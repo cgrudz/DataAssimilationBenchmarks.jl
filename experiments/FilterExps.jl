@@ -8,7 +8,6 @@ using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
 using EnsembleKalmanSchemes, DeSolvers, L96
-using TickTock
 export filter_state, filter_param
 
 ########################################################################################################################
