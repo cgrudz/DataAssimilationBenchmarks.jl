@@ -43,5 +43,6 @@ Thumbs.db
 # no output from nohup
 *.out 
 
-# no actual data, keep output directory for server sync
-data/*
+# no actual data, keep output 'data' directory for server sync directory tree
+storage/*
+
