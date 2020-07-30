@@ -1,4 +1,4 @@
-# enkf_benchmark
+# da_benchmark
 
 ## Description
 This is my personal data asimilation benchmark research code.  This includes code for developing and testing data assimilation schemes in the L96-s model and the nonlinear swing equations.
