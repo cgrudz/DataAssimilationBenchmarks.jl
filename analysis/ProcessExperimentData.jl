@@ -75,7 +75,7 @@ function process_filter_state()
     end
 
     # create file name with relevant parameters
-    fname = "processed_filter_state_" * 
+    fname = "processed_filter_state" * 
             "_diffusion_" * rpad(diffusion, 4, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -161,7 +161,7 @@ function process_filter_param()
     end
     
     # create file name with relevant parameters
-    fname = "processed_filter_param_" * 
+    fname = "processed_filter_param" * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_wlk_" * rpad(wlk, 6, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
