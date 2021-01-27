@@ -138,11 +138,17 @@ function process_filter_param()
                 for_rmse = tmp["fore_rmse"]::Vector{Float64}
                 for_spread = tmp["fore_spread"]::Vector{Float64}
 
+                par_rmse = tmp["param_rmse"]::Vector{Float64}
+                par_spread = tmp["param_spread"]::Vector{Float64}
+
                 data[method * "_anal_rmse"][22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
                 data[method * "_anal_spread"][22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
                 data[method * "_fore_rmse"][22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
                 data[method * "_fore_spread"][22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+
+                data[method * "_para_rmse"][22 - i, j+1] = mean(par_rmse[burn+1: nanl+burn])
+                data[method * "_para_spread"][22 - i, j+1] = mean(par_spread[burn+1: nanl+burn])
             end
         end
     end
@@ -177,5 +183,10 @@ function process_filter_param()
     end
 
 end
+
+########################################################################################################################
+process_filter_state()
+#process_filter_param()
+
 
 end
