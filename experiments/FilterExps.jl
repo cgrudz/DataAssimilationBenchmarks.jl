@@ -226,9 +226,12 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         analysis = ensemble_filter(scheme, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
+        # extract the parameter ensemble for later usage
+        param_ens = ens[state_dim+1:end, :]
+
         # compute the analysis statistics
         anal_rmse[i], anal_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
-        param_rmse[i], param_spread[i] = analyze_ensemble_parameters(ens[state_dim+1:end, :], param_truth)
+        param_rmse[i], param_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
         param_ens = param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)

@@ -4,10 +4,10 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 using Debugger
-@everywhere push!(LOAD_PATH, "/media/Storage/Dropbox/Documents/scripting/julia/data_assimilation/da_benchmark")
-@everywhere push!(LOAD_PATH, "/media/Storage/Dropbox/Documents/scripting/julia/data_assimilation/da_benchmark/methods")
-@everywhere push!(LOAD_PATH, "/media/Storage/Dropbox/Documents/scripting/julia/data_assimilation/da_benchmark/models")
-@everywhere push!(LOAD_PATH, "/media/Storage/Dropbox/Documents/scripting/julia/data_assimilation/da_benchmark/experiments")
+@everywhere push!(LOAD_PATH, "/da_benchmark")
+@everywhere push!(LOAD_PATH, "/da_benchmark/methods")
+@everywhere push!(LOAD_PATH, "/da_benchmark/models")
+@everywhere push!(LOAD_PATH, "/da_benchmark/experiments")
 @everywhere using FilterExps, EnsembleKalmanSchemes, DeSolvers, L96
 
 ########################################################################################################################
@@ -41,8 +41,8 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 #seed = 0
 #obs_un = 1.0
 #obs_dim = 40
-#N_ens = 20:25
-#infl = LinRange(1.0, 1.02, 3)
+#N_ens = 14:41
+#infl = LinRange(1.0, 1.20, 21)
 #
 ## load the experiments
 #args = Tuple[]
@@ -69,9 +69,9 @@ obs_un = 1.0
 obs_dim = 40
 param_err = 0.03
 param_wlk = [0.0000, 0.0001, 0.0010, 0.0100]
-N_ens = 20:25
-state_infl = LinRange(1.0, 1.02, 3)
-param_infl = LinRange(1.0, 1.02, 3)
+N_ens = 14:41
+state_infl = LinRange(1.0, 1.20, 21)
+param_infl = LinRange(1.0, 1.00, 1)
 
 # load the experiments
 args = Tuple[]

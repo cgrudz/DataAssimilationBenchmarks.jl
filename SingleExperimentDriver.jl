@@ -12,7 +12,7 @@ using L96
 using EnsembleKalmanSchemes
 using FilterExps
 using SmootherExps
-export exp
+export filter_state_exp, filter_param_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -38,14 +38,18 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## filter_state single run for degbugging, arguments are
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
 #
-#args = (time_series, "etkf", 0, 1.0, 40, 25, 1.12)
-#filter_state(args)
+function filter_state_exp()
+    args = (time_series, "etkf", 0, 1.0, 40, 25, 1.12)
+    filter_state(args)
+end
 ########################################################################################################################
 ## filter_param single run for degbugging, arguments are
 ## [time_series, scheme, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
 #
-#args = (time_series, "etkf", 0, 1.0, 40, 0.03, 0.0010, 25, 1.02, 1.0)
-#filter_param(args)
+function filter_param_exp()
+    args = (time_series, "etkf", 0, 1.0, 40, 0.03, 0.0000, 25, 1.02, 1.0)
+    filter_param(args)
+end
 ########################################################################################################################
 
 ########################################################################################################################

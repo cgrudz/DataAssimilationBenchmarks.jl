@@ -354,7 +354,6 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
     inflation."""
     
     # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
-    @bp
     f_steps = kwargs["f_steps"]::Int64
     step_model = kwargs["step_model"]
     posterior = kwargs["posterior"]::Array{Float64,3}
