@@ -47,3 +47,5 @@ Thumbs.db
 storage/*
 state_filter/
 param_filter/
+enkf/
+etkf/

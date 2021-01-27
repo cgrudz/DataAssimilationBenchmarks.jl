@@ -4,10 +4,10 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 using Debugger
-@everywhere push!(LOAD_PATH, "/da_benchmark")
-@everywhere push!(LOAD_PATH, "/da_benchmark/methods")
-@everywhere push!(LOAD_PATH, "/da_benchmark/models")
-@everywhere push!(LOAD_PATH, "/da_benchmark/experiments")
+@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark")
+@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/methods")
+@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/models")
+@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/experiments")
 @everywhere using FilterExps, EnsembleKalmanSchemes, DeSolvers, L96
 
 ########################################################################################################################
