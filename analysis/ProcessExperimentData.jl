@@ -65,9 +65,9 @@ function process_filter_state()
     # for each DA method in the experiment, process the data, loading into the dictionary
     for method in method_list
         fnames = Glob.glob("../storage/filter_state/" * method * 
-                           "/*_diffusion_" * rpad(diffusion, 4, "0") *
-                            "*_nanl_" * lpad(nanl + burn, 5, "0")  *  
-                            "_tanl_" * rpad(tanl, 4, "0") * 
+                           "/diffusion_" * rpad(diffusion, 4, "0") *
+                            "/*_nanl_" * lpad(nanl + burn, 5, "0")  *  
+                            "*_tanl_" * rpad(tanl, 4, "0") * 
                             "*" )
 
         process_data(fnames, method)
@@ -105,7 +105,7 @@ function process_filter_param()
     nanl = 40000
     burn = 5000
     diffusion = 0.0
-    wlk = 0.001
+    wlk = 0.00
     method_list = ["enkf", "etkf"]
     
     # define the storage dictionary here
@@ -150,10 +150,10 @@ function process_filter_param()
     # for each DA method in the experiment, process the data, loading into the dictionary
     for method in method_list
         fnames = Glob.glob("../storage/filter_param/" * method * 
-                           "/*_diffusion_" * rpad(diffusion, 4, "0") *
-                           "_wlk_" * rpad(param_wlk, 6, "0") *
+                           "/diffusion_" * rpad(diffusion, 4, "0") *
+                           "/*_wlk_" * rpad(wlk, 6, "0") *
                            "*_nanl_" * lpad(nanl + burn, 5, "0")  *  
-                           "_tanl_" * rpad(tanl, 4, "0") * 
+                           "*_tanl_" * rpad(tanl, 4, "0") * 
                            "*" )
 
         process_data(fnames, method)
@@ -163,7 +163,7 @@ function process_filter_param()
     # create file name with relevant parameters
     fname = "processed_filter_param_" * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
-            "_wlk_" * rpad(param_wlk, 6, "0") *
+            "_wlk_" * rpad(wlk, 6, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_burn_" * lpad(burn, 5, "0") * 
