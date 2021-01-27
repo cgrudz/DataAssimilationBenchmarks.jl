@@ -72,7 +72,7 @@ function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion:
     # spin the model onto the attractor
     for j in 1:spin
         for k in 1:f_steps
-            x_t = forward_step(x_t, kwargs)
+            x_t = forward_step(x_t, kwargs, 0.0)
         end
     end
 

@@ -49,7 +49,7 @@ end
 ########################################################################################################################
 # linearized time derivative
 
-function jacobian(x::Vector{Float64}, dx_params::Vector{Float64})
+function jacobian(x::Vector{Float64}, dx_params::Vector{Float64}, t::Float64)
     """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the state x.
     
     Note that this has been designed to load the entries in a standard zeros array but return a sparse array after
@@ -102,7 +102,7 @@ end
 # This depends on rho and alpha as above
 # NOTE: this still needs to be debugged
 
-function l96s_tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any})
+function l96s_tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     """One step of integration rule for l96 second order taylor rule
 
     The rho and alpha are to be computed by the auxiliary functions, depending only on p, and supplied for all steps.  

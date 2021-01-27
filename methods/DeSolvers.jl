@@ -95,7 +95,7 @@ end
 ########################################################################################################################
 # deterministic 2nd order Taylor Method
 
-function tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any})
+function tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     """Second order Taylor method for step size h and state vector x.
 
     Arguments are given as
@@ -115,16 +115,16 @@ function tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any})
     # calculate the evolution of x one step forward via the second order Taylor expansion
 
     # first derivative
-    dx = dx_dt(x, params)
+    dx = dx_dt(x, params, t)
 
     # second order taylor expansion
-    x + dx * h + 0.5 * jacobian(x, params) * dx * h^2.0
+    x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
 end
 
 ########################################################################################################################
 # Euler-Murayama step
 
-function em_step!(x::Vector{Float64}, kwargs::Dict{String,Any})
+function em_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     """This will propagate the state x one step forward by Euler-Murayama
 
     Step size is h and the Wiener process is assumed to have a scalar diffusion coefficient"""
@@ -155,7 +155,7 @@ function em_step!(x::Vector{Float64}, kwargs::Dict{String,Any})
     W = ξ * sqrt(h)
 
     # step forward by interval h
-    x +  h * dx_dt(x, params) + diffusion * W
+    x +  h * dx_dt(x, params, t) + diffusion * W
 end
 
 ########################################################################################################################

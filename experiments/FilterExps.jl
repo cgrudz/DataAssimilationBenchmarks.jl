@@ -67,11 +67,11 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     obs = H * obs + obs_un * rand(Normal(), obs_dim, nanl)
     
     # create storage for the forecast and analysis statistics
-    fore_rmse = zeros(nanl)
-    anal_rmse = zeros(nanl)
+    fore_rmse = Vector{Float64}(undef, nanl)
+    anal_rmse = Vector{Float64}(undef, nanl)
     
-    fore_spread = zeros(nanl)
-    anal_spread = zeros(nanl)
+    fore_spread = Vector{Float64}(undef, nanl)
+    anal_spread = Vector{Float64}(undef, nanl)
 
     # loop over the number of observation-forecast-analysis cycles
     for i in 1:nanl
@@ -200,13 +200,13 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     obs_cov = obs_un^2.0 * I
 
     # create storage for the forecast and analysis statistics
-    fore_rmse = zeros(nanl)
-    anal_rmse = zeros(nanl)
-    param_rmse = zeros(nanl)
+    fore_rmse = Vector{Float64}(undef, nanl)
+    anal_rmse = Vector{Float64}(undef, nanl)
+    param_rmse = Vector{Float64}(undef, nanl)
     
-    fore_spread = zeros(nanl)
-    anal_spread = zeros(nanl)
-    param_spread = zeros(nanl)
+    fore_spread = Vector{Float64}(undef, nanl)
+    anal_spread = Vector{Float64}(undef, nanl)
+    param_spread = Vector{Float64}(undef, nanl)
 
 
     # loop over the number of observation-forecast-analysis cycles
@@ -224,7 +224,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
 
         # after the forecast step, perform assimilation of the observation
         analysis = ensemble_filter(scheme, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
-        ens = analysis["ens"]
+        ens = analysis["ens"]::Array{Float64,2}
 
         # compute the analysis statistics
         anal_rmse[i], anal_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
@@ -265,8 +265,8 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "_obs_un_" * rpad(obs_un, 4, "0") * "_param_err_" * rpad(param_err, 4, "0") * "_param_wlk_" * 
             rpad(param_wlk, 6, "0") * "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * 
             rpad(h, 4, "0") * "_N_ens_" * lpad(N_ens, 3, "0") * 
-            "_state_inflation_" * lpad(round(state_infl, digits=2), 4, "0") *
-            "_param_infl_" * lpad(round(param_infl, digits=2), 4, "0") * ".jld"
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") *
+            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")

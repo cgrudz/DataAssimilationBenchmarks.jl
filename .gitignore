@@ -45,4 +45,5 @@ Thumbs.db
 
 # no actual data, keep output 'data' directory for server sync directory tree
 storage/*
-
+state_filter/
+param_filter/

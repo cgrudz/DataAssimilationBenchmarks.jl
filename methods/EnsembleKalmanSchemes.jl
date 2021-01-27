@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using LinearAlgebra
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, ensemble_filter, square_root
+       inflate_param!, transform, ensemble_filter, ls_smoother_classic, square_root
 
 ########################################################################################################################
 ########################################################################################################################
@@ -336,87 +336,103 @@ function ensemble_filter(analysis::String, ens::Array{Float64,2}, H::T1, obs::Ve
     Dict{String,Array{Float64,2}}("ens" => ens)
 end
 
+
+########################################################################################################################
+# classical version lag_shift_smoother
+
+function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
+                             obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: ObsH, T2 <: CovM}
+
+    """Lag-shift ensemble kalman smoother analysis step, classical version
+
+    This version of the lag-shift enks uses the last filtered state for the forecast, differentiated from the hybrid
+    and iterative schemes which will use the once or multiple-times re-analized posterior for the initial condition
+    for the forecast of the states to the next shift.
+
+    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
+    case, a value for the parameter covariance inflation should be included in addition to the state covariance
+    inflation."""
+    
+    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
+    @bp
+    f_steps = kwargs["f_steps"]::Int64
+    step_model = kwargs["step_model"]
+    posterior = kwargs["posterior"]::Array{Float64,3}
+    
+    # infer the ensemble, obs, and system dimensions, observation sequence includes shift forward times
+    obs_dim, shift = size(obs)
+    sys_dim, N_ens, lag = size(posterior)
+
+    # optional parameter estimation
+    if haskey(kwargs, "state_dim")
+        state_dim = kwargs["state_dim"]::Int64
+        param_infl = kwargs["param_infl"]::Float64
+        param_wlk = kwargs["param_wlk"]::Float64
+
+    else
+        state_dim = sys_dim
+    end
+
+    # step 1: create storage for the forecast and filter values over the DAW
+    forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
+    filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
+
+    # step 2: forward propagate the ensemble and analyze the observations
+    for s in 1:shift
+
+        # initialize posterior for the special case lag=shift
+        if lag==shift
+            posterior[:, :, s] = ens
+        end
+        
+        # step 2a: propagate between observation times
+        for j in 1:N_ens
+            for k in 1:f_steps
+                ens = step_model(ens[:, j], kwargs, 0.0)
+            end
+        end
+
+        # step 2b: store the forecast to compute ensemble statistics before observations become available
+        forecast[:, :, s] = ens
+
+        # step 2c: perform the filtering step
+        trans = transform(analysis, ens, H, obs[:, s], obs_cov)
+        ens = ens_update(analysis, ens, trans)
+
+        # compute multiplicative inflation of state variables
+        ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+
+        # if including an extended state of parameter values,
+        # compute multiplicative inflation of parameter values
+        if state_dim != sys_dim
+            ens = inflate_param(ens, param_infl, sys_dim, state_dim)
+        end
+
+        # store the filtered states
+        filtered[:, :, s] = ens
+        
+        # step 2e: re-analyze the posterior in the lag window of states
+        for l in 1:lag
+            posterior[:, :, l] = ens_update(analysis, posterior[:, :, l], trans)
+        end
+    end
+            
+    # step 3: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim
+        param_ens = ens[state_dim:end , :]
+        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+        ens[state_dim:end, :] = param_ens
+    end
+    
+    Dict{String,Array{Float64}}(
+                                "ens" => ens, 
+                                "post" =>  posterior, 
+                                "fore" => forecast, 
+                                "filt" => filtered
+                               ) 
 end
 
-#########################################################################################################################
-## classical version lag_shift_smoother
-#
-#function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
-#                             obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: ObsH, T2 <: CovM}
-#
-#    """Lag-shift ensemble kalman smoother analysis step, classical version
-#
-#    This version of the lag-shift enks uses the last filtered state for the forecast, differentiated from the hybrid
-#    and iterative schemes which will use the once or multiple-times re-analized posterior for the initial condition
-#    for the forecast of the states to the next shift.
-#
-#    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
-#    case, a value for the parameter covariance inflation should be included in addition to the state covariance
-#    inflation."""
-#    
-#    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
-#    f_steps = kwargs["f_steps"]
-#    step_model = kwargs["step_model"]
-#    posterior = kwargs["posterior"]
-#    
-#    # infer the ensemble, obs, and system dimensions, observation sequence includes shift forward times
-#    obs_dim, shift = size(obs)
-#    sys_dim, N_ens, lag = size(posterior)
-#
-#    # optional parameter estimation
-#    if 'state_dim' in kwargs:
-#        state_dim = kwargs['state_dim']
-#        param_infl = kwargs['param_infl']
-#        param_wlk = kwargs['param_wlk']
-#
-#    else:
-#        state_dim = sys_dim
-#
-#    # step 1: create storage for the forecast and filter values over the DAW
-#    forecast = np.zeros([sys_dim, N_ens, shift])
-#    filtered = np.zeros([sys_dim, N_ens, shift])
-#
-#    # step 2: forward propagate the ensemble and analyze the observations
-#    for s in range(shift):
-#
-#        # initialize posterior for the special case lag=shift
-#        if lag==shift:
-#            posterior[:, :, s] = ens
-#        
-#        # step 2a: propagate between observation times
-#        for k in range(f_steps):
-#            ens = step_model(ens, **kwargs)
-#
-#        # step 2b: store the forecast to compute ensemble statistics before observations become available
-#        forecast[:, :, s] = ens
-#
-#        # step 2c: perform the filtering step
-#        trans = transform(analysis, ens, H, obs[:, s], obs_cov)
-#        ens = ens_update(analysis, ens, trans)
-#
-#        # compute multiplicative inflation of state variables
-#        ens = inflate_state(ens, state_infl, sys_dim, state_dim)
-#
-#        # if including an extended state of parameter values,
-#        # compute multiplicative inflation of parameter values
-#        if state_dim != sys_dim:
-#            ens = inflate_param(ens, param_infl, sys_dim, state_dim)
-#
-#        # store the filtered states
-#        filtered[:, :, s] = ens
-#        
-#        # step 2e: re-analyze the posterior in the lag window of states
-#        for l in range(lag):
-#            posterior[:, :, l] = ens_update(analysis, posterior[:, :, l], trans)
-#            
-#    # step 3: if performing parameter estimation, apply the parameter model
-#    if state_dim != sys_dim:
-#        param_ens = ens[state_dim: , :]
-#        param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
-#        ens[state_dim:, :] = param_ens
-#    
-#    return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
-#
+end
 #########################################################################################################################
 ## single iteration, correlation-based lag_shift_smoother
 #
@@ -439,27 +455,27 @@ end
 #    [obs_dim, lag] = np.shape(obs)
 #
 #    # unpack kwargs
-#    f_steps = kwargs['f_steps']
-#    step_model = kwargs['step_model']
-#    shift = kwargs['shift']
+#    f_steps = kwargs["f_steps"]
+#    step_model = kwargs["step_model"]
+#    shift = kwargs["shift"]
 #    
 #    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
 #    # the first initial condition for the future iterations regardless of sda or mda settings
-#    spin = kwargs['spin']
+#    spin = kwargs["spin"]
 #    
 #    # multiple data assimilation (mda) is optional, read as boolean variable
-#    mda = kwargs['mda']
+#    mda = kwargs["mda"]
 #    if mda:
-#        obs_weights = kwargs['obs_weights']
+#        obs_weights = kwargs["obs_weights"]
 #    
 #    else:
 #        obs_weights = np.ones([lag])
 #
 #    # optional parameter estimation
-#    if 'state_dim' in kwargs:
-#        state_dim = kwargs['state_dim']
-#        param_infl = kwargs['param_infl']
-#        param_wlk = kwargs['param_wlk']
+#    if "state_dim" in kwargs:
+#        state_dim = kwargs["state_dim"]
+#        param_infl = kwargs["param_infl"]
+#        param_wlk = kwargs["param_wlk"]
 #
 #    else:
 #        state_dim = sys_dim
@@ -529,7 +545,7 @@ end
 #    if state_dim != sys_dim:
 #        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 #
-#    return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
+#    return {"ens": ens, "post": posterior, "fore": forecast, "filt": filtered}
 #
 #########################################################################################################################
 #########################################################################################################################
@@ -555,16 +571,16 @@ end
 #    lag -= 1
 #
 #    # unpack kwargs
-#    f_steps = kwargs['f_steps']
-#    step_model = kwargs['step_model']
-#    shift = kwargs['shift']
-#    mda = kwargs['mda']
+#    f_steps = kwargs["f_steps"]
+#    step_model = kwargs["step_model"]
+#    shift = kwargs["shift"]
+#    mda = kwargs["mda"]
 #    
 #    # optional parameter estimation
-#    if 'state_dim' in kwargs:
-#        state_dim = kwargs['state_dim']
-#        param_infl = kwargs['param_infl']
-#        param_wlk = kwargs['param_wlk']
+#    if "state_dim" in kwargs:
+#        state_dim = kwargs["state_dim"]
+#        param_infl = kwargs["param_infl"]
+#        param_wlk = kwargs["param_wlk"]
 #
 #    else:
 #        state_dim = sys_dim
@@ -642,7 +658,7 @@ end
 #    if state_dim != sys_dim:
 #        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 #
-#    return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
+#    return {"ens": ens, "post": posterior, "fore": forecast, "filt": filtered}
 #
 #########################################################################################################################
 ## IEnKF
@@ -664,16 +680,16 @@ end
 #    step_model = kwargs["step_model"]
 #
 #    # optional parameter estimation
-#    if 'state_dim' in kwargs:
-#        state_dim = kwargs['state_dim']
-#        param_infl = kwargs['param_infl']
+#    if "state_dim" in kwargs:
+#        state_dim = kwargs["state_dim"]
+#        param_infl = kwargs["param_infl"]
 #
 #    else:
 #        state_dim = sys_dim
 #
 #    # lag-1 smoothing - an initial ensemble value should replace
 #    # the dummy ens argument in this case to be written consistently with other methods
-#    ens = kwargs['ens_0']
+#    ens = kwargs["ens_0"]
 #    
 #    # create storage for the posterior over the smoothing window
 #    posterior = np.zeros([sys_dim, N_ens, 2])
@@ -758,7 +774,7 @@ end
 #    # store the analyzed and inflated current posterior - lag-1 filter
 #    posterior[:, :, 1] = ens
 #
-#    return {'ens': ens, 'posterior': posterior}
+#    return {"ens": ens, "posterior": posterior}
 #
 #########################################################################################################################
 ## Stochastic EnKF analysis step, using anomalies
