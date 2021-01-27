@@ -9,7 +9,7 @@ using JLD
 using LinearAlgebra
 using HDF5
 using Glob
-export process_filter_state
+export process_filter_state, process_filter_param
 
 ########################################################################################################################
 ########################################################################################################################
@@ -79,7 +79,7 @@ function process_filter_state()
             "_diffusion_" * rpad(diffusion, 4, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * rpad(burn, 5, "0") * 
+            "_burn_" * lpad(burn, 5, "0") * 
             ".h5"
 
 
@@ -166,7 +166,7 @@ function process_filter_param()
             "_wlk_" * rpad(param_wlk, 6, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * rpad(burn, 5, "0") * 
+            "_burn_" * lpad(burn, 5, "0") * 
             ".h5"
     
     # write out file in hdf5
