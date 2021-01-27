@@ -79,7 +79,7 @@ function process_filter_state()
             "_diffusion_" * rpad(diffusion, 4, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * rpad(tanl, 5, "0") * 
+            "_burn_" * rpad(burn, 5, "0") * 
             ".h5"
 
 
@@ -117,7 +117,7 @@ function process_filter_param()
                 "enkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
                 "enkf_fore_spread" => Array{Float64}(undef, 21, 28),
                 "etkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_fore_spread" => Array{Float64}(undef, 21, 28)
+                "etkf_fore_spread" => Array{Float64}(undef, 21, 28),
                 "enkf_para_rmse"   => Array{Float64}(undef, 21, 28),
                 "enkf_para_spread" => Array{Float64}(undef, 21, 28),
                 "etkf_para_rmse"   => Array{Float64}(undef, 21, 28),
@@ -166,7 +166,7 @@ function process_filter_param()
             "_wlk_" * rpad(param_wlk, 6, "0") *
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * rpad(tanl, 5, "0") * 
+            "_burn_" * rpad(burn, 5, "0") * 
             ".h5"
     
     # write out file in hdf5
