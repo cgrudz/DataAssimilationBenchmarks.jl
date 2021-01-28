@@ -104,8 +104,8 @@ function process_filter_param()
     tanl = 0.05
     nanl = 40000
     burn = 5000
-    diffusion = 0.0
-    wlk = 0.00
+    diffusion = 0.00
+    wlk = 0.0001
     method_list = ["enkf", "etkf"]
     
     # define the storage dictionary here
