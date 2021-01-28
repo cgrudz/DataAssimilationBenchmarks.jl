@@ -74,19 +74,30 @@ function process_filter_state()
 
     end
 
-    # create file name with relevant parameters
-    fname = "processed_filter_state" * 
-            "_diffusion_" * rpad(diffusion, 4, "0") *
-            "_tanl_" * rpad(tanl, 4, "0") * 
-            "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * lpad(burn, 5, "0") * 
-            ".h5"
+    # create jld file name with relevant parameters
+    jlname = "processed_filter_state" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".jld"
 
+    # create hdf5 file name with relevant parameters
+    h5name = "processed_filter_state" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".h5"
+
+
+    # write out file in jld
+    save(jlname, data)
 
     # write out file in hdf5
-    h5open(fname, "w") do file
+    h5open(h5name, "w") do file
         for key in keys(data)
-            h5write(fname, key, data[key])
+            h5write(h5name, key, data[key])
         end
     end
 
@@ -166,19 +177,31 @@ function process_filter_param()
 
     end
     
-    # create file name with relevant parameters
-    fname = "processed_filter_param" * 
-            "_diffusion_" * rpad(diffusion, 4, "0") * 
-            "_wlk_" * rpad(wlk, 6, "0") *
-            "_tanl_" * rpad(tanl, 4, "0") * 
-            "_nanl_" * lpad(nanl, 5, "0") * 
-            "_burn_" * lpad(burn, 5, "0") * 
-            ".h5"
+    # create jld file name with relevant parameters
+    jlname = "processed_filter_param" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") * 
+             "_wlk_" * rpad(wlk, 6, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".jld"
     
+    # create hdf5 file name with relevant parameters
+    h5name = "processed_filter_param" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") * 
+             "_wlk_" * rpad(wlk, 6, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".h5"
+    
+    # write out file in jld
+    save(jlname, data)
+
     # write out file in hdf5
-    h5open(fname, "w") do file
+    h5open(h5name, "w") do file
         for key in keys(data)
-            h5write(fname, key, data[key])
+            h5write(h5name, key, data[key])
         end
     end
 
