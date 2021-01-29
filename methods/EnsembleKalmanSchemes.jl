@@ -378,7 +378,6 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
 
     # step 2: forward propagate the ensemble and analyze the observations
     for s in 1:shift
-
         # initialize posterior for the special case lag=shift
         if lag==shift
             posterior[:, :, s] = ens
@@ -387,7 +386,7 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
         # step 2a: propagate between observation times
         for j in 1:N_ens
             for k in 1:f_steps
-                ens = step_model(ens[:, j], kwargs, 0.0)
+                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
 
@@ -396,15 +395,15 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
 
         # step 2c: perform the filtering step
         trans = transform(analysis, ens, H, obs[:, s], obs_cov)
-        ens = ens_update(analysis, ens, trans)
+        ens = ens_update!(ens, trans)
 
         # compute multiplicative inflation of state variables
-        ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+        ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
 
         # if including an extended state of parameter values,
         # compute multiplicative inflation of parameter values
         if state_dim != sys_dim
-            ens = inflate_param(ens, param_infl, sys_dim, state_dim)
+            ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
         end
 
         # store the filtered states
@@ -412,7 +411,7 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
         
         # step 2e: re-analyze the posterior in the lag window of states
         for l in 1:lag
-            posterior[:, :, l] = ens_update(analysis, posterior[:, :, l], trans)
+            posterior[:, :, l] = ens_update!(posterior[:, :, l], trans)
         end
     end
             

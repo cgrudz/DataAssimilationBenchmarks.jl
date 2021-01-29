@@ -12,7 +12,7 @@ using L96
 using EnsembleKalmanSchemes
 using FilterExps
 using SmootherExps
-export filter_state_exp, filter_param_exp
+export filter_state_exp, filter_param_exp, classic_smoother_state_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -58,8 +58,10 @@ end
 ## classic_state single run for degbugging, arguments are
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
 #
-#args = [time_series, "etks", 0, 2, 2, 1.0, 40, 25, 1.05]
-#classic_state(args)
+function classic_smoother_state_exp()
+    args = [time_series, "etks", 0, 51, 1, 1.0, 40, 35, 1.05]
+    classic_state(args)
+end
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
