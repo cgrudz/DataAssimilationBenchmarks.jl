@@ -11,8 +11,8 @@ using DeSolvers
 using L96 
 using EnsembleKalmanSchemes
 using FilterExps
-using SmootherExps
-export filter_state_exp, filter_param_exp, classic_smoother_state_exp
+#using SmootherExps
+export filter_state_exp, filter_param_exp#, classic_smoother_state_exp
 
 ########################################################################################################################
 ########################################################################################################################

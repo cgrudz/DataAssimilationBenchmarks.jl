@@ -23,7 +23,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     time_series, scheme, seed, obs_un, obs_dim, N_ens, infl = args
 
     # load the timeseries and associated parameters
-    ts = load(time_series)
+    ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
     f = ts["F"]::Float64
     tanl = ts["tanl"]::Float64
@@ -35,13 +35,13 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45000
+    nanl = 45
 
     # set seed 
     Random.seed!(seed)
     
     # define the initial ensembles, squeezing the sys_dim times 1 array from the timeseries generation
-    obs = ts["obs"]
+    obs = ts["obs"]::Array{Float64, 2}
     init = obs[:, 1]
     sys_dim = length(init)
     ens = rand(MvNormal(init, I), N_ens)
@@ -122,6 +122,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
 
+
 ########################################################################################################################
 
 
@@ -133,7 +134,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     time_series, scheme, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
-    ts = load(time_series)
+    ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
     f = ts["F"]::Float64
     tanl = ts["tanl"]::Float64
@@ -145,13 +146,13 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45000
+    nanl = 45
 
     # set seed 
     Random.seed!(seed)
     
     # define the initial ensembles, squeezing the sys_dim times 1 array from the timeseries generation
-    obs = ts["obs"]
+    obs = ts["obs"]::Array{Float64, 2}
     init = obs[:, 1]
     param_truth = [f]
     state_dim = length(init)
@@ -202,12 +203,11 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
     anal_rmse = Vector{Float64}(undef, nanl)
-    param_rmse = Vector{Float64}(undef, nanl)
+    para_rmse = Vector{Float64}(undef, nanl)
     
     fore_spread = Vector{Float64}(undef, nanl)
     anal_spread = Vector{Float64}(undef, nanl)
-    param_spread = Vector{Float64}(undef, nanl)
-
+    para_spread = Vector{Float64}(undef, nanl)
 
     # loop over the number of observation-forecast-analysis cycles
     for i in 1:nanl
@@ -231,7 +231,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
 
         # compute the analysis statistics
         anal_rmse[i], anal_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
-        param_rmse[i], param_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
+        para_rmse[i], para_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
         param_ens = param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
@@ -241,10 +241,10 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     data = Dict{String,Any}(
             "fore_rmse" => fore_rmse,
             "anal_rmse" => anal_rmse,
-            "param_rmse" => param_rmse,
+            "param_rmse" => para_rmse,
             "fore_spread" => fore_spread,
             "anal_spread" => anal_spread,
-            "param_spread" => param_spread,
+            "param_spread" => para_spread,
             "scheme" => scheme,
             "seed" => seed, 
             "diffusion" => diffusion,
@@ -274,6 +274,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
+
 
 ########################################################################################################################
 
