@@ -39,7 +39,7 @@ function classic_state(args)
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 450
+    nanl = 45000
 
     # set seed 
     Random.seed!(seed)
