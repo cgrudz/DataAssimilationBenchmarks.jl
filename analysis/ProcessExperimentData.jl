@@ -241,13 +241,13 @@ function process_classic_smoother_state()
     # auxilliary function to process data
     function process_data(fnames::Vector{String}, method::String)
         # loop lag
-        for k in 1:11
+        for k in 0:10
             # loop ensemble size 
             @bp
             for j in 0:27 
                 #loop inflation
                 for i in 1:21
-                    tmp = load(fnames[i + j*21])
+                    tmp = load(fnames[i + j*21 + k*28*21])
                     
                     ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                     ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -258,14 +258,14 @@ function process_classic_smoother_state()
                     fil_rmse = tmp["filt_rmse"]::Vector{Float64}
                     fil_spread = tmp["filt_spread"]::Vector{Float64}
 
-                    data[method * "_anal_rmse"][12 - k, 22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                    data[method * "_anal_spread"][12 - k, 22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                    data[method * "_anal_rmse"][11 - k, 22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                    data[method * "_anal_spread"][11 - k, 22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                    data[method * "_fore_rmse"][12 - k, 22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                    data[method * "_fore_spread"][12 - k, 22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                    data[method * "_fore_rmse"][11 - k, 22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                    data[method * "_fore_spread"][11 - k, 22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                    data[method * "_filt_rmse"][12 - k, 22 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
-                    data[method * "_filt_spread"][12 - k, 22 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                    data[method * "_filt_rmse"][11 - k, 22 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
+                    data[method * "_filt_spread"][11 - k, 22 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
                 end
             end
         end
