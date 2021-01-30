@@ -11,8 +11,8 @@ using DeSolvers
 using L96 
 using EnsembleKalmanSchemes
 using FilterExps
-#using SmootherExps
-export filter_state_exp, filter_param_exp#, classic_smoother_state_exp
+using SmootherExps
+export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -37,19 +37,23 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ########################################################################################################################
 ## filter_state single run for degbugging, arguments are
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
-#
+
 function filter_state_exp()
     args = (time_series, "etkf", 0, 1.0, 40, 25, 1.12)
     filter_state(args)
 end
+
+
 ########################################################################################################################
 ## filter_param single run for degbugging, arguments are
 ## [time_series, scheme, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-#
+
 function filter_param_exp()
     args = (time_series, "etkf", 0, 1.0, 40, 0.03, 0.0000, 25, 1.02, 1.0)
     filter_param(args)
 end
+
+
 ########################################################################################################################
 
 ########################################################################################################################
@@ -57,17 +61,23 @@ end
 ########################################################################################################################
 ## classic_state single run for degbugging, arguments are
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
-#
+
 function classic_smoother_state_exp()
-    args = [time_series, "etks", 0, 51, 1, 1.0, 40, 35, 1.05]
+    args = (time_series, "etks", 0, 51, 1, 1.0, 40, 35, 1.05)
     classic_state(args)
 end
+
+
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-#
-#args = [time_series, 'etks', 0, 1, 1, 1.0, 40, 0.03, 0.01, 24, 1.08, 1.0] 
-#print(classic_param(args))
+
+function classic_smoother_param_exp()
+    args = (time_series, "etks", 0, 1, 1, 1.0, 40, 0.03, 0.01, 24, 1.08, 1.0) 
+    classic_param(args)
+end
+
+
 ########################################################################################################################
 
 ########################################################################################################################

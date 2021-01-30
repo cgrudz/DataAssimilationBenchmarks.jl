@@ -8,7 +8,7 @@ using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
 using EnsembleKalmanSchemes, DeSolvers, L96
-export classic_state
+export classic_state, classic_param
 
 ########################################################################################################################
 ########################################################################################################################
@@ -205,15 +205,11 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     Random.seed!(seed)
     
     # define the initialization 
-    obs = ts["obs"]
+    obs = ts["obs"]::Array{Float64,2}
     init = obs[:, 1]
-    sys_dim = length(init)
-    ens = rand(MvNormal(init, I), N_ens)
 
-    # define the observation sequence where we project the true state into the observation space and
-    # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + lag + shift + 1]
-    truth = copy(obs)
+    # define the initial state ensemble
+    ens = rand(MvNormal(init, I), N_ens)
     param_truth = [f]
     state_dim = length(init)
     sys_dim = state_dim + length(param_truth)
@@ -227,7 +223,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
         param_ens = rand(Normal(param_truth[1], param_truth[1]*param_err), 1, N_ens)
     end
 
-    # defined the extended state ensemble
+    # define the extended state ensemble
     ens = [ens; param_ens]
 
     # define kwargs
@@ -238,21 +234,22 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "h" => h,
                 "diffusion" => diffusion,
                 "state_dim" => state_dim,
-                "param_infl" => param_infl
+                "param_wlk" => param_wlk,
+                "param_infl" => param_infl,
                 "shift" => shift,
                 "mda" => false
                              )
 
-    # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
-    # truth state vector below, this is stored separately
+    # define the observation sequence where we project the true state into the observation space and
+    # perturb by white-in-time-and-space noise with standard deviation obs_un
+    obs = obs[:, 1:nanl + lag + shift + 1]
+    truth = copy(obs)
     H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), obs_dim, nanl)
+    obs =  H * obs + obs_un * rand(Normal(), size(obs))
+    obs_cov = obs_un^2.0 * I
 
     # define the observation operator on the extended state, used for the ensemble
     H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
-
-    # define the associated time invariant observation error covariance
-    obs_cov = obs_un^2.0 * I
 
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
@@ -274,6 +271,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # we perform assimilation of the observation window from time 2 to time nanl + 1 + lag at increments of shift 
     # starting at time 2 because of no observations at time 1 
     # only the interval 2 : nanl + 1 is stored later for all statistics
+    @bp
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
@@ -292,6 +290,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                                                                                         truth[:, i + j - 1])
 
             # we analyze the posterior states that will be discarded in the non-overlapping DAWs
+            @bp
             if shift == lag
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
@@ -299,7 +298,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                                                                                 truth[:, i + j - 2])
 
                 para_rmse[i + j - 2], 
-                param_spread[i + j - 2] = analyze_ensemble_parameters(post[state_dim:, :, j], 
+                param_spread[i + j - 2] = analyze_ensemble_parameters(post[state_dim + 1: end, :, j], 
                                                                                 param_truth)
             elseif i > lag 
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
@@ -308,12 +307,13 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                                                                                     truth[:, i - lag + j - 1])
 
                 para_rmse[i - lag + j - 1], 
-                para_spread[i - lag + j - 1] = analyze_ensemble_parameters(post[state_dim:, :, j], 
+                para_spread[i - lag + j - 1] = analyze_ensemble_parameters(post[state_dim + 1: end, :, j], 
                                                                                 param_truth)
             end
         end
         
         # reset the posterior
+        @bp
         if lag == shift
             # the assimilation windows are disjoint and therefore we reset completely
             posterior = Array{Float64}(undef, sys_dim, N_ens, lag)

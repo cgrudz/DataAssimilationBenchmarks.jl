@@ -80,9 +80,9 @@ function rk4_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
 
     # terms of the RK scheme recursively evolve the dynamic state components alone
     k1 = dx_dt(x[begin: state_dim], params, t) * h + diffusion * W
-    k2 = dx_dt(x[begin: state_dim] + 0.5 * k1, params, t) * h + diffusion * W
-    k3 = dx_dt(x[begin: state_dim] + 0.5 * k2, params, t) * h + diffusion * W
-    k4 = dx_dt(x[begin: state_dim] + k3, params, t) * h + diffusion * W
+    k2 = dx_dt(x[begin: state_dim] + 0.5 * k1, params, t + 0.5 * h) * h + diffusion * W
+    k3 = dx_dt(x[begin: state_dim] + 0.5 * k2, params, t + 0.5 * h) * h + diffusion * W
+    k4 = dx_dt(x[begin: state_dim] + k3, params, t + h) * h + diffusion * W
     
     # compute the update to the dynamic variables
     x_step = x[begin: state_dim]+ (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4)
