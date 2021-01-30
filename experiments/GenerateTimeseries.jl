@@ -9,7 +9,7 @@ using LinearAlgebra
 using JLD
 using DeSolvers
 using L96 
-using DifferentialEquations
+#using DifferentialEquations
 export l96_timeseries
 
 ########################################################################################################################
@@ -79,7 +79,7 @@ function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion:
     # save the model state at timesteps of tanl
     for j in 1:nanl
         for k in 1:f_steps
-            x_t = forward_step(x_t, kwargs)
+            x_t = forward_step(x_t, kwargs, 0.0)
         end
         obs[:, j] = x_t
     end
