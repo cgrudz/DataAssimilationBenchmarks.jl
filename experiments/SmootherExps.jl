@@ -199,7 +199,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45
+    nanl = 45000
 
     # set seed 
     Random.seed!(seed)
@@ -271,7 +271,6 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # we perform assimilation of the observation window from time 2 to time nanl + 1 + lag at increments of shift 
     # starting at time 2 because of no observations at time 1 
     # only the interval 2 : nanl + 1 is stored later for all statistics
-    @bp
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
