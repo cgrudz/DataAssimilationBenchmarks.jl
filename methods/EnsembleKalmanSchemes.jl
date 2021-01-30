@@ -363,7 +363,6 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
     sys_dim, N_ens, lag = size(posterior)
 
     # optional parameter estimation
-    @bp
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
         param_infl = kwargs["param_infl"]::Float64
@@ -417,7 +416,6 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
     end
             
     # step 3: if performing parameter estimation, apply the parameter model
-    @bp
     if state_dim != sys_dim
         param_ens = ens[state_dim + 1:end , :]
         param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))

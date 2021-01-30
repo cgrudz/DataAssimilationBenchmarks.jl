@@ -39,7 +39,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45000
+    nanl = 45
 
     # set seed 
     Random.seed!(seed)
@@ -284,26 +284,25 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
         for j in 1:shift
             # compute the forecast, filter and analysis statistics -- indices for the forecast, filter, analysis 
             # statistics storage index starts at absolute time 1, truth index starts at absolute time 1
-            fore_rmse[i + j - 1], fore_spread[i + j - 1] = analyze_ensemble(fore[:, :, j], 
+            fore_rmse[i + j - 1], fore_spread[i + j - 1] = analyze_ensemble(fore[1:state_dim, :, j], 
                                                                                         truth[:, i + j - 1])
-            filt_rmse[i + j - 1], filt_spread[i + j - 1] = analyze_ensemble(filt[:, :, j], 
+            filt_rmse[i + j - 1], filt_spread[i + j - 1] = analyze_ensemble(filt[1:state_dim, :, j], 
                                                                                         truth[:, i + j - 1])
 
             # we analyze the posterior states that will be discarded in the non-overlapping DAWs
-            @bp
             if shift == lag
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
-                anal_rmse[i + j - 2], anal_spread[i + j - 2] = analyze_ensemble(post[:, :, j],
+                anal_rmse[i + j - 2], anal_spread[i + j - 2] = analyze_ensemble(post[1:state_dim, :, j],
                                                                                 truth[:, i + j - 2])
 
                 para_rmse[i + j - 2], 
-                param_spread[i + j - 2] = analyze_ensemble_parameters(post[state_dim + 1: end, :, j], 
+                para_spread[i + j - 2] = analyze_ensemble_parameters(post[state_dim + 1: end, :, j], 
                                                                                 param_truth)
             elseif i > lag 
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
                 # the first posterior starts with the first prior at time 1, later discarded to align stats
-                anal_rmse[i - lag + j - 1], anal_spread[i - lag + j - 1] = analyze_ensemble(post[:, :, j], 
+                anal_rmse[i - lag + j - 1], anal_spread[i - lag + j - 1] = analyze_ensemble(post[1:state_dim, :, j], 
                                                                                     truth[:, i - lag + j - 1])
 
                 para_rmse[i - lag + j - 1], 
@@ -313,7 +312,6 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
         end
         
         # reset the posterior
-        @bp
         if lag == shift
             # the assimilation windows are disjoint and therefore we reset completely
             posterior = Array{Float64}(undef, sys_dim, N_ens, lag)
@@ -338,31 +336,38 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
             "anal_rmse"=> anal_rmse,
+            "param_rmse"=> para_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
             "anal_spread"=> anal_spread,
+            "param_spread"=> para_spread,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
             "sys_dim"=> sys_dim,
+            "state_dim" => state_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "param_err" => param_err,
+            "param_wlk" => param_wlk,
             "nanl"=> nanl,
             "tanl"=> tanl,
             "lag"=> lag,
             "shift"=> shift,
             "h"=> h,
             "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "state_infl"=> round(state_infl, digits=2),
+            "param_infl" => round(param_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
-    name = method * "_classic_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+    name = method * "_classic_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_param_err_" * rpad(param_err, 4, "0") * "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * ".jld"
-
+            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")

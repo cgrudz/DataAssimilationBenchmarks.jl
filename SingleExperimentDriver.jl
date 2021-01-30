@@ -73,7 +73,7 @@ end
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
 
 function classic_smoother_param_exp()
-    args = (time_series, "etks", 0, 1, 1, 1.0, 40, 0.03, 0.01, 24, 1.08, 1.0) 
+    args = (time_series, "enks", 0, 1, 1, 1.0, 40, 0.03, 0.01, 24, 1.08, 1.0) 
     classic_param(args)
 end
 
