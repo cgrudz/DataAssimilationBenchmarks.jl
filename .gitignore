@@ -49,3 +49,5 @@ state_filter/
 param_filter/
 enkf/
 etkf/
+state_smoother/
+param_smoother/
