@@ -12,5 +12,4 @@ The directory is structured as follows:
   * data - dummy output directory for consistency with the server
 
 ## To do
-Current need to benchmark and pass the filter code for state/ parameter estimation.  Once this is clear, convert the smoother code from Python.
-
+Need to benchmark the hybrid smoother, plus iterative smoother schemes
