@@ -52,7 +52,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + lag + shift + 1]
+    obs = obs[:, 1:nanl + 2 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -242,7 +242,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + lag + shift + 1]
+    obs = obs[:, 1:nanl + 2 * lag + 1]
     truth = copy(obs)
     H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
     obs =  H * obs + obs_un * rand(Normal(), size(obs))
@@ -410,7 +410,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + lag + shift + 1]
+    obs = obs[:, 1:nanl + 2 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -453,7 +453,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     
     # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
     # first-lag posterior values so that the statistics align on the same time points after the spin
-    for i in 2: shift : nanl + 2 * lag
+    for i in 2: shift : nanl + lag + 1
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
