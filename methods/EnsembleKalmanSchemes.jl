@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using LinearAlgebra
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, ensemble_filter, ls_smoother_classic, square_root
+       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid 
 
 ########################################################################################################################
 ########################################################################################################################
@@ -430,121 +430,163 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, H::T1, obs
                                ) 
 end
 
-end
 #########################################################################################################################
-## single iteration, correlation-based lag_shift_smoother
-#
-#
-#def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
-#
-#    """Lag-shift ensemble kalman smoother analysis step, hybrid version
-#
-#    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
-#    which is pushed forward in time from the initial conidtion to shift-number of observation times.
-#
-#    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
-#    case, a value for the parameter covariance inflation should be included in addition to the state covariance
-#    inflation."""
-#    
-#    # step 0: infer the ensemble, obs, and state dimensions
-#    [sys_dim, N_ens] = np.shape(ens)
-#    
-#    # observation sequence ranges from time +1 to time +lag
-#    [obs_dim, lag] = np.shape(obs)
-#
-#    # unpack kwargs
-#    f_steps = kwargs["f_steps"]
-#    step_model = kwargs["step_model"]
-#    shift = kwargs["shift"]
-#    
-#    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
-#    # the first initial condition for the future iterations regardless of sda or mda settings
-#    spin = kwargs["spin"]
-#    
-#    # multiple data assimilation (mda) is optional, read as boolean variable
-#    mda = kwargs["mda"]
-#    if mda:
-#        obs_weights = kwargs["obs_weights"]
-#    
-#    else:
-#        obs_weights = np.ones([lag])
-#
-#    # optional parameter estimation
-#    if "state_dim" in kwargs:
-#        state_dim = kwargs["state_dim"]
-#        param_infl = kwargs["param_infl"]
-#        param_wlk = kwargs["param_wlk"]
-#
-#    else:
-#        state_dim = sys_dim
-#
-#    # step 1: create storage for the posterior, forecast and filter values over the DAW
-#    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
-#    # last-iterate posterior estimate respectively
-#    forecast = np.zeros([sys_dim, N_ens, shift])
-#    posterior = np.zeros([sys_dim, N_ens, shift])
-#    filtered = np.zeros([sys_dim, N_ens, shift])
-#    ens_0 = copy.copy(ens)
-#
-#    # step 2: forward propagate the ensemble and analyze the observations
-#    for l in range(lag):
-#        
-#        # step 2a: propagate between observation times
-#        for k in range(f_steps):
-#            ens = step_model(ens, **kwargs)
-#
-#        # step 2b: store the forecast to compute ensemble statistics before observations become available
-#        if l >= (lag - shift):
-#            forecast[:, :, l - (lag - shift)] = ens
-#
-#        # step 2c: perform the filtering step if in spin, multiple DA (mda=True) or
-#        # whenever the lag-forecast steps take us to new observations (l>=(lag - shift))
-#        if spin or mda or l >= (lag - shift):
-#            # observation sequence starts from the time of the inital condition
-#            # though we do not assimilate time zero observations
-#            trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
-#            ens = ens_update(analysis, ens, trans)
-#
-#            if spin:
-#                # compute multiplicative inflation of state variables
-#                ens = inflate_state(ens, state_infl, sys_dim, state_dim)
-#
-#                # if including an extended state of parameter values,
-#                # compute multiplicative inflation of parameter values
-#                if state_dim != sys_dim:
-#                    ens = inflate_param(ens, param_infl, sys_dim, state_dim)
-#
-#            if l >= (lag - shift):
-#                # store the filtered states alone, not mda values
-#                filtered[:, :, l - (lag - shift)] = ens
-#        
-#        # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-#        if spin or mda or l >= (lag - shift):
-#            ens_0 = ens_update(analysis, ens_0, trans)
-#            
-#    # step 3: propagate the posterior initial condition forward to the shift-forward time
-#    ens = copy.copy(ens_0)
-#
-#    # step 3a: if performing parameter estimation, apply the parameter model
-#    if state_dim != sys_dim:
-#        param_ens = ens[state_dim: , :]
-#        param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
-#        ens[state_dim:, :] = param_ens
-#
-#    # step 3b: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
-#    # observation times
-#    for s in range(shift):
-#        posterior[:, :, s] = ens
-#        for k in range(f_steps):
-#            ens = step_model(ens, **kwargs)
-#
-#    ens = inflate_state(ens, state_infl, sys_dim, state_dim)
-#        
-#    if state_dim != sys_dim:
-#        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
-#
-#    return {"ens": ens, "post": posterior, "fore": forecast, "filt": filtered}
-#
+# single iteration, correlation-based lag_shift_smoother
+
+
+function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
+                             obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: ObsH, T2 <: CovM}
+
+    """Lag-shift ensemble kalman smoother analysis step, hybrid version
+
+    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
+    which is pushed forward in time from the initial conidtion to shift-number of observation times.
+
+    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
+    case, a value for the parameter covariance inflation should be included in addition to the state covariance
+    inflation."""
+    
+    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
+    f_steps = kwargs["f_steps"]::Int64
+    step_model = kwargs["step_model"]
+    posterior = kwargs["posterior"]::Array{Float64,3}
+    
+    # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
+    obs_dim, lag = size(obs)
+    sys_dim, N_ens, shift = size(posterior)
+
+    # optional parameter estimation
+    if haskey(kwargs, "state_dim")
+        state_dim = kwargs["state_dim"]::Int64
+        param_infl = kwargs["param_infl"]::Float64
+        param_wlk = kwargs["param_wlk"]::Float64
+
+    else
+        state_dim = sys_dim
+    end
+
+    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
+    # the first initial condition for the future iterations regardless of sda or mda settings
+    spin = kwargs["spin"]::Bool
+    
+    # multiple data assimilation (mda) is optional, read as boolean variable
+    mda = kwargs["mda"]::Bool
+    if mda
+        obs_weights = kwargs["obs_weights"]::Vector{Float64}
+    
+    else
+        obs_weights = ones(lag)
+    end
+
+    # step 1: create storage for the posterior, forecast and filter values over the DAW
+    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
+    # last-iterate posterior estimate respectively
+    if spin
+        forecast = zeros(sys_dim, N_ens, lag)
+        filtered = zeros(sys_dim, N_ens, lag)
+    
+    else
+        forecast = zeros(sys_dim, N_ens, shift)
+        filtered = zeros(sys_dim, N_ens, shift)
+    end
+    ens_0 = copy(ens)
+
+    # step 2: forward propagate the ensemble and analyze the observations
+    for l in 1:lag
+        # step 2a: propagate between observation times
+        for j in 1:N_ens
+            for k in 1:f_steps
+                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+            end
+        end
+
+        # step 2b: store the forecast to compute ensemble statistics before observations become available
+        if spin
+            # store all new forecast states
+            forecast[:, :, l] = ens
+        elseif l > (lag - shift)
+            # only store forecasted states for beyond unobserved times beyond previous forecast windows
+            forecast[:, :, l - (lag - shift)] = ens
+        end
+
+        # step 2c: perform the filtering step if in spin, multiple DA (mda=true) or
+        # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
+        if spin || mda || l > (lag - shift)
+            # observation sequence starts from the time of the inital condition
+            # though we do not assimilate time zero observations
+            trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
+            ens = ens_update!(ens, trans)
+
+            if spin
+                # compute multiplicative inflation of state variables
+                ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+
+                # if including an extended state of parameter values,
+                # compute multiplicative inflation of parameter values
+                if state_dim != sys_dim
+                    ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+                end
+            end
+
+            if spin
+                # store all new filtred states
+                filtered[:, :, l] = ens
+
+            elseif l > (lag - shift)
+                # store the filtered states for previously unobserved times, not mda values
+                filtered[:, :, l - (lag - shift)] = ens
+            end
+        end
+        
+        # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+        if spin || mda || l > (lag - shift)
+            ens_0 = ens_update!(ens_0, trans)
+        end
+    end
+            
+    # step 3: propagate the posterior initial condition forward to the shift-forward time
+    ens = copy(ens_0)
+
+    # step 3a: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim
+        param_ens = ens[state_dim + 1:end , :]
+        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+        ens[state_dim + 1:end, :] = param_ens
+    end
+
+    # step 3b: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+    # observation times
+    for s in 1:shift
+        posterior[:, :, s] = ens
+        for j in 1:N_ens
+            for k in 1:f_steps
+                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+            end
+        end
+    end
+    
+    # inflate the foreward posterior
+    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+
+    # if including an extended state of parameter values,
+    # compute multiplicative inflation of parameter values
+    if state_dim != sys_dim
+        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+    end
+
+    Dict{String,Array{Float64}}(
+                                "ens" => ens, 
+                                "post" =>  posterior, 
+                                "fore" => forecast, 
+                                "filt" => filtered
+                               ) 
+
+end
+
+
+#########################################################################################################################
+
+end
 #########################################################################################################################
 #########################################################################################################################
 ## Additional methods, non-standard, may have remaining bugs
