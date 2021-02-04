@@ -51,3 +51,7 @@ enkf/
 etkf/
 state_smoother/
 param_smoother/
+enks_hybrid/
+enks_classic/
+etks_hybrid/
+etks_classic/
