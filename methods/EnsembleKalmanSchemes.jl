@@ -511,7 +511,7 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
 
         # step 2c: perform the filtering step if in spin, multiple DA (mda=true) or
         # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-        if spin || mda || l > (lag - shift)
+        if mda || l > (lag - shift) || spin
             # observation sequence starts from the time of the inital condition
             # though we do not assimilate time zero observations
             trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
@@ -539,7 +539,7 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
         end
         
         # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-        if spin || mda || l > (lag - shift)
+        if mda || l > (lag - shift) || spin
             ens_0 = ens_update!(ens_0, trans)
         end
     end

@@ -422,7 +422,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
                 "h" => h,
                 "diffusion" => diffusion,
                 "shift" => shift,
-                "mda" => false
+                "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
@@ -458,8 +458,10 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
         # we use the observation window from current time +1 to current time +lag
         if mda
             # if still processing observations from the spin cycle, deal with special weights
+            # given by the number of times the observation is assimilated
+            # NOTE: mda spin weights are only designed for shift=1
             if i <= lag
-                kwargs["obs_weights"] = cat([i:lag, ones(i-1) * lag], dims=1)
+                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag]
 
             # otherwise equal weights
             else
