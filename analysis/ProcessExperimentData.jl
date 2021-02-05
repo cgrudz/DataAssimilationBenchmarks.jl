@@ -443,7 +443,7 @@ function process_hybrid_smoother_state()
     burn = 500
     diffusion = 0.0
     mda = false
-    method_list = ["enks", "etks"]
+    method_list = ["enks"]
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,3}}(
@@ -539,6 +539,6 @@ end
 
 
 ########################################################################################################################
-process_hybrid_smoother_param()
+process_hybrid_smoother_state()
 
 end
