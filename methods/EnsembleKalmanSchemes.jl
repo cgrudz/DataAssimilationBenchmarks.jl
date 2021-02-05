@@ -482,12 +482,12 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
     # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
     # last-iterate posterior estimate respectively
     if spin
-        forecast = zeros(sys_dim, N_ens, lag)
-        filtered = zeros(sys_dim, N_ens, lag)
+        forecast = Array{Float64}(undef, sys_dim, N_ens, lag)
+        filtered = Array{Float64}(undef, sys_dim, N_ens, lag)
     
     else
-        forecast = zeros(sys_dim, N_ens, shift)
-        filtered = zeros(sys_dim, N_ens, shift)
+        forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
+        filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
     end
     ens_0 = copy(ens)
 
