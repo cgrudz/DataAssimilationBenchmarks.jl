@@ -9,7 +9,8 @@ using JLD
 using LinearAlgebra
 using HDF5
 using Glob
-export process_filter_state, process_filter_param, process_classic_smoother_state, process_classic_smoother_param
+export process_filter_state, process_filter_param, process_classic_smoother_state, process_classic_smoother_param,
+       process_hybrid_smoother_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -26,17 +27,19 @@ function process_filter_state()
     burn = 5000
     diffusion = 0.0
     method_list = ["enkf", "etkf"]
+    ensemble_size = 28
+    total_inflation = 21
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,2}}(
-                "enkf_anal_rmse"   => Array{Float64}(undef, 21, 28),
-                "enkf_anal_spread" => Array{Float64}(undef, 21, 28),
-                "etkf_anal_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_anal_spread" => Array{Float64}(undef, 21, 28),
-                "enkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
-                "enkf_fore_spread" => Array{Float64}(undef, 21, 28),
-                "etkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_fore_spread" => Array{Float64}(undef, 21, 28)
+                "enkf_anal_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_anal_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_anal_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_anal_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_fore_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_fore_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_fore_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_fore_spread" => Array{Float64}(undef, total_inflation, ensemble_size)
                )
 
     # auxilliary function to process data
@@ -44,8 +47,8 @@ function process_filter_state()
         # loop columns
         for j in 0:27 
             #loop rows
-            for i in 1:21
-                tmp = load(fnames[i + j*21])
+            for i in 1:total_inflation
+                tmp = load(fnames[i + j*total_inflation])
                 
                 ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                 ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -53,11 +56,11 @@ function process_filter_state()
                 for_rmse = tmp["fore_rmse"]::Vector{Float64}
                 for_spread = tmp["fore_spread"]::Vector{Float64}
 
-                data[method * "_anal_rmse"][22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                data[method * "_anal_spread"][22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                data[method * "_anal_rmse"][total_inflation + 1 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                data[method * "_anal_spread"][total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                data[method * "_fore_rmse"][22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                data[method * "_fore_spread"][22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                data[method * "_fore_rmse"][total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                data[method * "_fore_spread"][total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
             end
         end
     end
@@ -118,21 +121,23 @@ function process_filter_param()
     diffusion = 0.00
     wlk = 0.0001
     method_list = ["enkf", "etkf"]
+    ensemble_size = 28
+    total_inflation = 21
     
     # define the storage dictionary here
     data = Dict{String, Array{Float64,2}}(
-                "enkf_anal_rmse"   => Array{Float64}(undef, 21, 28),
-                "enkf_anal_spread" => Array{Float64}(undef, 21, 28),
-                "etkf_anal_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_anal_spread" => Array{Float64}(undef, 21, 28),
-                "enkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
-                "enkf_fore_spread" => Array{Float64}(undef, 21, 28),
-                "etkf_fore_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_fore_spread" => Array{Float64}(undef, 21, 28),
-                "enkf_para_rmse"   => Array{Float64}(undef, 21, 28),
-                "enkf_para_spread" => Array{Float64}(undef, 21, 28),
-                "etkf_para_rmse"   => Array{Float64}(undef, 21, 28),
-                "etkf_para_spread" => Array{Float64}(undef, 21, 28)
+                "enkf_anal_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_anal_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_anal_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_anal_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_fore_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_fore_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_fore_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_fore_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_para_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "enkf_para_spread" => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_para_rmse"   => Array{Float64}(undef, total_inflation, ensemble_size),
+                "etkf_para_spread" => Array{Float64}(undef, total_inflation, ensemble_size)
                )
 
     # auxilliary function to process data
@@ -140,8 +145,8 @@ function process_filter_param()
         # loop columns
         for j in 0:27 
             #loop rows
-            for i in 1:21
-                tmp = load(fnames[i + j*21])
+            for i in 1:total_inflation
+                tmp = load(fnames[i + j*total_inflation])
                 
                 ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                 ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -152,14 +157,14 @@ function process_filter_param()
                 par_rmse = tmp["param_rmse"]::Vector{Float64}
                 par_spread = tmp["param_spread"]::Vector{Float64}
 
-                data[method * "_anal_rmse"][22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                data[method * "_anal_spread"][22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                data[method * "_anal_rmse"][total_inflation + 1 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                data[method * "_anal_spread"][total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                data[method * "_fore_rmse"][22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                data[method * "_fore_spread"][22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                data[method * "_fore_rmse"][total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                data[method * "_fore_spread"][total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                data[method * "_para_rmse"][22 - i, j+1] = mean(par_rmse[burn+1: nanl+burn])
-                data[method * "_para_spread"][22 - i, j+1] = mean(par_spread[burn+1: nanl+burn])
+                data[method * "_para_rmse"][total_inflation + 1 - i, j+1] = mean(par_rmse[burn+1: nanl+burn])
+                data[method * "_para_spread"][total_inflation + 1 - i, j+1] = mean(par_spread[burn+1: nanl+burn])
             end
         end
     end
@@ -221,21 +226,23 @@ function process_classic_smoother_state()
     burn = 5000
     diffusion = 0.0
     method_list = ["enks", "etks"]
+    ensemble_size = 28
+    total_inflation = 21
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,3}}(
-                "enks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_spread" => Array{Float64}(undef, 11, 21, 28)
+                "enks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
                )
 
     # auxilliary function to process data
@@ -245,8 +252,8 @@ function process_classic_smoother_state()
             # loop ensemble size 
             for j in 0:27 
                 #loop inflation
-                for i in 1:21
-                    tmp = load(fnames[i + j*21 + k*28*21])
+                for i in 1:total_inflation
+                    tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
                     
                     ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                     ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -257,14 +264,14 @@ function process_classic_smoother_state()
                     fil_rmse = tmp["filt_rmse"]::Vector{Float64}
                     fil_spread = tmp["filt_spread"]::Vector{Float64}
 
-                    data[method * "_anal_rmse"][11 - k, 22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                    data[method * "_anal_spread"][11 - k, 22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                    data[method * "_anal_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                    data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                    data[method * "_fore_rmse"][11 - k, 22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                    data[method * "_fore_spread"][11 - k, 22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                    data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                    data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                    data[method * "_filt_rmse"][11 - k, 22 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
-                    data[method * "_filt_spread"][11 - k, 22 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                    data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
+                    data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
                 end
             end
         end
@@ -326,36 +333,39 @@ function process_classic_smoother_param()
     diffusion = 0.0
     wlk = 0.0010
     method_list = ["enks", "etks"]
+    ensemble_size = 28
+    total_inflation = 21
+    total_lag = 11
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,3}}(
-                "enks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_para_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_para_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_para_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_para_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_spread" => Array{Float64}(undef, 11, 21, 28)
+                "enks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_para_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_para_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_para_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_para_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
                )
 
     # auxilliary function to process data
     function process_data(fnames::Vector{String}, method::String)
         # loop lag
-        for k in 0:10
+        for k in 0:total_lag - 1
             # loop ensemble size 
-            for j in 0:27 
+            for j in 0:ensemble_size - 1
                 #loop inflation
-                for i in 1:21
-                    tmp = load(fnames[i + j*21 + k*28*21])
+                for i in 1:total_inflation
+                    tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
                     
                     ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                     ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -369,17 +379,17 @@ function process_classic_smoother_param()
                     fil_rmse = tmp["filt_rmse"]::Vector{Float64}
                     fil_spread = tmp["filt_spread"]::Vector{Float64}
 
-                    data[method * "_anal_rmse"][11 - k, 22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                    data[method * "_anal_spread"][11 - k, 22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                    data[method * "_anal_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                    data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                    data[method * "_para_rmse"][11 - k, 22 - i, j+1] = mean(par_rmse[burn+1: nanl+burn])
-                    data[method * "_para_spread"][11 - k, 22 - i, j+1] = mean(par_spread[burn+1: nanl+burn])
+                    data[method * "_para_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(par_rmse[burn+1: nanl+burn])
+                    data[method * "_para_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(par_spread[burn+1: nanl+burn])
 
-                    data[method * "_fore_rmse"][11 - k, 22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                    data[method * "_fore_spread"][11 - k, 22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                    data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                    data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                    data[method * "_filt_rmse"][11 - k, 22 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
-                    data[method * "_filt_spread"][11 - k, 22 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                    data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
+                    data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
                 end
             end
         end
@@ -439,37 +449,41 @@ function process_hybrid_smoother_state()
     
     # parameters for the file names and separating out experiments
     tanl = 0.05
-    nanl = 4000
-    burn = 500
+    nanl = 20000
+    burn = 5000
     diffusion = 0.0
     mda = false
-    method_list = ["enks"]
+    method_list = ["etks"]
+    total_inflation = 11
+    ensemble_size = 15
+    total_lag = 11
+    @bp
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,3}}(
-                "enks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_anal_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_filt_spread" => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "enks_fore_spread" => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_rmse"   => Array{Float64}(undef, 11, 21, 28),
-                "etks_fore_spread" => Array{Float64}(undef, 11, 21, 28)
+                "enks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_anal_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_filt_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "enks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_rmse"   => Array{Float64}(undef, total_lag, total_inflation, ensemble_size),
+                "etks_fore_spread" => Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
                )
 
     # auxilliary function to process data
     function process_data(fnames::Vector{String}, method::String)
         # loop lag
-        for k in 0:10
+        for k in 0:total_lag - 1
             # loop ensemble size 
-            for j in 0:27 
+            for j in 0:ensemble_size - 1
                 #loop inflation
-                for i in 1:21
-                    tmp = load(fnames[i + j*21 + k*28*21])
+                for i in 1:total_inflation
+                    tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
                     
                     ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                     ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -480,14 +494,14 @@ function process_hybrid_smoother_state()
                     fil_rmse = tmp["filt_rmse"]::Vector{Float64}
                     fil_spread = tmp["filt_spread"]::Vector{Float64}
 
-                    data[method * "_anal_rmse"][11 - k, 22 - i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                    data[method * "_anal_spread"][11 - k, 22 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                    data[method * "_anal_rmse"][total_lag - k, total_inflation + 1- i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                    data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                    data[method * "_fore_rmse"][11 - k, 22 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                    data[method * "_fore_spread"][11 - k, 22 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                    data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                    data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                    data[method * "_filt_rmse"][11 - k, 22 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
-                    data[method * "_filt_spread"][11 - k, 22 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                    data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
+                    data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
                 end
             end
         end

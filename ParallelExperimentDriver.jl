@@ -167,17 +167,17 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ########################################################################################################################
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
-#
-schemes = ["enks", "etks"]
+
+schemes = ["etks"]
 seed = 0
 lag = 1:5:51
 shift = 1
 obs_un = 1.0
 obs_dim = 40
-N_ens = 14:41
-state_infl = LinRange(1.0, 1.20, 21)
+N_ens = 15:2:43
+state_infl = LinRange(1.0, 1.10, 11)
 param_infl = LinRange(1.0, 1.00, 1)
-mda = false
+mda = true
 
 # load the experiments
 args = Tuple[]
