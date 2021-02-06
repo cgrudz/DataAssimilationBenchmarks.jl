@@ -167,7 +167,36 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ########################################################################################################################
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
-
+#
+#schemes = ["etks"]
+#seed = 0
+#lag = 1:5:51
+#shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+#N_ens = 15:2:43
+#state_infl = LinRange(1.0, 1.10, 11)
+#mda = true
+#
+## load the experiments
+#args = Tuple[]
+#for scheme in schemes
+#    for l in lag
+#        for N in N_ens
+#            for s_infl in state_infl
+#                tmp = (time_series, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+#                push!(args, tmp)
+#            end
+#        end
+#    end
+#end
+#
+#experiment = SmootherExps.hybrid_state
+#
+########################################################################################################################
+# hybrid_param single run for debugging, arguments are
+# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+#
 schemes = ["etks"]
 seed = 0
 lag = 1:5:51
@@ -175,9 +204,11 @@ shift = 1
 obs_un = 1.0
 obs_dim = 40
 N_ens = 15:2:43
+param_err = 0.03
+param_wlk = [0.0000, 0.0001, 0.0010, 0.0100]
 state_infl = LinRange(1.0, 1.10, 11)
 param_infl = LinRange(1.0, 1.00, 1)
-mda = true
+mda = [true, false]
 
 # load the experiments
 args = Tuple[]
@@ -185,21 +216,21 @@ for scheme in schemes
     for l in lag
         for N in N_ens
             for s_infl in state_infl
-                tmp = (time_series, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-                push!(args, tmp)
+                for p_infl in param_infl
+                    for wlk in param_wlk
+                        for da in mda
+                            tmp = (time_series, scheme, seed, l, shift, da, obs_un, obs_dim, param_err, wlk, N, s_infl, p_infl)
+                            push!(args, tmp)
+                        end
+                    end
+                end
             end
         end
     end
 end
 
-experiment = SmootherExps.hybrid_state
+experiment = SmootherExps.hybrid_param
 
-########################################################################################################################
-# hybrid_param single run for debugging, arguments are
-# [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-#
-#args = [time_series, 'etks', 0, 26, 1, 1.0, 40, 0.03, 0.01, 25, 1.01, 1.0] 
-#print(hybrid_param(args))
 ########################################################################################################################
 ########################################################################################################################
 # Run the experiments in parallel over the parameter values
