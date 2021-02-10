@@ -706,13 +706,15 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     end
 
     # step 2: begin iterative optimization
-    for i in 1:max_iter
-        # step 2a: redefine the conditioned ensemble with updated mean
-        ens = ens_mean_iter .+ anom_0 * T
+    for i in 1:max_iter + 1
+        # step 2a: redefine the conditioned ensemble with updated mean, after first forecast
+        if i > 1
+            ens = ens_mean_iter .+ anom_0 * T
+        end
 
-        # step 2b: forward propagate the ensemble and sequentially construct cost function
+        # step 2b: forward propagate the ensemble and sequentially store the forecast or construct cost function
         for l in 1:lag
-            # step 2a: propagate between observation times
+            # propagate between observation times
             for j in 1:N_ens
                 for k in 1:f_steps
                     ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
@@ -721,31 +723,31 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
 
             # step 2c: store the forecast to compute ensemble statistics before observations become available
             # NOTE: this should only occur on the first pass before observations are assimilated into the first prior
-            if i < 2
+            # and performed with the un-scaled or conditioned ensemble
+            if i == 1
                 if spin
-                    # validate that this is a viable trick to make the forecast statistics
-                    # store all new forecast states
-                    ens_mean = mean(ens, dims=2)
-                    anom = ens .- ens_mean
-                    forecast[:, :, l] = ens_mean .+ anom * inv(T)
+                    # NOTE: need to include a separate pass for the forecast statistics
+                    forecast[:, :, l] = ens
                 elseif l > (lag - shift)
                     # validate that this is a viable trick to make the forecast statistics
                     # only store forecasted states for beyond unobserved times beyond previous forecast windows
-                    ens_mean = mean(ens, dims=2)
-                    anom = ens .- ens_mean
-                    forecast[:, :, l - (lag - shift)] = ens_mean .+ anom * inv(T)
+                    forecast[:, :, l - (lag - shift)] = ens
                 end
-            end
 
             # step 2d: compute the sequential terms of the gradient and hessian of the cost function if in spin, 
-            # multiple DA (mda=true) or  whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-            if mda || spin
+            # multiple DA (mda=true) or whenever the lag-forecast steps take us to new observations (l>(lag - shift))
+            # after the initial forecast
+            elseif mda || spin
                 ∇J[:,l], hess_J[:, :, l] = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l], conditioning=T)
 
             elseif l > (lag - shift)
                 ∇J[:,l - (lag - shift)], 
                 hess_J[:, :, l - (lag - shift)] = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l], conditioning=T)
 
+            end
+
+            if i == 1
+                break
             end
         end
 
@@ -781,7 +783,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     
     # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
     U = rand_orth(N_ens)
-    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * H_minus_half# * U
+    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * H_minus_half * U
     ens_copy = copy(ens)
 
     # step 3b: if performing parameter estimation, apply the parameter model
@@ -833,10 +835,9 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
 end
 
 
-end
-
 #########################################################################################################################
 
+end
 
 #########################################################################################################################
 ## IEnKF
