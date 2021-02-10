@@ -8,7 +8,7 @@ using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
 using EnsembleKalmanSchemes, DeSolvers, L96
-export classic_state, classic_param, hybrid_state, hybrid_param
+export classic_state, classic_param, hybrid_state, hybrid_param, iterative_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -397,7 +397,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 450
 
     # set seed 
     Random.seed!(seed)
@@ -584,7 +584,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45
+    nanl = 4500
 
     # set seed 
     Random.seed!(seed)
@@ -789,6 +789,195 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
             "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
             "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
+
+
+    save(path * name, data)
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+
+end
+
+
+#########################################################################################################################
+
+function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64,Int64,Int64,Float64})
+    
+    # time the experiment
+    t1 = time()
+
+    # Define experiment parameters
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+
+    # load the timeseries and associated parameters
+    ts = load(time_series)::Dict{String,Any}
+    diffusion = ts["diffusion"]::Float64
+    f = ts["F"]::Float64
+    tanl = ts["tanl"]::Float64
+    h = 0.01
+    dx_dt = L96.dx_dt
+    step_model = rk4_step!
+    
+    # number of discrete forecast steps
+    f_steps = convert(Int64, tanl / h)
+
+    # number of analyses
+    nanl = 4500
+
+    # set seed 
+    Random.seed!(seed)
+    
+    # define the initial ensembles, squeezing the sys_dim times 1 array from the timeseries generation
+    obs = ts["obs"]::Array{Float64, 2}
+    init = obs[:, 1]
+    sys_dim = length(init)
+    ens = rand(MvNormal(init, I), N_ens)
+
+    # define the observation sequence where we project the true state into the observation space and
+    # perturb by white-in-time-and-space noise with standard deviation obs_un
+    obs = obs[:, 1:nanl + 2 * lag + 1]
+    truth = copy(obs)
+
+    # define kwargs
+    kwargs = Dict{String,Any}(
+                "dx_dt" => dx_dt,
+                "f_steps" => f_steps,
+                "step_model" => step_model, 
+                "dx_params" => [f],
+                "h" => h,
+                "diffusion" => diffusion,
+                "shift" => shift,
+                "mda" => mda 
+                             )
+
+    # define the observation operator, observation error covariance and observations with error 
+    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs_cov = obs_un^2.0 * I
+    obs = H * obs + obs_un * rand(Normal(), size(obs))
+    
+    # create storage for the forecast and analysis statistics, indexed in relative time
+    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    
+    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+
+    # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
+    # new observations with a filtering step to prevent divergence of the forecast for long lags
+    spin = true
+    kwargs["spin"] = spin
+    posterior = zeros(sys_dim, N_ens, shift)
+    kwargs["posterior"] = posterior
+    
+    # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
+    # first-lag posterior values so that the statistics align on the same time points after the spin
+    for i in 2: shift : nanl + lag + 1
+        # perform assimilation of the DAW
+        # we use the observation window from current time +1 to current time +lag
+        if mda
+            # if still processing observations from the spin cycle, deal with special weights
+            # given by the number of times the observation is assimilated
+            # NOTE: mda spin weights are only designed for shift=1
+            if i <= lag
+                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag]
+
+            # otherwise equal weights
+            else
+                kwargs["obs_weights"] = ones(lag) * lag
+            end
+        end
+        
+        @bp
+        analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
+        ens = analysis["ens"]
+        fore = analysis["fore"]
+        filt = analysis["filt"]
+        post = analysis["post"]
+
+        if spin
+            for j in 1:lag 
+                # compute forecast and filter statistics on the first lag states during spin period
+                @bp
+                fore_rmse[i - 1 + j], fore_spread[i - 1 + j] = analyze_ensemble(fore[:, :, j], 
+                                                                                    truth[:, i - 1 + j])
+                
+                filt_rmse[i - 1 + j], filt_spread[i - 1 + j] = analyze_ensemble(filt[:, :, j], 
+                                                                                    truth[:, i - 1 + j])
+                
+            end
+
+            for j in 1:shift
+                # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
+                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                
+            end
+
+            # turn off the initial spin period, continue hereafter on the normal assimilation cycle
+            spin = false
+            kwargs["spin"] = spin
+
+        else
+            for j in 1:shift
+                # compute the forecast, filter and analysis statistics
+                # indices for the forecast, filter, analysis and truth arrays are in absolute time,
+                # forecast / filter stats computed beyond the first lag period for the spin
+                @bp
+                fore_rmse[i + lag - 1 - shift + j], 
+                fore_spread[i + lag - 1 - shift + j] = analyze_ensemble(fore[:, :, j], 
+                                                                                    truth[:, i + lag - 1 - shift + j])
+                
+                filt_rmse[i + lag - 1 - shift + j], 
+                filt_spread[i + lag - 1 - shift + j] = analyze_ensemble(filt[:, :, j], 
+                                                                                    truth[:, i + lag - 1 - shift + j])
+                
+                # analysis statistics computed beyond the first shift
+                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+
+            end
+
+        end
+
+    end
+
+    # cut the statistics so that they align on the same absolute time points 
+    fore_rmse = fore_rmse[2: nanl + 1]
+    fore_spread = fore_spread[2: nanl + 1]
+    filt_rmse = filt_rmse[2: nanl + 1]
+    filt_spread = filt_spread[2: nanl + 1]
+    anal_rmse = anal_rmse[2: nanl + 1]
+    anal_spread = anal_spread[2: nanl + 1]
+
+    data = Dict{String,Any}(
+            "fore_rmse"=> fore_rmse,
+            "filt_rmse"=> filt_rmse,
+            "anal_rmse"=> anal_rmse,
+            "fore_spread"=> fore_spread,
+            "filt_spread"=> filt_spread,
+            "anal_spread"=> anal_spread,
+            "method"=> method,
+            "seed" => seed, 
+            "diffusion"=> diffusion,
+            "sys_dim"=> sys_dim,
+            "obs_dim"=> obs_dim, 
+            "obs_un"=> obs_un,
+            "nanl"=> nanl,
+            "tanl"=> tanl,
+            "lag"=> lag,
+            "shift"=> shift,
+            "mda" => mda,
+            "h"=> h,
+            "N_ens"=> N_ens, 
+            "state_infl"=> round(state_infl, digits=2)
+           )
+    
+
+    path = "./data/" * method * "/"
+    name = method * "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
+            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * ".jld"
 
 
     save(path * name, data)

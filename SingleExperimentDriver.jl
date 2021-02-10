@@ -13,7 +13,7 @@ using EnsembleKalmanSchemes
 using FilterExps
 using SmootherExps
 export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp, 
-        hybrid_smoother_state_exp, hybrid_smoother_param_exp
+        hybrid_smoother_state_exp, hybrid_smoother_param_exp, iterative_smoother_state_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -99,8 +99,19 @@ end
 # param_wlk, N_ens, state_infl, param_infl = args
 
 function hybrid_smoother_param_exp()
-    args = (time_series, "etks", 0, 3, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
+    args = (time_series, "etks", 0, 3, 1, true, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
     hybrid_param(args)
+end
+
+
+########################################################################################################################
+# Iterative smoothers
+########################################################################################################################
+# iterative_state single run for degbugging, arguments are
+# [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, infl] = args
+function iterative_smoother_state_exp()
+    args = (time_series, "ienks-bundle", 0, 51, 1, false, 1.0, 40, 25, 1.01)
+    iterative_state(args)
 end
 
 
