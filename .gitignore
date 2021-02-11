@@ -42,6 +42,7 @@ Thumbs.db
 
 # no output from nohup
 *.out 
+*.err
 
 # no actual data, keep output 'data' directory for server sync directory tree
 storage/*
@@ -55,3 +56,4 @@ enks_hybrid/
 enks_classic/
 etks_hybrid/
 etks_classic/
+data/input_data/

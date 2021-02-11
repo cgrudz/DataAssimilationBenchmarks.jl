@@ -452,7 +452,7 @@ function process_hybrid_smoother_state()
     nanl = 20000
     burn = 5000
     diffusion = 0.0
-    mda = false
+    mda = true
     method_list = ["etks"]
     total_inflation = 11
     ensemble_size = 15
