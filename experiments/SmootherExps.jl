@@ -678,7 +678,6 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
             end
         end
 
-        @bp
         analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -703,7 +702,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
                 anal_rmse[i - 2 + j], 
                 anal_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
                                                           truth[:, i - 2 + j])
-                @bp
+                
                 para_rmse[i - 2 + j], 
                 para_spread[i - 2 + j] = analyze_ensemble_parameters(post[state_dim+1:end, :, j], 
                                                                      param_truth)
@@ -731,7 +730,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
                 anal_rmse[i - 2 + j], 
                 anal_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
                                                           truth[:, i - 2 + j])
-                @bp
+                
                 para_rmse[i - 2 + j], 
                 para_spread[i - 2 + j] = analyze_ensemble_parameters(post[state_dim+1:end, :, j], 
                                                                      param_truth)
@@ -820,7 +819,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 4500
+    nanl = 450
 
     # set seed 
     Random.seed!(seed)
@@ -888,7 +887,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
             end
         end
         
-        @bp
         analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -898,7 +896,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
         if spin
             for j in 1:lag 
                 # compute forecast and filter statistics on the first lag states during spin period
-                @bp
                 fore_rmse[i - 1 + j], fore_spread[i - 1 + j] = analyze_ensemble(fore[:, :, j], 
                                                                                     truth[:, i - 1 + j])
                 
@@ -922,7 +919,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
                 # compute the forecast, filter and analysis statistics
                 # indices for the forecast, filter, analysis and truth arrays are in absolute time,
                 # forecast / filter stats computed beyond the first lag period for the spin
-                @bp
                 fore_rmse[i + lag - 1 - shift + j], 
                 fore_spread[i + lag - 1 - shift + j] = analyze_ensemble(fore[:, :, j], 
                                                                                     truth[:, i + lag - 1 - shift + j])

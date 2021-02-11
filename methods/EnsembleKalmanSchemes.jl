@@ -694,7 +694,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         hess_J = Array{Float64}(undef, N_ens, N_ens, shift)
     end
 
-    # pre-allocate these variables as global for the loop
+    # pre-allocate these variables as global for the loops
     hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
     new_ens = Array{Float64}(undef, sys_dim, N_ens)
 
@@ -724,13 +724,10 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
             # step 2c: store the forecast to compute ensemble statistics before observations become available
             # NOTE: this should only occur on the first pass before observations are assimilated into the first prior
             # and performed with the un-scaled or conditioned ensemble
-            if i == 1
+            if i == 1 
                 if spin
-                    # NOTE: need to include a separate pass for the forecast statistics
                     forecast[:, :, l] = ens
                 elseif l > (lag - shift)
-                    # validate that this is a viable trick to make the forecast statistics
-                    # only store forecasted states for beyond unobserved times beyond previous forecast windows
                     forecast[:, :, l - (lag - shift)] = ens
                 end
 
@@ -746,30 +743,28 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
 
             end
 
-            if i == 1
+        end
+
+        if i > 1
+            # step 2e: formally compute the gradient and the hessian from the sequential components, 
+            # perform Gauss-Newton step after forecast iteration
+            gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
+            hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+
+            if analysis == "ienks-transform"
+                T = inv(square_root(hessian)) 
+            end
+
+            Δw = hessian \ gradient
+            w -= Δw 
+            # step 2f: update the mean via the increment, always with the zeroth iterate of the ensemble,
+            # but store the next iterate of the ensemble for reuse in the final analysis
+            ens_mean_iter = ens_mean_0 + anom_0 * w
+            
+            if norm(Δw) < tol
                 break
             end
         end
-
-        # step 2e: formally compute the gradient and the hessian from the sequential components, 
-        # perform Gauss-Newton step
-        gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
-        hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
-
-        if analysis == "ienks-transform"
-            T = inv(square_root(hessian)) 
-        end
-
-        Δw = hessian \ gradient
-        w -= Δw 
-        # step 2f: update the mean via the increment, always with the zeroth iterate of the ensemble,
-        # but store the next iterate of the ensemble for reuse in the final analysis
-        ens_mean_iter = ens_mean_0 + anom_0 * w
-        
-        if norm(Δw) < tol
-            break
-        end
-
     end
                 
     # step 3: compute posterior initial condiiton and propagate forward in time
@@ -784,7 +779,6 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
     U = rand_orth(N_ens)
     ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * H_minus_half * U
-    ens_copy = copy(ens)
 
     # step 3b: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
@@ -796,6 +790,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
     # observation times, store the filtered state as the forward propagated value at new observation
     # times, store the posterior at the times discarded at the next shift
+    @bp
     for l in 1:lag
         if l <= shift
             posterior[:, :, l] = ens
@@ -805,6 +800,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                 ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
+        @bp
         if l == shift
             new_ens = copy(ens)
         end
