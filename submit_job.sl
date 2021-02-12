@@ -1,5 +1,5 @@
 #!/bin/bash
 #SBATCH -n 1
-#SBATCH -o hybrid_smoother.out
-#SBATCH -e hybrid_smoother.err
-julia SlurmExperimentDriver.jl "1815"
+#SBATCH -o experiment.out
+#SBATCH -e experiment.err
+julia SlurmExperimentDriver.jl "2805"

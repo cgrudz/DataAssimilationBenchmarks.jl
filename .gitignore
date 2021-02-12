@@ -42,7 +42,11 @@ Thumbs.db
 
 # no output from nohup
 *.out 
+
+# no simulation auxilliary files
+*.sl
 *.err
+*.txt
 
 # no actual data, keep output 'data' directory for server sync directory tree
 storage/*
@@ -56,4 +60,6 @@ enks_hybrid/
 enks_classic/
 etks_hybrid/
 etks_classic/
+ienks-bundle/
+ienks-transform/
 data/input_data/
