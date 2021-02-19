@@ -680,6 +680,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
 
     # step 1b: define the initial correction and iteration count
     w = zeros(N_ens)
+    i = 0
 
     # step 1c: compute the initial ensemble mean and normalized anomalies, storage for the
     # sequentially computed iterated mean, gradient and and hessian terms 
@@ -707,9 +708,9 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     end
 
     # step 2: begin iterative optimization
-    for i in 1:max_iter + 1
+    while i <= max_iter 
         # step 2a: redefine the conditioned ensemble with updated mean, after first forecast
-        if i > 1
+        if i > 0
             ens = ens_mean_iter .+ anom_0 * T
         end
 
@@ -725,7 +726,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
             # step 2c: store the forecast to compute ensemble statistics before observations become available
             # NOTE: this should only occur on the first pass before observations are assimilated into the first prior
             # and performed with the un-scaled or conditioned ensemble
-            if i == 1 
+            if i == 0
                 if spin
                     forecast[:, :, l] = ens
                 elseif l > (lag - shift)
@@ -746,7 +747,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
 
         end
 
-        if i > 1
+        if i > 0
             # step 2e: formally compute the gradient and the hessian from the sequential components, 
             # perform Gauss-Newton step after forecast iteration
             gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
@@ -766,6 +767,9 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                 break
             end
         end
+        
+        # update the iteration count
+        i+=1
     end
                 
     # step 3: compute posterior initial condiiton and propagate forward in time
@@ -825,7 +829,8 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                                 "ens" => ens, 
                                 "post" =>  posterior, 
                                 "fore" => forecast, 
-                                "filt" => filtered
+                                "filt" => filtered,
+                                "iterations" => Array{Float64}([i])
                                ) 
 end
 

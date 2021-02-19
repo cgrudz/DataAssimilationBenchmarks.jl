@@ -819,7 +819,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -862,6 +862,10 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
+    # create storage for the iteration sequence
+    iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    k = 1
+
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
     spin = true
@@ -892,6 +896,8 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
         fore = analysis["fore"]
         filt = analysis["filt"]
         post = analysis["post"]
+        iteration_sequence[k] = analysis["iterations"][1]
+        k+=1
 
         if spin
             for j in 1:lag 
@@ -943,6 +949,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     filt_spread = filt_spread[2: nanl + 1]
     anal_rmse = anal_rmse[2: nanl + 1]
     anal_spread = anal_spread[2: nanl + 1]
+    iteration_sequence = iteration_sequence[2:nanl+1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
@@ -951,6 +958,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
             "anal_spread"=> anal_spread,
+            "iteration_sequence" => iteration_sequence,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
