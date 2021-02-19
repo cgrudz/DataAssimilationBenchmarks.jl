@@ -397,7 +397,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 25
 
     # set seed 
     Random.seed!(seed)
@@ -464,7 +464,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
                 kwargs["obs_weights"] = ones(lag) * lag
             end
         end
-
+                
         analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -584,7 +584,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 4500
+    nanl = 45
 
     # set seed 
     Random.seed!(seed)
@@ -819,7 +819,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
