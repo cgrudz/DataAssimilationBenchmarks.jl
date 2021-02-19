@@ -291,10 +291,11 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         y_anom = (H * ens .- y_mean) * inv(conditioning)
 
         # step 3: compute the cost function gradient term
-        ∇J = transpose(y_anom) * inv(obs_cov) * (obs - y_mean)
+        inv_obs_cov = inv(obs_cov)
+        ∇J = transpose(y_anom) * inv_obs_cov * (obs - y_mean)
 
         # step 4: compute the cost function gradient term
-        hess_J = transpose(y_anom) * inv(obs_cov) * y_anom
+        hess_J = transpose(y_anom) * inv_obs_cov * y_anom
 
         # return tuple of the gradient and hessian terms
         ∇J, hess_J
@@ -790,7 +791,6 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
     # observation times, store the filtered state as the forward propagated value at new observation
     # times, store the posterior at the times discarded at the next shift
-    @bp
     for l in 1:lag
         if l <= shift
             posterior[:, :, l] = ens
@@ -800,7 +800,6 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                 ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
-        @bp
         if l == shift
             new_ens = copy(ens)
         end
