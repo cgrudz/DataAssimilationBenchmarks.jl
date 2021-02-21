@@ -397,7 +397,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -457,11 +457,15 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
             # given by the number of times the observation is assimilated
             # NOTE: mda spin weights are only designed for shift=1
             if i <= lag
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag]
+                obs_weights = [i-1:lag-1; ones(i-1) * lag]
+                kwargs["obs_weights"] = obs_weights
+                one_minus_α_k = (Vector{Float64}(1:lag) .-1.0) ./ obs_weights
+                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
 
             # otherwise equal weights
             else
                 kwargs["obs_weights"] = ones(lag) * lag
+                kwargs["reb_weights"] = 1 ./ ((Vector{Float64}(1:lag) .- 1.0) ./ lag)
             end
         end
                 
