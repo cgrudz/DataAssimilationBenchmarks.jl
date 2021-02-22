@@ -499,27 +499,13 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
         state_dim = sys_dim
     end
 
+    # make a copy of the intial ens for re-analysis
+    ens_0 = copy(ens)
+    
     # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
     
-    # multiple data assimilation (mda) is optional, read as boolean variable
-    mda = kwargs["mda"]::Bool
-    if mda
-        # set the observation and re-balancing weights
-        obs_weights = kwargs["obs_weights"]::Vector{Float64}
-        reb_weights = kwargs["reb_weights"]::Vector{Float64}
-
-        # set iteration count for the initial MDA step followed by rebalancing
-        i = 0
-    else
-        # set equal, non-inflated variances
-        obs_weights = ones(lag)
-        
-        # set iteration count to avoid the rebalancing step
-        i = 1
-    end
-
     # step 1: create storage for the posterior, forecast and filter values over the DAW
     # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
     # last-iterate posterior estimate respectively
@@ -531,11 +517,91 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
         filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
     end
     
-    # make a copy of the intial ens for re-analysis
-    ens_0 = copy(ens)
+    # multiple data assimilation (mda) is optional, read as boolean variable
+    mda = kwargs["mda"]::Bool
+    
+    if mda
+        # set the observation and re-balancing weights
+        reb_weights = kwargs["reb_weights"]::Vector{Float64}
+        obs_weights = kwargs["obs_weights"]::Vector{Float64}
 
-    # we make a single iteration with SDA, with MDA we must make a zeroth iteration and rebalancing step
-    while i <=1 
+        # set iteration count for the initial rebalancing step followed by mda
+        i = 0
+        
+        # the posterior statistics are computed in the zeroth pass with rebalancing
+        posterior[:, :, 1] = ens_0
+        
+        # we make a single iteration with SDA, with MDA we make a rebalancing step on the zeroth iteration
+        while i <=1 
+            # step 2: forward propagate the ensemble and analyze the observations
+            for l in 1:lag
+                # step 2a: propagate between observation times
+                for j in 1:N_ens
+                    for k in 1:f_steps
+                        ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+                    end
+                end
+                if i == 0
+                    # step 2b: store the forecast to compute ensemble statistics before observations become available
+                    # for MDA, this is on the zeroth iteration through the DAW
+                    if spin
+                        # store all new forecast states
+                        forecast[:, :, l] = ens
+                    elseif (l > (lag - shift))
+                        # only store forecasted states for beyond unobserved times beyond previous forecast windows
+                        forecast[:, :, l - (lag - shift)] = ens
+                    end
+                    
+                    # step 2c: perform the filtering step with rebalancing weights 
+                    trans = transform(analysis, ens, H, obs[:, l], obs_cov * reb_weights[l])
+                    ens = ens_update!(ens, trans)
+
+                    if spin 
+                        # compute multiplicative inflation of state variables
+                        ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+
+                        # if including an extended state of parameter values,
+                        # compute multiplicative inflation of parameter values
+                        if state_dim != sys_dim
+                            ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+                        end
+                        
+                        # store all new filtered states
+                        filtered[:, :, l] = ens
+                    
+                    elseif l > (lag - shift)
+                        # store the filtered states for previously unobserved times, not mda values
+                        filtered[:, :, l - (lag - shift)] = ens
+                    end
+                    
+                    # step 2d: compute the re-analyzed initial condition for posterior statistics with rebalancing step
+                    posterior[:, :, 1] = ens_update!(posterior[:, :, 1], trans)
+                    
+                    # on final iteration, inflate the covariance
+                    if l == lag
+                        # compute multiplicative inflation of state variables
+                        posterior[:, :, 1] = inflate_state!(posterior[:, :, 1], state_infl, sys_dim, state_dim)
+
+                        # if including an extended state of parameter values,
+                        # compute multiplicative inflation of parameter values
+                        if state_dim != sys_dim
+                            posterior[:, :, 1] = inflate_param!(posterior[:, :, 1], param_infl, sys_dim, state_dim)
+                        end
+                    end
+                else
+                    # step 2c: perform the filtering step with mda weights
+                    trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
+                    ens = ens_update!(ens, trans)
+                    
+                    # re-analyzed initial conditions are computed in the mda step
+                    ens_0 = ens_update!(ens_0, trans)
+                end
+            end
+            # reset the ensemble with the prior for mda and step forward the iteration count,
+            ens = copy(ens_0)
+            i+=1
+        end
+    else
         # step 2: forward propagate the ensemble and analyze the observations
         for l in 1:lag
             # step 2a: propagate between observation times
@@ -544,120 +610,78 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                     ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
                 end
             end
-
-            # step 2b: store the forecast to compute ensemble statistics before observations become available
-            if mda 
-                if i == 0
-                # for MDA, this is on the zeroth iteration through the DAW
-                    if spin
-                        # store all new forecast states
-                        forecast[:, :, l] = ens
-                    elseif (l > (lag - shift))
-                        # only store forecasted states for beyond unobserved times beyond previous forecast windows
-                        forecast[:, :, l - (lag - shift)] = ens
-                    end
-                end
-            else
-                # for SDA, we only make a single pass
-                if spin
-                    # store all new forecast states
-                    forecast[:, :, l] = ens
-                elseif l > (lag - shift)  
-                    # only store forecasted states for beyond unobserved times beyond previous forecast windows
-                    forecast[:, :, l - (lag - shift)] = ens
-                end
-            end
-
-            # step 2c: perform the filtering step if in spin, multiple DA (mda=true) or
-            # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-            if mda || l > (lag - shift) || spin
-                # observation sequence starts from the time of the inital condition
-                # though we do not assimilate time zero observations
-                if mda && i == 1 && l == 1
-                    # note, in the rebalancing step, we have fully assimilated the first observation
-                    # we store the foreward forecast and skip the update
-                    # this stored value will be overwritten if lag>1, or if not in the spin period
-                    filtered[:, :, l] = ens
-                    continue
-                end
-
-                # apply the transformation and update step
-                trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
+            if spin
+                # step 2b: store the forecast to compute ensemble statistics before observations become available
+                # if spin, store all new forecast states
+                forecast[:, :, l] = ens
+                
+                # step 2c: apply the transformation and update step
+                trans = transform(analysis, ens, H, obs[:, l], obs_cov)
                 ens = ens_update!(ens, trans)
+                
+                # compute multiplicative inflation of state variables
+                ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
 
-                if spin
-                    # compute multiplicative inflation of state variables
-                    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
-
-                    # if including an extended state of parameter values,
-                    # compute multiplicative inflation of parameter values
-                    if state_dim != sys_dim
-                        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
-                    end
+                # if including an extended state of parameter values,
+                # compute multiplicative inflation of parameter values
+                if state_dim != sys_dim
+                    ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
                 end
-
-                if i == 1
-                    if spin
-                        # store all new filtred states
-                        filtered[:, :, l] = ens
-
-                    elseif l > (lag - shift)
-                        # store the filtered states for previously unobserved times, not mda values
-                        filtered[:, :, l - (lag - shift)] = ens
-                    end
-                end
-            end
+                
+                # store all new filtered states
+                filtered[:, :, l] = ens
             
-            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-            # we do not re-analyze the initial ensemble on the second pass of MDA
-            if mda
-                if i==0
-                    ens_0 = ens_update!(ens_0, trans)
-                end
-            elseif l > (lag - shift) || spin
+                # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+                ens_0 = ens_update!(ens_0, trans)
+            
+            elseif l > (lag - shift)
+                # step 2b: store the forecast to compute ensemble statistics before observations become available
+                # if not spin, only store forecasted states for beyond unobserved times beyond previous forecast windows
+                forecast[:, :, l - (lag - shift)] = ens
+                
+                # step 2c: apply the transformation and update step
+                trans = transform(analysis, ens, H, obs[:, l], obs_cov)
+                ens = ens_update!(ens, trans)
+                
+                # store the filtered states for previously unobserved times, not mda values
+                filtered[:, :, l - (lag - shift)] = ens
+                
+                # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
             end
         end
-        
-        # reset the ensemble with the re-analyzed prior and step forward the iteration count
+        # reset the ensemble with the re-analyzed prior 
         ens = copy(ens_0)
-        i+=1
-
-        if mda
-            # for multiple DA, set the observation weights to the rebalancing weights
-            # for the second iteration
-            obs_weights = reb_weights
-        end
-    
     end
-            
-    # step 3: propagate the posterior initial condition forward to the shift-forward time
 
-    # step 3a: if performing parameter estimation, apply the parameter model
+    # step 3: propagate the posterior initial condition forward to the shift-forward time
+    # step 3a: inflate the posterior covariance
+    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+    
+    # if including an extended state of parameter values,
+    # compute multiplicative inflation of parameter values
+    if state_dim != sys_dim
+        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+    end
+
+    # step 3b: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
         param_ens = ens[state_dim + 1:end , :]
         param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
         ens[state_dim + 1:end, :] = param_ens
     end
 
-    # step 3b: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
     # observation times
     for s in 1:shift
-        posterior[:, :, s] = ens
+        if !mda
+            posterior[:, :, s] = ens
+        end
         for j in 1:N_ens
             for k in 1:f_steps
                 ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
-    end
-    
-    # inflate the foreward posterior
-    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
-
-    # if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim
-        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
     end
 
     Dict{String,Array{Float64}}(
