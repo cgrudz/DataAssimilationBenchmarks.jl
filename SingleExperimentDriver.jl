@@ -40,7 +40,7 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
 
 function filter_state_exp()
-    args = (time_series, "etkf", 0, 1.0, 40, 25, 1.12)
+    args = (time_series, "etkf", 0, 1.0, 40, 25, 1.02)
     filter_state(args)
 end
 
@@ -88,7 +88,7 @@ end
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, infl] = args
 
 function hybrid_smoother_state_exp()
-    args = (time_series, "etks", 0, 31, 1, false, 1.0, 40, 25, 1.01)
+    args = (time_series, "etks", 0, 1, 1, true, 1.0, 40, 25, 1.01)
     hybrid_state(args)
 end
 
@@ -99,7 +99,7 @@ end
 # param_wlk, N_ens, state_infl, param_infl = args
 
 function hybrid_smoother_param_exp()
-    args = (time_series, "etks", 0, 3, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
+    args = (time_series, "etks", 0, 1, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
     hybrid_param(args)
 end
 
@@ -116,5 +116,6 @@ end
 
 
 ########################################################################################################################
+
 
 end
