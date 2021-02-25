@@ -88,7 +88,7 @@ end
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, infl] = args
 
 function hybrid_smoother_state_exp()
-    args = (time_series, "etks", 0, 2, 1, true, 1.0, 40, 15, 1.00)
+    args = (time_series, "etks", 0, 31, 1, false, 1.0, 40, 25, 1.01)
     hybrid_state(args)
 end
 
@@ -99,7 +99,7 @@ end
 # param_wlk, N_ens, state_infl, param_infl = args
 
 function hybrid_smoother_param_exp()
-    args = (time_series, "etks", 0, 3, 1, true, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
+    args = (time_series, "etks", 0, 3, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
     hybrid_param(args)
 end
 
