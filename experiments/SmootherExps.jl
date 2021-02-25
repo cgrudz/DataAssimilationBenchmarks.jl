@@ -819,7 +819,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
