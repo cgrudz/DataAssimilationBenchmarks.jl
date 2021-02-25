@@ -2,4 +2,4 @@
 #SBATCH -n 1
 #SBATCH -o experiment.out
 #SBATCH -e experiment.err
-julia SlurmExperimentDriver.jl "2"
+julia SlurmExperimentDriver.jl "2970"
