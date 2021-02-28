@@ -675,7 +675,7 @@ function process_all_smoother_state()
     nanl = 20000
     burn = 5000
     diffusion = 0.0
-    method_list = ["etks_hybrid"]
+    method_list = ["etks_hybrid", "etks_classic"]
     total_inflation = 11
     ensemble_size = 15
     total_lag = 18
