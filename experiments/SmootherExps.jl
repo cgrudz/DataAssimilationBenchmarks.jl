@@ -397,7 +397,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 500
+    nanl = 5000
 
     # set seed 
     Random.seed!(seed)
