@@ -56,8 +56,8 @@ end
 t = parse(Int64, ARGS[1])
 
 #classic_smoother_state_exp(t)
-#hybrid_smoother_state_exp(t)
-iterative_smoother_state_exp(t)
+hybrid_smoother_state_exp(t)
+#iterative_smoother_state_exp(t)
 
 ########################################################################################################################
 
