@@ -5,7 +5,7 @@ module EnsembleKalmanSchemes
 # imports and exports
 using Debugger
 using Random, Distributions, Statistics
-using LinearAlgebra
+using LinearAlgebra, Optim
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
        inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid,
        ls_smoother_iterative
@@ -158,11 +158,15 @@ function inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int6
     
     Multiplicative inflation is performed only in the leading components."""
 
-    X_mean = mean(ens, dims=2)
-    A = ens .- X_mean
-    infl =  Matrix(1.0I, sys_dim, sys_dim) 
-    infl[1:state_dim, 1:state_dim] .*= inflation 
-    X_mean .+ infl * A
+    if inflation == 1.0
+        return ens
+    else
+        X_mean = mean(ens, dims=2)
+        A = ens .- X_mean
+        infl =  Matrix(1.0I, sys_dim, sys_dim) 
+        infl[1:state_dim, 1:state_dim] .*= inflation 
+        X_mean .+ infl * A
+    end
 end
 
 
@@ -175,11 +179,15 @@ function inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int6
     
     Multiplicative inflation is performed only in the trailing components."""
 
-    X_mean = mean(ens, dims=2)
-    A = ens .- X_mean
-    infl =  Matrix(1.0I, sys_dim, sys_dim) 
-    infl[state_dim+1: end, state_dim+1: end] .*= inflation
-    X_mean .+ infl * A
+    if inflation == 1.0
+        return ens
+    else
+        X_mean = mean(ens, dims=2)
+        A = ens .- X_mean
+        infl =  Matrix(1.0I, sys_dim, sys_dim) 
+        infl[state_dim+1: end, state_dim+1: end] .*= inflation
+        X_mean .+ infl * A
+    end
 end
 
 
@@ -190,7 +198,10 @@ function square_root(M::T) where {T <: CovM}
     
     if T <: UniformScaling
         M^0.5
+    elseif T <: Diagonal
+        sqrt(M)
     else
+        # stable square root for close-to-singular inverse calculations
         F = svd(M)
         Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt)
     end
@@ -202,9 +213,9 @@ end
 
 function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{Float64}, 
                    obs_cov::T2; conditioning::T3=0.0001I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
-    """Computes transform and related values for EnKF, ETKF, EnkS, ETKS
+    """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
-    analysis is a string which determines the type of transform update.  The observation error covariance should be
+    "analysis" is a string which determines the type of transform update.  The observation error covariance should be
     of UniformScaling, Diagonal or Symmetric type."""
 
     if analysis=="enkf" || analysis=="enks"
@@ -235,6 +246,8 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         
     elseif analysis=="etkf" || analysis=="etks"
         ## This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
+        ## This is the default method for the ensemble square root transform, given best
+        ## performance metrics by BenchmarkTools
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -242,7 +255,7 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         # step 1: compute the ensemble mean
         x_mean = mean(ens, dims=2)
 
-        # step 2: compute the normalized anomalies, transposed
+        # step 2: compute the normalized anomalies
         A = (ens .- x_mean) / sqrt(N_ens - 1.0)
         
         # step 3: compute the ensemble in observation space
@@ -261,13 +274,13 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         S = obs_sqrt_inv * S
 
         # step 6: compute the weighted innovation
-        delta = obs_sqrt_inv * ( obs - y_mean )
+        δ = obs_sqrt_inv * ( obs - y_mean )
        
         # step 7: compute the transform matrix
         T = inv(Symmetric(1.0I + transpose(S) * S))
         
         # step 8: compute the analysis weights
-        w = T * transpose(S) * delta
+        w = T * transpose(S) * δ
 
         # step 9: compute the square root of the transform
         T_sqrt = sqrt(T)
@@ -277,6 +290,121 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
 
         # step 11: package the transform output tuple
         T_sqrt, w, U
+    
+    elseif analysis=="etkf-svd" || analysis=="etks-svd"
+        ## This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
+        ## This is an SVD-based variant on the direct ETKF above, BenchmarkTools gives
+        ## this min, mean and median longer timing, though shorter max time
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+
+        # step 1: compute the ensemble mean
+        x_mean = mean(ens, dims=2)
+
+        # step 2: compute the normalized anomalies
+        A = (ens .- x_mean) / sqrt(N_ens - 1.0)
+        
+        # step 3: compute the ensemble in observation space
+        Z = H * ens
+
+        # step 4: compute the ensemble mean in observation space
+        y_mean = mean(Z, dims=2)
+        
+        # step 5: compute the weighted anomalies in observation space
+        
+        # first we find the observation error covariance inverse
+        obs_sqrt_inv = inv(square_root(obs_cov))
+        
+        # then compute the weighted anomalies
+        S = (Z .- y_mean) / sqrt(N_ens - 1.0)
+        S = obs_sqrt_inv * S
+
+        # step 6: compute the weighted innovation
+        δ = obs_sqrt_inv * ( obs - y_mean )
+       
+        # step 7: compute the transform matrix
+        F = svd(S)
+        T = F.V * Diagonal( 1.0 ./ (1.0 .+ F.S.^2.0)) 
+        
+        # step 8: compute the analysis weights
+        w = T * Diagonal(F.S) * transpose(F.U) * δ
+
+        # step 9: compute the square root of the transform
+        T_sqrt = Symmetric(F.V * Diagonal( sqrt.(1.0 ./ (1.0 .+ F.S.^2.0)) ) * F.Vt)
+        
+        # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
+
+        # step 11: package the transform output tuple
+        T_sqrt, w, U
+
+    elseif analysis=="enkf-n" || analysis=="enks-n"
+        ## This computes the dual form of the EnKF-N transform as in bocquet & raanes 2015
+        ## NOTE: may want to try a higher order hessian-based approach later, for now this simply uses
+        ## the Brent method for the argmin problem
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+
+        # step 1: compute the ensemble mean
+        x_mean = mean(ens, dims=2)
+
+        # step 2: compute the non-normalized anomalies
+        A = ens .- x_mean
+        
+        # step 3: compute the ensemble mean and anomalies in observation space
+        y_mean = H * x_mean
+        Y = H * A
+
+        # step 4: compute the weighted anomalies in observation space
+        
+        # first we find the observation error covariance inverse
+        obs_sqrt_inv = inv(square_root(obs_cov))
+        
+        # then compute the weighted anomalies
+        S = obs_sqrt_inv * Y
+
+        # step 5: compute the weighted innovation
+        δ = obs_sqrt_inv * ( obs - y_mean )
+        
+        # step 6: compute the SVD for the simplified cost function, gauge weights and range
+        F = svd(S)
+        G = F.U * Diagonal(F.S)
+        ϵ_N = 1.0 + (1.0 / N_ens)
+        ζ_l = 0.000001
+        ζ_u = (N_ens + 1.0) / ϵ_N
+        
+        # step 7: define the dual cost function
+        function D(ζ)
+            cost = I - (G * Diagonal( 1.0 ./ (1.0 .+ F.S.^2.0 / ζ) ) * transpose(G) / ζ)
+            cost = transpose(δ) * cost * δ .+ ϵ_N * ζ .+ (N_ens + 1.0) * log((N_ens + 1.0) / ζ) .- (N_ens + 1.0)
+            cost[1]
+        end
+        
+        # step 8: find the argmin
+        ζ_a = optimize(D, ζ_l, ζ_u)
+        @bp
+        diag_vals = ζ_a.minimizer .+ F.S.^2.0
+
+        # step 9: compute the update weights
+        # NOTE: for consistency with the ETKF update code, we scale to account 
+        # for the normalized anomalies in the update step
+        w = F.V * Diagonal( 1.0 ./ diag_vals ) * transpose(G) * δ * sqrt(N_ens - 1.0)
+
+        # step 10: compute the update transform
+        # NOTE: for consistency with the ETKF update code, we scale to account 
+        # for the normalized anomalies in the update step
+        H_sqrt_inv = Symmetric(Diagonal( 1.0 ./ diag_vals) * transpose(G) * δ * 
+                               transpose(δ) * G * Diagonal( 1.0 ./ diag_vals))
+        H_sqrt_inv = Diagonal(diag_vals) - ( (2.0 * ζ_a.minimizer^2.0) / (N_ens + 1.0) ) * H_sqrt_inv
+        H_sqrt_inv = Symmetric(F.V * inv(square_root(H_sqrt_inv)) * F.Vt * sqrt(N_ens - 1.0))
+        
+        # step 11:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
+
+        # step 12: package the transform output tuple
+        H_sqrt_inv, w, U
     
     elseif analysis=="ienks-bundle" || analysis=="ienks-transform"
         # this computes the weighted observed anomalies as per the Gauss-Newton, bundle or transform
@@ -321,10 +449,10 @@ function ens_update!(ens::Array{Float64,2}, transform::T0) where {T0 <: TransM}
         # step 1: compute the ensemble mean
         X_mean = mean(ens, dims=2)
 
-        # step 2: compute the normalized anomalies, transposed
+        # step 2: compute the normalized anomalies
         A = (ens .- X_mean) / sqrt(N_ens - 1.0)
 
-        # step 3: compute the update, reshape for proper broadcasting
+        # step 3: compute the update
         ens_transform = w .+ T_sqrt * U * sqrt(N_ens - 1.0)
         X_mean .+ A * ens_transform
     end
@@ -916,123 +1044,6 @@ end
 end
 
 #########################################################################################################################
-## IEnKF
-#
-#
-#def ienkf(ens, H, obs, obs_cov, state_infl, 
-#        epsilon=0.0001, tol=0.001, l_max=50, **kwargs):
-#
-#    """Compute ienkf analysis as in algorithm 1, bocquet sakov 2014
-#    
-#    This should be considered always as a lag-1 smoother, the more general IEnKS is considered separately."""
-#
-#    # step 0: infer the ensemble, obs, and state dimensions, and smoothing window,
-#    # unpack kwargs
-#    [sys_dim, N_ens] = np.shape(ens)
-#    obs = np.squeeze(obs)
-#    obs_dim = len(obs)
-#    f_steps = kwargs["f_steps"]
-#    step_model = kwargs["step_model"]
-#
-#    # optional parameter estimation
-#    if "state_dim" in kwargs:
-#        state_dim = kwargs["state_dim"]
-#        param_infl = kwargs["param_infl"]
-#
-#    else:
-#        state_dim = sys_dim
-#
-#    # lag-1 smoothing - an initial ensemble value should replace
-#    # the dummy ens argument in this case to be written consistently with other methods
-#    ens = kwargs["ens_0"]
-#    
-#    # create storage for the posterior over the smoothing window
-#    posterior = np.zeros([sys_dim, N_ens, 2])
-#
-#    # step 1: define the initial correction and interation count
-#    w = np.zeros(N_ens)
-#    l = 0
-#
-#    # steps 2-3: compute the initial ensemble mean and non-normalized anomalies transposed
-#    X_mean_0 = np.mean(ens, axis=1)
-#    A_t = ens.transpose() - X_mean_0
-#
-#
-#    # define the initial iteration increment as dummy variable
-#    delta_w = np.ones(sys_dim)
-#
-#    # step 4: begin while, break at max or reaching tolerance in the iterative step
-#    while np.sqrt(delta_w @ delta_w) >= tol:
-#        if l >= l_max:
-#            break
-#
-#        # step 5: update the mean via the increment (always with the 0th iterate of X)
-#        X_mean = X_mean_0 + A_t.transpose() @ w
-#
-#        # step 6: redefine the scaled ensemble in the bundle variant, with updated mean
-#        ens = (X_mean + epsilon * A_t).transpose()
-#
-#        # step 7: compute the forward ensemble evolution
-#        for k in range(f_steps):
-#            ens = step_model(ens, **kwargs)
-#
-#        # step 8: compute the mean of the forward ensemble in observation space
-#        Y_ens = H @ ens
-#        Y_mean = np.mean(Y_ens, axis=1)
-#
-#        # step 9: compute the scaled Y ensemble of anomalies
-#        Y_ens_t = (Y_ens.transpose() - Y_mean) / epsilon
-#
-#        # step 10: compute the approximate gradient of the cost function
-#        grad_J = (N_ens - 1) * w - Y_ens_t @ np.linalg.inv(obs_cov) @ (obs - Y_mean)
-#
-#        # step 11: compute the approximate hessian of the cost function
-#        hess = (N_ens - 1) * np.eye(N_ens) + Y_ens_t @  np.linalg.inv(obs_cov) @ Y_ens_t.transpose()
-#
-#        # step 12: solve the system of equations for the update to w
-#        delta_w = solve(hess, grad_J)
-#
-#        # steps 13 - 14: update w and the number of iterations
-#        w = w - delta_w
-#        l += 1
-#
-#    # step 15: end while
-#
-#    # step 16: update past ensemble with the current iterate of the ensemble mean, plus increment
-#    
-#    # generate mean preserving random orthogonal matrix as in sakov oke 08
-#    U = rand_orth(N_ens)
-#    
-#    # we compute the inverse square root of the hessian
-#    V, Sigma, V_t = np.linalg.svd(hess)
-#    hess_sqrt_inv = V @ np.diag( 1 / np.sqrt(Sigma) ) @ V_t
-#
-#    # we use the current X_mean iterate, and transformed anomalies to define the new past ensemble
-#    ens = X_mean + np.sqrt(N_ens - 1) * (A_t.transpose() @ hess_sqrt_inv @ U).transpose()
-#    ens = ens.transpose()
-#
-#    # store the posterior initial condition
-#    posterior[:, :, 0] = ens
-#
-#    # step 17: forward propagate the ensemble
-#    for k in range(f_steps):
-#        ens = step_model(ens, **kwargs)
-#    
-#    # step 18 - 19: compute the inflated forward ensemble
-#    ens = inflate_state(ens, state_infl, sys_dim, state_dim)
-#
-#    # step 19b: if including an extended state of parameter values,
-#    # compute multiplicative inflation of parameter values
-#    if state_dim != sys_dim:
-#        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
-#
-#    # store the analyzed and inflated current posterior - lag-1 filter
-#    posterior[:, :, 1] = ens
-#
-#    return {"ens": ens, "posterior": posterior}
-#
-#
-#########################################################################################################################
 ## IEnKF-T-LM
 #
 #
@@ -1103,17 +1114,17 @@ end
 #        l+= 1
 #        
 #        # step 15: solve the system for the w increment update
-#        delta_w = solve(hess + mu * np.eye(N_ens),  -1 * grad_J)
+#        δ_w = solve(hess + mu * np.eye(N_ens),  -1 * grad_J)
 #
 #        # step 16: check if the increment is sufficiently small to terminate
-#        if np.sqrt(delta_w @ delta_w) < tol:
+#        if np.sqrt(δ_w @ δ_w) < tol:
 #            # step 17: flag false to terminate
 #            flag = False
 #
 #        # step 18: begin else
 #        else:
 #            # step 19: reset the ensemble adjustment
-#            w_prime = w + delta_w
+#            w_prime = w + δ_w
 #            
 #            # step 20: reset the initial ensemble with the new adjustment term
 #            X_mean_1 = X_mean_0 + A_t.transpose() @ w_prime
@@ -1126,7 +1137,7 @@ end
 #            Y_mean = H @ X_mean_tmp
 #
 #            # steps 22 - 24: define the parameters for the confidence region
-#            L = 0.5 * delta_w @ (mu * delta_w - grad_J)
+#            L = 0.5 * δ_w @ (mu * δ_w - grad_J)
 #            J_prime = 0.5 * (obs - Y_mean) @ np.linalg.inv(obs_cov) @ (obs - Y_mean) + 0.5 * (N_ens -1) * w_prime @ w_prime
 #            theta = (J - J_prime) / L
 #
@@ -1282,11 +1293,11 @@ end
 #        nu *= 2
 #
 #        # step 15: solve the system for the w increment update
-#        delta_w = solve(hess + mu * np.eye(N_ens),  -1 * grad_J)
+#        δ_w = solve(hess + mu * np.eye(N_ens),  -1 * grad_J)
 #
 #        # step 16: check if the increment is sufficiently small to terminate
 #        # NOTE: MARC'S VERSION NORMALIZES THE LENGTH RELATIVE TO THE ENSEMBLE SIZE
-#        if np.sqrt(delta_w @ delta_w) < tol:
+#        if np.sqrt(δ_w @ δ_w) < tol:
 #            # step 17: flag false to terminate
 #            flag = False
 #            print(l)
@@ -1294,7 +1305,7 @@ end
 #        # step 18: begin else
 #        else:
 #            # step 19: reset the ensemble adjustment
-#            w_prime = w + delta_w
+#            w_prime = w + δ_w
 #            
 #            # step 20: reset the initial ensemble with the new adjustment term
 #            X_mean_1 = X_mean_0 + A_t.transpose() @ w_prime
@@ -1307,7 +1318,7 @@ end
 #            Y_mean = H @ X_mean_tmp
 #
 #            # steps 22 - 24: define the parameters for the confidence region
-#            L = 0.5 * delta_w @ (mu * delta_w - grad_J)
+#            L = 0.5 * δ_w @ (mu * δ_w - grad_J)
 #            J_prime = 0.5 * (obs - Y_mean) @ np.linalg.inv(obs_cov) @ (obs - Y_mean) + 0.5 * (N_ens -1) * w_prime @ w_prime
 #            theta = (J - J_prime) / L
 #            
@@ -1378,107 +1389,4 @@ end
 #    X_ext_ens = (X_mean_2 + infl @  A_t).transpose()
 #
 #    return X_ext_ens
-#
-#
-#########################################################################################################################
-## IEnKF
-#
-#def ienkf_f(ens, H, obs, obs_cov, f_steps, h, 
-#        epsilon=0.0001, infl=1.0, tol=0.001, l_max=50):
-#
-#    """Compute Ienkf analysis as in algorithm 1, bocquet sakov 2014"""
-#
-#    # step 0: infer the ensemble, obs, and state dimensions
-#    [sys_dim, N_ens] = np.shape(ens)
-#    sys_dim = sys_dim - 1
-#    obs_dim = len(obs)
-#
-#    # step 1: we define the initial iterative minimization parameters
-#    l = 0
-#    w = np.zeros(N_ens)
-#    delta_w = np.ones(N_ens)
-#    
-#    # step 2: compute the ensemble mean
-#    X_mean_0 = np.mean(ens, axis=1)
-#    
-#    # step 3: compute the non-normalized ensemble of anomalies (transposed)
-#    A_t = ens.transpose() - X_mean_0
-#
-#    # step 4: begin while
-#    while np.sqrt(delta_w @ delta_w) >= tol:
-#        if l >= l_max:
-#            break
-#
-#        # step 5: update the mean via the increment (always with the 0th iterate)
-#        X_mean = X_mean_0 + A_t.transpose() @ w
-#
-#        # step 6: redefine the scaled ensemble in the bundle variant, with updated mean
-#        ens = (X_mean + epsilon * A_t).transpose()
-#
-#        # step 7: compute the forward ensemble evolution
-#        for j in range(N_ens):
-#            for k in range(f_steps):
-#                ens[:sys_dim, j] = l96_rk4_step(ens[:sys_dim, j], h, ens[sys_dim, j])
-#
-#        # step 8: compute the mean of the forward ensemble in observation space
-#        Y_ens = H @ ens
-#        Y_mean = np.mean(Y_ens, axis=1)
-#
-#        # step 9: compute the scaled Y ensemble of anomalies
-#        Y_ens_t = (Y_ens.transpose() - Y_mean) / epsilon
-#
-#        # step 10: compute the approximate gradient of the cost function
-#        grad_J = (N_ens - 1) * w - Y_ens_t @ np.linalg.inv(obs_cov) @ (obs - Y_mean)
-#
-#        # step 11: compute the approximate hessian of the cost function
-#        hess = (N_ens - 1) * np.eye(N_ens) + Y_ens_t @  np.linalg.inv(obs_cov) @ Y_ens_t.transpose()
-#
-#        # step 12: solve the system of equations for the update to w
-#        delta_w = solve(hess, grad_J)
-#
-#        # steps 13 - 14: update w and the number of iterations
-#        w = w - delta_w
-#        l += 1
-#
-#
-#    # step 15: end while
-#
-#    # step 16: update past ensemble with the current iterate of the ensemble mean, plus increment
-#    
-#    # generate mean preserving random orthogonal matrix as in sakov oke 08
-#    Q = np.random.standard_normal([N_ens -1, N_ens -1])
-#    Q, R = np.linalg.qr(Q)
-#    U_p =  np.zeros([N_ens, N_ens])
-#    U_p[0,0] = 1
-#    U_p[1:, 1:] = Q
-#
-#    b_1 = np.ones(N_ens)/np.sqrt(N_ens)
-#    Q = np.random.standard_normal([N_ens -1, N_ens -1])
-#    B = np.zeros([N_ens, N_ens])
-#    B[:,0] = b_1
-#    B, R = np.linalg.qr(B)
-#    U = B @ U_p @ B.transpose()
-#    
-#    # we compute the inverse square root of the hessian
-#    V, Sigma, V_t = np.linalg.svd(hess)
-#    hess_sqrt_inv = V @ np.diag( 1 / np.sqrt(Sigma) ) @ V_t
-#
-#    # we use the current X_mean iterate, and transformed anomalies to define the new past ensemble
-#    ens = X_mean + np.sqrt(N_ens - 1) * (A_t.transpose() @ hess_sqrt_inv @ U).transpose()
-#    ens = ens.transpose()
-#
-#    # step 17: forward propagate the ensemble
-#    for j in range(N_ens):
-#        for k in range(f_steps):
-#            ens[:sys_dim, j] = l96_rk4_step(ens[:sys_dim, j], h, ens[sys_dim, j])
-#    
-#    # step 18: compute the forward ensemble mean
-#    X_mean = np.mean(ens, axis=1)
-#
-#    # step 19: compute the inflated forward ensemble
-#    A_t = ens.transpose() - X_mean
-#    infl = np.eye(N_ens) * infl
-#    ens = (X_mean + infl @  A_t).transpose()
-#
-#    return ens
 #
