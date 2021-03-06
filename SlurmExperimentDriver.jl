@@ -21,7 +21,7 @@ export hybrid_smoother_state_exp, iterative_smoother_state_exp
 # Filters 
 ########################################################################################################################
 function filter_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/filter_state_smoother_input_args.jld")
+    f = load("/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld")
     args = f["experiments"][j]
     filter_state(args)
 end
@@ -62,12 +62,19 @@ end
 ########################################################################################################################
 # Run experiments
 ########################################################################################################################
-# comment or uncomment to run with slurm
 t = parse(Int64, ARGS[1])
+s = ARGS[2]
 
-#classic_smoother_state_exp(t)
-hybrid_smoother_state_exp(t)
-#iterative_smoother_state_exp(t)
+if s == "filter_state"
+    filter_state_exp(t)
+elseif s == "classic_smoother_state"
+    classic_smoother_state_exp(t)
+elseif s == "hybrid_smoother_state"
+    hybrid_smoother_state_exp(t)
+elseif s == "iterative_smoother_state"
+    iterative_smoother_state_exp(t)
+end
+
 
 ########################################################################################################################
 
