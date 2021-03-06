@@ -12,7 +12,6 @@ using L96
 using EnsembleKalmanSchemes
 using FilterExps
 using SmootherExps
-export hybrid_smoother_state_exp, iterative_smoother_state_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -62,12 +61,18 @@ end
 ########################################################################################################################
 # Run experiments
 ########################################################################################################################
-# comment or uncomment to run with slurm
 t = parse(Int64, ARGS[1])
+s = ARGS[2]
 
-#classic_smoother_state_exp(t)
-hybrid_smoother_state_exp(t)
-#iterative_smoother_state_exp(t)
+if s == "filter_state"
+    filter_state_exp(t)
+elseif s == "classic_smoother_state"
+    classic_smoother_state_exp(t)
+elseif s == "hybrid_smoother_state"
+    hybrid_smoother_state_exp(t)
+elseif s == "iterative_smoother_state"
+    iterative_smoother_state_exp(t)
+end
 
 ########################################################################################################################
 
