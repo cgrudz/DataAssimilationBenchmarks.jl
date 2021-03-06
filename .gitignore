@@ -60,6 +60,8 @@ enks_hybrid/
 enks_classic/
 etks_hybrid/
 etks_classic/
+enkf-n/
+enks-n_hybrid/
 ienks-bundle/
 ienks-transform/
 data/input_data/
