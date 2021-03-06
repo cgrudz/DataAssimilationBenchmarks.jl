@@ -675,11 +675,11 @@ function process_all_smoother_state()
     nanl = 20000
     burn = 5000
     diffusion = 0.0
-    method_list = ["etks_hybrid", "etks_classic"]
+    method_list = ["ienks-bundle", "etks_hybrid", "etks_classic"]
     total_inflation = 11
     ensemble_size = 15
-    total_lag = 18
-    mda = false
+    total_lag = 14
+    mda = true
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64,3}}(
@@ -711,25 +711,36 @@ function process_all_smoother_state()
             for j in 0:ensemble_size - 1
                 #loop inflation
                 for i in 1:total_inflation
-                    tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
-                    
-                    ana_rmse = tmp["anal_rmse"]::Vector{Float64}
-                    ana_spread = tmp["anal_spread"]::Vector{Float64}
+                    try
+                        tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
+                        
+                        ana_rmse = tmp["anal_rmse"]::Vector{Float64}
+                        ana_spread = tmp["anal_spread"]::Vector{Float64}
 
-                    for_rmse = tmp["fore_rmse"]::Vector{Float64}
-                    for_spread = tmp["fore_spread"]::Vector{Float64}
+                        for_rmse = tmp["fore_rmse"]::Vector{Float64}
+                        for_spread = tmp["fore_spread"]::Vector{Float64}
 
-                    fil_rmse = tmp["filt_rmse"]::Vector{Float64}
-                    fil_spread = tmp["filt_spread"]::Vector{Float64}
+                        fil_rmse = tmp["filt_rmse"]::Vector{Float64}
+                        fil_spread = tmp["filt_spread"]::Vector{Float64}
 
-                    data[method * "_anal_rmse"][total_lag - k, total_inflation + 1- i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
-                    data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
+                        data[method * "_anal_rmse"][total_lag - k, total_inflation + 1- i, j+1] = mean(ana_rmse[burn+1: nanl+burn])
+                        data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(ana_spread[burn+1: nanl+burn])
 
-                    data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
-                    data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
+                        data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_rmse[burn+1: nanl+burn])
+                        data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(for_spread[burn+1: nanl+burn])
 
-                    data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
-                    data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                        data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_rmse[burn+1: nanl+burn])
+                        data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = mean(fil_spread[burn+1: nanl+burn])
+                    catch
+                        data[method * "_anal_rmse"][total_lag - k, total_inflation + 1- i, j+1] = Inf 
+                        data[method * "_anal_spread"][total_lag - k, total_inflation + 1 - i, j+1] = Inf
+
+                        data[method * "_fore_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = Inf
+                        data[method * "_fore_spread"][total_lag - k, total_inflation + 1 - i, j+1] = Inf
+
+                        data[method * "_filt_rmse"][total_lag - k, total_inflation + 1 - i, j+1] = Inf
+                        data[method * "_filt_spread"][total_lag - k, total_inflation + 1 - i, j+1] = Inf
+                    end
                 end
             end
         end
@@ -737,13 +748,24 @@ function process_all_smoother_state()
 
     # for each DA method in the experiment, process the data, loading into the dictionary
     for method in method_list
-        fnames = Glob.glob("../storage/smoother_state/" * method *
-                           "/diffusion_" * rpad(diffusion, 4, "0") *
-                            "/*_nanl_" * lpad(nanl + burn, 5, "0")  *  
-                            "*_tanl_" * rpad(tanl, 4, "0") * 
-                            "*" )
+        if method[6:end] == "classic"
+            fnames = Glob.glob("../storage/smoother_state/" * method *
+                               "/diffusion_" * rpad(diffusion, 4, "0") *
+                                "/*_nanl_" * lpad(nanl + burn, 5, "0")  *  
+                                "*_tanl_" * rpad(tanl, 4, "0") * 
+                                "*" )
 
-        process_data(fnames, method)
+            process_data(fnames, method)
+        else
+            fnames = Glob.glob("../storage/smoother_state/" * method *
+                               "/diffusion_" * rpad(diffusion, 4, "0") *
+                                "/*_nanl_" * lpad(nanl + burn, 5, "0")  *  
+                                "*_tanl_" * rpad(tanl, 4, "0") * 
+                                "*_mda_*" * string(mda) * 
+                                "*" )
+
+            process_data(fnames, method)
+        end
 
     end
 
