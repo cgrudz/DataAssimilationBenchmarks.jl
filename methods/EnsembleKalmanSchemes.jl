@@ -370,33 +370,61 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         
         # step 6: compute the SVD for the simplified cost function, gauge weights and range
         F = svd(S)
-        G = F.U * Diagonal(F.S)
         ϵ_N = 1.0 + (1.0 / N_ens)
         ζ_l = 0.000001
         ζ_u = (N_ens + 1.0) / ϵ_N
         
-        # step 7: define the dual cost function
+        # step 7: define the dual cost function derived in singular value form
         function D(ζ)
-            cost = I - (G * Diagonal( 1.0 ./ (1.0 .+ F.S.^2.0 / ζ) ) * transpose(G) / ζ)
+            cost = I - (F.U * Diagonal( F.S.^2.0 ./ (ζ .+ F.S.^2.0) ) * transpose(F.U) )
             cost = transpose(δ) * cost * δ .+ ϵ_N * ζ .+ (N_ens + 1.0) * log((N_ens + 1.0) / ζ) .- (N_ens + 1.0)
             cost[1]
         end
         
+        ## The below is defined for possible Hessian-based minimization 
+        ## NOTE: we get failure to converge in test cases with Optim library
+        #
+        #function D_v(ζ)
+        #    ζ = ζ[1]
+        #    cost = I - (F.U * Diagonal( F.S.^2.0 ./ (ζ .+ F.S.^2.0) ) * transpose(F.U) )
+        #    cost = transpose(δ) * cost * δ .+ ϵ_N * ζ .+ (N_ens + 1.0) * log((N_ens + 1.0) / ζ) .- (N_ens + 1.0)
+        #    cost[1]
+        #end
+
+        #function g!(grad, ζ)
+        #    ζ = ζ[1]
+        #    grad = transpose(δ) * F.U * Diagonal( - F.S.^2.0 .* (ζ .+ F.S.^2.0).^(-2.0) ) * transpose(F.U) * δ
+        #    grad = grad .+ ϵ_N  .- (N_ens + 1.0) / ζ
+        #end
+
+        #function h!(hess, ζ)
+        #    ζ = ζ[1]
+        #    hess = transpose(δ) * F.U * Diagonal( 2.0 * F.S.^2.0 .* (ζ .+ F.S.^2.0).^(-3.0) ) * transpose(F.U) * δ
+        #    hess = hess .+ (N_ens + 1.0) * ζ^(-2.0)
+        #end
+
+        #lx = [ζ_l]
+        #ux = [ζ_u]
+        #ζ_0 = [(ζ_u + ζ_l)/2.0]
+        #df = TwiceDifferentiable(D_v, g!, h!, ζ_0)
+        #dfc = TwiceDifferentiableConstraints(lx, ux)
+        #ζ_b = optimize(D_v, h!, g!, ζ_0, x_abstol =10e-12)
+
+
         # step 8: find the argmin
         ζ_a = optimize(D, ζ_l, ζ_u)
-        @bp
         diag_vals = ζ_a.minimizer .+ F.S.^2.0
 
         # step 9: compute the update weights
         # NOTE: for consistency with the ETKF update code, we scale to account 
         # for the normalized anomalies in the update step
-        w = F.V * Diagonal( 1.0 ./ diag_vals ) * transpose(G) * δ * sqrt(N_ens - 1.0)
+        w = F.V * Diagonal( F.S ./ diag_vals ) * transpose(F.U) * δ * sqrt(N_ens - 1.0)
 
         # step 10: compute the update transform
         # NOTE: for consistency with the ETKF update code, we scale to account 
         # for the normalized anomalies in the update step
-        H_sqrt_inv = Symmetric(Diagonal( 1.0 ./ diag_vals) * transpose(G) * δ * 
-                               transpose(δ) * G * Diagonal( 1.0 ./ diag_vals))
+        H_sqrt_inv = Symmetric(Diagonal( F.S ./ diag_vals) * transpose(F.U) * δ * 
+                               transpose(δ) * F.U * Diagonal( F.S ./ diag_vals))
         H_sqrt_inv = Diagonal(diag_vals) - ( (2.0 * ζ_a.minimizer^2.0) / (N_ens + 1.0) ) * H_sqrt_inv
         H_sqrt_inv = Symmetric(F.V * inv(square_root(H_sqrt_inv)) * F.Vt * sqrt(N_ens - 1.0))
         
