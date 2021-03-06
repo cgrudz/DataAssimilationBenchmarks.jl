@@ -20,7 +20,7 @@ using SmootherExps
 # Filters 
 ########################################################################################################################
 function filter_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/filter_state_smoother_input_args.jld")
+    f = load("/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld")
     args = f["experiments"][j]
     filter_state(args)
 end

@@ -30,7 +30,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # Filters
 ########################################################################################################################
 # [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
-
+#
 schemes = ["enkf-n"]
 seed = 0
 obs_un = 1.0
@@ -45,7 +45,7 @@ for ts in time_series
     for scheme in schemes
         for N in N_ens
             for α in infl
-                tmp = (time_series, scheme, seed, obs_un, obs_dim, N, α)
+                tmp = (ts, scheme, seed, obs_un, obs_dim, N, α)
                 push!(args, tmp)
             end
         end
@@ -54,6 +54,18 @@ end
 
 name = "/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
 save(name, "experiments", args)
+
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"filter_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
 
 
 ########################################################################################################################
@@ -94,36 +106,49 @@ save(name, "experiments", args)
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
 #
-#schemes = ["etks"]
-#seed = 0
-#lag = 1:3:52
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-#N_ens = 15:2:43
-#state_infl = LinRange(1.00, 1.10, 11)
-#mda = true
-#
-#
-## load the experiments
-#args = Tuple[]
-#for ts in time_series
-#    for scheme in schemes
-#        for l in lag
-#            for N in N_ens
-#                for s_infl in state_infl
-#                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-#                    push!(args, tmp)
-#                end
-#            end
-#        end
-#    end
-#end
-#
-#name = "/home/cgrudzien/da_benchmark/data/input_data/hybrid_state_smoother_input_args.jld"
-#save(name, "experiments", args)
-#
-#
+schemes = ["enks-n"]
+seed = 0
+lag = 1:3:52
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+N_ens = 15:2:43
+state_infl = [1.0] #LinRange(1.00, 1.10, 11)
+time_series = [time_series_1, time_series_2]
+mda = false
+
+
+# load the experiments
+args = Tuple[]
+for ts in time_series
+    for scheme in schemes
+        for l in lag
+            for N in N_ens
+                for s_infl in state_infl
+                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+                    push!(args, tmp)
+                end
+            end
+        end
+    end
+end
+
+name = "/home/cgrudzien/da_benchmark/data/input_data/hybrid_state_smoother_input_args.jld"
+save(name, "experiments", args)
+
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"hybrid_smoother_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
+
+
 ########################################################################################################################
 # Iterative smoothers
 ########################################################################################################################
@@ -163,8 +188,8 @@ save(name, "experiments", args)
 #    f = open("./submit_job.sl", "w")
 #    write(f,"#!/bin/bash\n")
 #    write(f,"#SBATCH -n 1\n")
-#    write(f,"#SBATCH -o experiment.out\n")
-#    write(f,"#SBATCH -e experiment.err\n")
+#    write(f,"#SBATCH -o ensemble_run.out\n")
+#    write(f,"#SBATCH -e ensemble_run.err\n")
 #    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"")
 #    close(f)
 #    my_command = `sbatch  submit_job.sl`
