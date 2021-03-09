@@ -862,7 +862,8 @@ function process_all_smoother_state()
     # on the left axis
     
     # parameters for the file names and separating out experiments
-    tanl = 0.10
+    t1 = time()
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -872,7 +873,7 @@ function process_all_smoother_state()
     shift = 1
     mda = false
     diffusion = 0.00
-    method_list = ["etks_classic", "enks-n_hybrid", "ienks-bundle", "etks_hybrid"]
+    method_list = ["enks-n_hybrid", "etks_hybrid", "etks_classic", "ienks-bundle"]
     ensemble_sizes = 15:2:43 
     ensemble_size = length(ensemble_sizes)
     total_inflations = LinRange(1.00, 1.10, 11)
@@ -883,7 +884,7 @@ function process_all_smoother_state()
     # define the storage dictionary here
     data = Dict{String, Array{Float64}}()
     for method in method_list
-        if method == "enks-n"
+        if method == "enks-n_hybrid"
             data[method * "_anal_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
             data[method * "_filt_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
             data[method * "_fore_rmse"] = Array{Float64}(undef, total_lag, ensemble_size) 
@@ -908,7 +909,7 @@ function process_all_smoother_state()
             for j in 0:ensemble_size - 1
                 if method == "enks-n_hybrid"
                     try
-                        tmp = load(fnames[j+1])
+                        tmp = load(fnames[1+j+k*ensemble_size])
                         
                         ana_rmse = tmp["anal_rmse"]::Vector{Float64}
                         ana_spread = tmp["anal_spread"]::Vector{Float64}
@@ -978,8 +979,8 @@ function process_all_smoother_state()
     fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/"
     for method in method_list
         fnames = []
-        for N_ens in ensemble_sizes
-            for lag in total_lags
+        for lag in total_lags
+            for N_ens in ensemble_sizes
                 if method == "enks-n_hybrid"
                     name = method * "_smoother_l96_state_benchmark_seed_0000"  *
                         "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -1050,6 +1051,7 @@ function process_all_smoother_state()
             h5write(h5name, key, data[key])
         end
     end
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
 
 
