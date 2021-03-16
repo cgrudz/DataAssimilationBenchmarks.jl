@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using LinearAlgebra, Optim, SparseArrays
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid, ls_smoother_hybrid_adaptive,
+       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid,
        ls_smoother_iterative
 
 ########################################################################################################################
@@ -397,6 +397,7 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         T_sqrt, w, U
 
     elseif analysis=="etks_adaptive"
+        ### NOTE NEED TO CHECK THE CASE WHERE THE ENSEMBLE IS FULL RANK
         ## This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
         # but using a computation of the contribution of the model error covariance matrix Q
         # in the square root as in Raanes et al. 2015 and the adaptive inflation from the
@@ -417,11 +418,17 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
             mean_err = mean(m_err, dims=2)
             A_err = (m_err .- mean_err) / sqrt(length(mean_err) - 1.0)
             F_err = svd(A_err)
-            Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+            @bp
+            if N_ens <= sys_dim
+                Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+            else
+                Σ_pinv = Diagonal(1.0 ./ F_ens.S)
+            end
 
             # step 2c: compute the square root covariance with model error anomaly contribution
             # in the ensemble space dimension, note the difference in equation due to the normalized
             # anomalies
+            @bp
             G = Symmetric(I +  Σ_pinv * transpose(F_ens.U) * F_err.U *
                           Diagonal(F_err.S.^2) * transpose(F_err.U) * 
                           F_ens.U * Σ_pinv)
