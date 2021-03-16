@@ -85,10 +85,10 @@ end
 # Hybrid smoothers
 ########################################################################################################################
 # hybrid_state single run for degbugging, arguments are
-# [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, infl] = args
+# [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 
 function hybrid_smoother_state_exp()
-    args = (time_series, "enks-n", 0, 35, 1, false, 1.0, 40, 25, 1.00)
+    args = (time_series, "etks_adaptive", 0, 22, 1, false, 1.0, 40, 25, 1.00)
     hybrid_state(args)
 end
 

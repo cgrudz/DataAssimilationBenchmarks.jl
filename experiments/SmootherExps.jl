@@ -164,11 +164,19 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
            )
     
     path = "./data/" * method * "_classic/" 
-    name = method * "_classic_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * ".jld"
+    name = method * 
+            "_classic_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * 
+            "_shift_" * lpad(shift, 3, "0") *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            ".jld"
 
 
     save(path * name, data)
@@ -360,13 +368,22 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
            )
     
     path = "./data/" * method * "_classic/" 
-    name = method * "_classic_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_param_err_" * rpad(param_err, 4, "0") * "_param_wlk_" * rpad(param_wlk, 6, "0") * 
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
+    name = method * 
+            "_classic_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_param_err_" * rpad(param_err, 4, "0") * 
+            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * 
+            "_shift_" * lpad(shift, 3, "0") *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            ".jld"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
@@ -376,7 +393,7 @@ end
 
 #########################################################################################################################
 
-function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64,Int64,Int64,Float64})
+function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
     
     # time the experiment
     t1 = time()
@@ -444,8 +461,10 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     # new observations with a filtering step to prevent divergence of the forecast for long lags
     spin = true
     kwargs["spin"] = spin
-    posterior = zeros(sys_dim, N_ens, shift)
+    posterior = Array{Float64}(undef, sys_dim, N_ens, shift)
     kwargs["posterior"] = posterior
+    analysis_innovations = Array{Float64}(undef, sys_dim, lag)
+    kwargs["analysis"] = analysis_innovations
     
     # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
     # first-lag posterior values so that the statistics align on the same time points after the spin
@@ -475,12 +494,16 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
                 kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
             end
         end
-                
+
+        # peform the analysis
         analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
         post = analysis["post"]
+        if method == "etks_adaptive"
+            kwargs["analysis"] = analysis["anal"]
+        end
 
         if spin
             for j in 1:lag 
@@ -553,11 +576,20 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64
     
 
     path = "./data/" * method * "_hybrid/" 
-    name = method * "_hybrid_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * ".jld"
+    name = method * 
+            "_hybrid_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * 
+            "_shift_" * lpad(shift, 3, "0") * 
+            "_mda_" * string(mda) *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            ".jld"
 
 
     save(path * name, data)
@@ -798,13 +830,23 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     
 
     path = "./data/" * method * "_hybrid/" 
-    name = method * "_hybrid_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_param_err_" * rpad(param_err, 4, "0") * "_param_wlk_" * rpad(param_wlk, 6, "0") * 
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
+    name = method * 
+            "_hybrid_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_param_err_" * rpad(param_err, 4, "0") * 
+            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * 
+            "_shift_" * lpad(shift, 3, "0") * 
+            "_mda_" * string(mda) *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            ".jld"
 
 
     save(path * name, data)
@@ -994,11 +1036,20 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     
 
     path = "./data/" * method * "/"
-    name = method * "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * ".jld"
+    name = method * 
+            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_lag_" * lpad(lag, 3, "0") * 
+            "_shift_" * lpad(shift, 3, "0") * 
+            "_mda_" * string(mda) *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            ".jld"
 
 
     save(path * name, data)
