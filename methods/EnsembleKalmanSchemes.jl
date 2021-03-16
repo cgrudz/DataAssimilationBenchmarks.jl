@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using LinearAlgebra, Optim, SparseArrays
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid, ls_smoother_hybrid_adaptive,
+       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid, 
        ls_smoother_iterative
 
 ########################################################################################################################
