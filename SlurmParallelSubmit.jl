@@ -155,16 +155,16 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # submit the experiments given the parameters and write to text files over the initializations
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, infl] = args
 #
-schemes = ["ienks-transform"]
+schemes = ["ienks-bundle"]
 seed = 0
-lag = 1:3:52
+lag = 37:3:52
 shift = 1
 obs_un = 1.0
 obs_dim = 40
 N_ens = 15:2:43
 state_infl = LinRange(1.00, 1.10, 11)
 mda = false
-time_series = [time_series_1, time_series_2]
+time_series = [time_series_2]
 
 # load the experiments
 args = Tuple[]

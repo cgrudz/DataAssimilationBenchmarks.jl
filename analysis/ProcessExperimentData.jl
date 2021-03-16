@@ -873,7 +873,7 @@ function process_all_smoother_state()
     shift = 1
     mda = false
     diffusion = 0.00
-    method_list = ["enks-n_hybrid", "etks_hybrid", "etks_classic", "ienks-bundle"]
+    method_list = ["enks-n_hybrid", "etks_hybrid", "etks_classic", "ienks-bundle", "ienks-transform"]
     ensemble_sizes = 15:2:43 
     ensemble_size = length(ensemble_sizes)
     total_inflations = LinRange(1.00, 1.10, 11)
