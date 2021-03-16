@@ -5,9 +5,9 @@ module EnsembleKalmanSchemes
 # imports and exports
 using Debugger
 using Random, Distributions, Statistics
-using LinearAlgebra, Optim
+using LinearAlgebra, Optim, SparseArrays
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid,
+       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid, ls_smoother_hybrid_adaptive,
        ls_smoother_iterative
 
 ########################################################################################################################
@@ -212,7 +212,8 @@ end
 # transform auxilliary function for EnKF, ETKF, EnKS, ETKS
 
 function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{Float64}, 
-                   obs_cov::T2; conditioning::T3=0.0001I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
+                   obs_cov::T2; conditioning::T3=0.0001I, 
+                   m_err::Array{Float64,2}=(1.0 ./ zeros(1,1))) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
     """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
     "analysis" is a string which determines the type of transform update.  The observation error covariance should be
@@ -332,6 +333,132 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
 
         # step 9: compute the square root of the transform
         T_sqrt = Symmetric(F.V * Diagonal( sqrt.(1.0 ./ (1.0 .+ F.S.^2.0)) ) * F.Vt)
+        
+        # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
+
+        # step 11: package the transform output tuple
+        T_sqrt, w, U
+    
+    elseif analysis=="etkf_sqrt_core" || analysis=="etks_sqrt_core"
+        ## This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
+        # but using a computation of the contribution of the model error covariance matrix Q
+        # in the square root as in Raanes et al. 2015
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+
+        # step 1: compute the ensemble mean
+        x_mean = mean(ens, dims=2)
+
+        # step 2a: compute the normalized anomalies
+        A = (ens .- x_mean) / sqrt(N_ens - 1.0)
+
+        # step 2b: compute the SVD for the two-sided projected model error covariance
+        F = svd(A)
+        Σ_inv = Diagonal([1.0 ./ F.S[1:N_ens-1]; 0.0]) 
+        p_inv = F.V * Σ_inv * transpose(F.U)
+        G = Symmetric(1.0I + (N_ens - 1.0) * p_inv * conditioning * transpose(p_inv))
+        
+        # step 2c: compute the model error adjusted anomalies
+        A = A * square_root(G)
+
+        # step 3: compute the ensemble in observation space
+        Z = H * ens
+
+        # step 4: compute the ensemble mean in observation space
+        y_mean = mean(Z, dims=2)
+        
+        # step 5: compute the weighted anomalies in observation space
+        
+        # first we find the observation error covariance inverse
+        obs_sqrt_inv = inv(square_root(obs_cov))
+        
+        # then compute the weighted anomalies
+        S = (Z .- y_mean) / sqrt(N_ens - 1.0)
+        S = obs_sqrt_inv * S
+
+        # step 6: compute the weighted innovation
+        δ = obs_sqrt_inv * ( obs - y_mean )
+       
+        # step 7: compute the transform matrix
+        T = inv(Symmetric(1.0I + transpose(S) * S))
+        
+        # step 8: compute the analysis weights
+        w = T * transpose(S) * δ
+
+        # step 9: compute the square root of the transform
+        T_sqrt = sqrt(T)
+        
+        # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
+
+        # step 11: package the transform output tuple
+        T_sqrt, w, U
+
+    elseif analysis=="etks_adaptive"
+        ## This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
+        # but using a computation of the contribution of the model error covariance matrix Q
+        # in the square root as in Raanes et al. 2015 and the adaptive inflation from the
+        # frequentist estimator for the model error covariance
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+
+        # step 1: compute the ensemble mean
+        x_mean = mean(ens, dims=2)
+
+        # step 2a: compute the normalized anomalies
+        A = (ens .- x_mean) / sqrt(N_ens - 1.0)
+
+        if !(m_err[1] == Inf)
+            # step 2b: compute the SVD for the two-sided projected model error covariance
+            F_ens = svd(A)
+            mean_err = mean(m_err, dims=2)
+            A_err = (m_err .- mean_err) / sqrt(length(mean_err) - 1.0)
+            F_err = svd(A_err)
+            Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+
+            # step 2c: compute the square root covariance with model error anomaly contribution
+            # in the ensemble space dimension, note the difference in equation due to the normalized
+            # anomalies
+            G = Symmetric(I +  Σ_pinv * transpose(F_ens.U) * F_err.U *
+                          Diagonal(F_err.S.^2) * transpose(F_err.U) * 
+                          F_ens.U * Σ_pinv)
+            
+            G = F_ens.V * square_root(G) * F_ens.Vt
+
+            # step 2c: compute the model error adjusted anomalies
+            A = A * G
+
+        end
+
+        # step 3: compute the ensemble in observation space
+        Z = H * ens
+
+        # step 4: compute the ensemble mean in observation space
+        y_mean = mean(Z, dims=2)
+        
+        # step 5: compute the weighted anomalies in observation space
+        
+        # first we find the observation error covariance inverse
+        obs_sqrt_inv = inv(square_root(obs_cov))
+        
+        # then compute the weighted anomalies
+        S = (Z .- y_mean) / sqrt(N_ens - 1.0)
+        S = obs_sqrt_inv * S
+
+        # step 6: compute the weighted innovation
+        δ = obs_sqrt_inv * ( obs - y_mean )
+       
+        # step 7: compute the transform matrix
+        T = inv(Symmetric(1.0I + transpose(S) * S))
+        
+        # step 8: compute the analysis weights
+        w = T * transpose(S) * δ
+
+        # step 9: compute the square root of the transform
+        T_sqrt = sqrt(T)
         
         # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
@@ -623,7 +750,6 @@ end
 #########################################################################################################################
 # single iteration, correlation-based lag_shift_smoother
 
-
 function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
                              obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: ObsH, T2 <: CovM}
 
@@ -634,12 +760,21 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
 
     Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
-    inflation."""
+    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
+    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
+    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
     
     # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
     step_model = kwargs["step_model"]
     posterior = kwargs["posterior"]::Array{Float64,3}
+    
+    # for the adaptive inflation shceme
+    if analysis == "etks_adaptive"
+        # analysis_innovations will contain the sequence of the last cycle's analysis mean 
+        # states over the current DAW and the innovations computed in the previous DAW-shift times
+        analysis_innovations = kwargs["analysis"]::Array{Float64,2}
+    end
     
     # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
     obs_dim, lag = size(obs)
@@ -671,6 +806,11 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
     else
         forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
         filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
+    end
+    
+    if analysis == "etks_adaptive"
+        # creat storage for the analysis means computed at each forward step of the current DAW
+        analysis_means = Array{Float64}(undef, sys_dim, lag)
     end
     
     # multiple data assimilation (mda) is optional, read as boolean variable
@@ -787,6 +927,11 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 # store all new filtered states
                 filtered[:, :, l] = ens
             
+                if analysis == "etks_adaptive"
+                    # store the analysis means for future statistics
+                    analysis_means[:, l] = mean(ens, dims=2)
+                end
+
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
             
@@ -796,18 +941,40 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 forecast[:, :, l - (lag - shift)] = ens
                 
                 # step 2c: apply the transformation and update step
-                trans = transform(analysis, ens, H, obs[:, l], obs_cov)
+                if analysis == "etks_adaptive"
+                    trans = transform(analysis, ens, H, obs[:, l], obs_cov, 
+                                      m_err=analysis_innovations)
+                else
+                    trans = transform(analysis, ens, H, obs[:, l], obs_cov)
+                end
+
                 ens = ens_update!(ens, trans)
                 
                 # store the filtered states for previously unobserved times, not mda values
                 filtered[:, :, l - (lag - shift)] = ens
                 
+                if analysis == "etks_adaptive"
+                    # store the analysis means for future statistics
+                    analysis_means[:, l] = mean(ens, dims=2)
+                end
+
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
+            elseif analysis == "etks_adaptive"
+                # store the analysis means for future statistics
+                analysis_means[:, l] = mean(ens, dims=2)
+
+                # compute the innovation versus the last cycle's analysis state
+                analysis_innovations[:, l + shift] = analysis_innovations[:, l + shift] - analysis_means[:, l]
             end
         end
         # reset the ensemble with the re-analyzed prior 
         ens = copy(ens_0)
+
+        if analysis == "etks_adaptive"
+            # reset the analysis innovations for the next DAW
+            analysis_innovations = copy(analysis_means)
+        end
     end
 
     # step 3: propagate the posterior initial condition forward to the shift-forward time
@@ -838,15 +1005,28 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
+        if analysis == "etks_adaptive"
+            # compute the analysis innovations over the shift states for the next DAW
+            analysis_innovations[:, s] = analysis_innovations[:, s] - mean(ens, dims=2)
+        end
     end
 
-    Dict{String,Array{Float64}}(
-                                "ens" => ens, 
-                                "post" =>  posterior, 
-                                "fore" => forecast, 
-                                "filt" => filtered
-                               ) 
-
+    if analysis == "etks_adaptive"
+       return  Dict{String,Array{Float64}}(
+                                           "ens" => ens, 
+                                           "post" =>  posterior, 
+                                           "fore" => forecast, 
+                                           "filt" => filtered,
+                                           "anal" => analysis_innovations
+                                          )
+    else
+       return  Dict{String,Array{Float64}}(
+                                           "ens" => ens, 
+                                           "post" =>  posterior, 
+                                           "fore" => forecast, 
+                                           "filt" => filtered,
+                                          ) 
+    end
 end
 
 

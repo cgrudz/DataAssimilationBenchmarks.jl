@@ -20,6 +20,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     t1 = time()
 
     # Define experiment parameters
+    @bp
     time_series, scheme, seed, obs_un, obs_dim, N_ens, infl = args
 
     # load the timeseries and associated parameters
@@ -35,7 +36,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45000
+    nanl = 45
 
     # set seed 
     Random.seed!(seed)
@@ -114,10 +115,18 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
            ) 
         
     path = "./data/" * scheme * "/" 
-    name = scheme * "_filter_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * "_diffusion_" * rpad(diffusion, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-            "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * ".jld"
+    name = scheme * 
+            "_filter_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") *
+            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+            ".jld"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
@@ -264,13 +273,22 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             )
     
     path = "./data/" * scheme * "/" 
-    name =  scheme * "_filter_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * "_diffusion_" * rpad(diffusion, 4, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * "_state_dim_" * lpad(state_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") * "_param_err_" * rpad(param_err, 4, "0") * "_param_wlk_" * 
-            rpad(param_wlk, 6, "0") * "_nanl_" * lpad(nanl, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * 
-            rpad(h, 4, "0") * "_N_ens_" * lpad(N_ens, 3, "0") * 
+    name =  scheme * 
+            "_filter_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
+            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+            "_state_dim_" * lpad(state_dim, 2, "0") * 
+            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+            "_obs_un_" * rpad(obs_un, 4, "0") * 
+            "_param_err_" * rpad(param_err, 4, "0") * 
+            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_nanl_" * lpad(nanl, 5, "0") * 
+            "_tanl_" * rpad(tanl, 4, "0") * 
+            "_h_" * rpad(h, 4, "0") * 
+            "_N_ens_" * lpad(N_ens, 3, "0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") *
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * ".jld"
+            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            ".jld"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
