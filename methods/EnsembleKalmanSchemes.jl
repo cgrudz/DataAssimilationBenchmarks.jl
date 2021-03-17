@@ -1341,7 +1341,6 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         if i > 0
             # step 2e: formally compute the gradient and the hessian from the sequential components, 
             # perform Gauss-Newton step after forecast iteration
-            @bp
             if adaptive
                 # use the finite size EnKF cost function to produce adaptive inflation
                 w_arg = sum(w.^2) + ϵ_N

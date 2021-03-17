@@ -709,7 +709,6 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
         post = analysis["post"]
 
         if method == "etks_adaptive"
-            @bp
             # cycle the analysis states for the new DAW
             kwargs["analysis"] = analysis["anal"]
             if tail_spin
