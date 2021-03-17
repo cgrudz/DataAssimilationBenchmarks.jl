@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using LinearAlgebra, Optim, SparseArrays
 export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, rand_orth, inflate_state!,
-       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid, 
+       inflate_param!, transform, square_root, ensemble_filter, ls_smoother_classic, ls_smoother_hybrid,
        ls_smoother_iterative
 
 ########################################################################################################################
@@ -415,9 +415,16 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
             # step 2b: compute the SVD for the two-sided projected model error covariance
             F_ens = svd(A)
             mean_err = mean(m_err, dims=2)
-            A_err = (m_err .- mean_err) / sqrt(length(mean_err) - 1.0)
+
+            ## NOTE: may want to consider separate formulations in which we treat the model error mean known versus unknown
+            #A_err = (m_err .- mean_err) / sqrt(length(mean_err) - 1.0)
+            A_err = m_err / sqrt(length(m_err[1,:]))
             F_err = svd(A_err)
-            Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+            if N_ens <= sys_dim
+                Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+            else
+                Σ_pinv = Diagonal(1.0 ./ F_ens.S)
+            end
 
             # step 2c: compute the square root covariance with model error anomaly contribution
             # in the ensemble space dimension, note the difference in equation due to the normalized
@@ -771,9 +778,9 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
     
     # for the adaptive inflation shceme
     if analysis == "etks_adaptive"
-        # analysis_innovations will contain the sequence of the last cycle's analysis mean 
-        # states over the current DAW and the innovations computed in the previous DAW-shift times
-        analysis_innovations = kwargs["analysis"]::Array{Float64,2}
+        # pre_analysis will contain the sequence of the last cycle's analysis states 
+        # over the current DAW and the innovations computed in the previous DAW-shift times
+        pre_analysis = kwargs["analysis"]::Array{Float64,3}
     end
     
     # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
@@ -810,7 +817,7 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
     
     if analysis == "etks_adaptive"
         # creat storage for the analysis means computed at each forward step of the current DAW
-        analysis_means = Array{Float64}(undef, sys_dim, lag)
+        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
     end
     
     # multiple data assimilation (mda) is optional, read as boolean variable
@@ -906,6 +913,13 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                     ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
                 end
             end
+            if l == lag - shift + 1
+                if analysis == "etks_adaptive"
+                    # compute the ensemble-wise means of the differences of the pre and post analyses
+                    # to derive the analysis innovation statistics
+                    analysis_innovations = dropdims(mean(pre_analysis, dims=2), dims=2)
+                end
+            end
             if spin
                 # step 2b: store the forecast to compute ensemble statistics before observations become available
                 # if spin, store all new forecast states
@@ -928,8 +942,11 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 filtered[:, :, l] = ens
             
                 if analysis == "etks_adaptive"
-                    # store the analysis means for future statistics
-                    analysis_means[:, l] = mean(ens, dims=2)
+                    # store the re-analyzed ensembles for future statistics
+                    post_analysis[:, :, l] = ens
+                    for j in 1:l-1
+                        post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+                    end
                 end
 
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
@@ -954,18 +971,22 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 filtered[:, :, l - (lag - shift)] = ens
                 
                 if analysis == "etks_adaptive"
-                    # store the analysis means for future statistics
-                    analysis_means[:, l] = mean(ens, dims=2)
+                    # store the re-analyzed ensembles for future statistics
+                    post_analysis[:, :, l] = ens
+                    for j in 1:l-1
+                        post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+                    end
                 end
 
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
+
             elseif analysis == "etks_adaptive"
-                # store the analysis means for future statistics
-                analysis_means[:, l] = mean(ens, dims=2)
+                # store the re-analyzed ensembles for future statistics
+                post_analysis[:, :, l] = ens
 
                 # compute the innovation versus the last cycle's analysis state
-                analysis_innovations[:, l + shift] = analysis_innovations[:, l + shift] - analysis_means[:, l]
+                pre_analysis[:, :, l + shift] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
             end
         end
         # reset the ensemble with the re-analyzed prior 
@@ -973,7 +994,7 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
 
         if analysis == "etks_adaptive"
             # reset the analysis innovations for the next DAW
-            analysis_innovations = copy(analysis_means)
+            pre_analysis = copy(post_analysis)
         end
     end
 
@@ -1006,8 +1027,9 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
             end
         end
         if analysis == "etks_adaptive"
+            @bp
             # compute the analysis innovations over the shift states for the next DAW
-            analysis_innovations[:, s] = analysis_innovations[:, s] - mean(ens, dims=2)
+            pre_analysis[:, :, s] = pre_analysis[:, :, s] - ens
         end
     end
 
@@ -1017,7 +1039,7 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                                            "post" =>  posterior, 
                                            "fore" => forecast, 
                                            "filt" => filtered,
-                                           "anal" => analysis_innovations
+                                           "anal" => pre_analysis
                                           )
     else
        return  Dict{String,Array{Float64}}(
