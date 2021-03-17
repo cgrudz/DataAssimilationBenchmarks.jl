@@ -873,7 +873,14 @@ function process_all_smoother_state()
     shift = 1
     mda = false
     diffusion = 0.00
-    method_list = ["enks-n_hybrid", "etks_hybrid", "etks_classic", "ienks-bundle", "ienks-transform"]
+    method_list = [
+                   #"enks-n_hybrid", 
+                   "etks_adaptive_hybrid", 
+                   #"etks_hybrid", 
+                   #"etks_classic", 
+                   #"ienks-bundle", 
+                   #"ienks-transform"
+                  ]
     ensemble_sizes = 15:2:43 
     ensemble_size = length(ensemble_sizes)
     total_inflations = LinRange(1.00, 1.10, 11)
@@ -884,7 +891,7 @@ function process_all_smoother_state()
     # define the storage dictionary here
     data = Dict{String, Array{Float64}}()
     for method in method_list
-        if method == "enks-n_hybrid"
+        if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid"
             data[method * "_anal_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
             data[method * "_filt_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
             data[method * "_fore_rmse"] = Array{Float64}(undef, total_lag, ensemble_size) 
@@ -907,7 +914,7 @@ function process_all_smoother_state()
         for k in 0:total_lag - 1
             # loop ensemble size 
             for j in 0:ensemble_size - 1
-                if method == "enks-n_hybrid"
+                if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid"
                     try
                         tmp = load(fnames[1+j+k*ensemble_size])
                         
@@ -981,38 +988,73 @@ function process_all_smoother_state()
         fnames = []
         for lag in total_lags
             for N_ens in ensemble_sizes
-                if method == "enks-n_hybrid"
-                    name = method * "_smoother_l96_state_benchmark_seed_0000"  *
-                        "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-                        "_nanl_" * lpad(nanl + burn, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-                        "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-                        "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * ".jld"
+                if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid"
+                    name = method * 
+                            "_smoother_l96_state_benchmark_seed_0000"  *
+                            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                            "_obs_un_" * rpad(obs_un, 4, "0") *
+                            "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                            "_tanl_" * rpad(tanl, 4, "0") * 
+                            "_h_" * rpad(h, 4, "0") *
+                            "_lag_" * lpad(lag, 3, "0") * 
+                            "_shift_" * lpad(shift, 3, "0") * 
+                            "_mda_" * string(mda) *
+                            "_N_ens_" * lpad(N_ens, 3,"0") * 
+                            "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
+                            ".jld"
 
                     push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                 else
                     for infl in total_inflations
                         if method[end-6:end] == "classic"
-                            name = method * "_smoother_l96_state_benchmark_seed_0000" *
-                                "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-                                "_nanl_" * lpad(nanl + burn, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-                                "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") *
-                                "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * ".jld"
+                            name = method * 
+                                    "_smoother_l96_state_benchmark_seed_0000" *
+                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                    "_obs_un_" * rpad(obs_un, 4, "0") *
+                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                    "_tanl_" * rpad(tanl, 4, "0") * 
+                                    "_h_" * rpad(h, 4, "0") *
+                                    "_lag_" * lpad(lag, 3, "0") * 
+                                    "_shift_" * lpad(shift, 3, "0") *
+                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                    ".jld"
 
                             push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                         elseif method[end-5:end] == "hybrid"
-                            name = method * "_smoother_l96_state_benchmark_seed_0000" *
-                                "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-                                "_nanl_" * lpad(nanl + burn, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-                                "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-                                "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * ".jld"
+                            name = method * 
+                                    "_smoother_l96_state_benchmark_seed_0000" *
+                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                    "_obs_un_" * rpad(obs_un, 4, "0") *
+                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                    "_tanl_" * rpad(tanl, 4, "0") * 
+                                    "_h_" * rpad(h, 4, "0") *
+                                    "_lag_" * lpad(lag, 3, "0") * 
+                                    "_shift_" * lpad(shift, 3, "0") * 
+                                    "_mda_" * string(mda) *
+                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                    ".jld"
                             
                             push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                         else
-                            name = method * "_l96_state_benchmark_seed_0000" *
-                                "_sys_dim_" * lpad(sys_dim, 2, "0") * "_obs_dim_" * lpad(obs_dim, 2, "0") * "_obs_un_" * rpad(obs_un, 4, "0") *
-                                "_nanl_" * lpad(nanl + burn, 5, "0") * "_tanl_" * rpad(tanl, 4, "0") * "_h_" * rpad(h, 4, "0") *
-                                "_lag_" * lpad(lag, 3, "0") * "_shift_" * lpad(shift, 3, "0") * "_mda_" * string(mda) *
-                                "_N_ens_" * lpad(N_ens, 3,"0") * "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * ".jld"
+                            name = method * 
+                                    "_l96_state_benchmark_seed_0000" *
+                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                    "_obs_un_" * rpad(obs_un, 4, "0") *
+                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                    "_tanl_" * rpad(tanl, 4, "0") * 
+                                    "_h_" * rpad(h, 4, "0") *
+                                    "_lag_" * lpad(lag, 3, "0") * 
+                                    "_shift_" * lpad(shift, 3, "0") * 
+                                    "_mda_" * string(mda) *
+                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                    ".jld"
                             
                             push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                         end
