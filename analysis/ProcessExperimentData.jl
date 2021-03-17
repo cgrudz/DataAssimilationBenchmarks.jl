@@ -874,12 +874,12 @@ function process_all_smoother_state()
     mda = false
     diffusion = 0.00
     method_list = [
-                   #"enks-n_hybrid", 
+                   "enks-n_hybrid", 
                    "etks_adaptive_hybrid", 
-                   #"etks_hybrid", 
-                   #"etks_classic", 
-                   #"ienks-bundle", 
-                   #"ienks-transform"
+                   "etks_hybrid", 
+                   "etks_classic", 
+                   "ienks-bundle", 
+                   "ienks-transform"
                   ]
     ensemble_sizes = 15:2:43 
     ensemble_size = length(ensemble_sizes)
