@@ -418,7 +418,7 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
 
             ## NOTE: may want to consider separate formulations in which we treat the model error mean known versus unknown
             #A_err = (m_err .- mean_err) / sqrt(length(mean_err) - 1.0)
-            A_err = m_err / sqrt(length(m_err[1,:]))
+            A_err = m_err / sqrt(size(m_err, 2))
             F_err = svd(A_err)
             if N_ens <= sys_dim
                 Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
@@ -767,21 +767,12 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
 
     Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
-    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
-    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
-    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
+    inflation."""
     
     # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
     step_model = kwargs["step_model"]
     posterior = kwargs["posterior"]::Array{Float64,3}
-    
-    # for the adaptive inflation shceme
-    if analysis == "etks_adaptive"
-        # pre_analysis will contain the sequence of the last cycle's analysis states 
-        # over the current DAW and the innovations computed in the previous DAW-shift times
-        pre_analysis = kwargs["analysis"]::Array{Float64,3}
-    end
     
     # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
     obs_dim, lag = size(obs)
@@ -813,11 +804,6 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
     else
         forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
         filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
-    end
-    
-    if analysis == "etks_adaptive"
-        # creat storage for the analysis means computed at each forward step of the current DAW
-        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
     end
     
     # multiple data assimilation (mda) is optional, read as boolean variable
@@ -913,13 +899,6 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                     ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
                 end
             end
-            if l == lag - shift + 1
-                if analysis == "etks_adaptive"
-                    # compute the ensemble-wise means of the differences of the pre and post analyses
-                    # to derive the analysis innovation statistics
-                    analysis_innovations = dropdims(mean(pre_analysis, dims=2), dims=2)
-                end
-            end
             if spin
                 # step 2b: store the forecast to compute ensemble statistics before observations become available
                 # if spin, store all new forecast states
@@ -941,14 +920,6 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 # store all new filtered states
                 filtered[:, :, l] = ens
             
-                if analysis == "etks_adaptive"
-                    # store the re-analyzed ensembles for future statistics
-                    post_analysis[:, :, l] = ens
-                    for j in 1:l-1
-                        post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
-                    end
-                end
-
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
             
@@ -958,44 +929,19 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 forecast[:, :, l - (lag - shift)] = ens
                 
                 # step 2c: apply the transformation and update step
-                if analysis == "etks_adaptive"
-                    trans = transform(analysis, ens, H, obs[:, l], obs_cov, 
-                                      m_err=analysis_innovations)
-                else
-                    trans = transform(analysis, ens, H, obs[:, l], obs_cov)
-                end
+                trans = transform(analysis, ens, H, obs[:, l], obs_cov)
 
                 ens = ens_update!(ens, trans)
                 
                 # store the filtered states for previously unobserved times, not mda values
                 filtered[:, :, l - (lag - shift)] = ens
                 
-                if analysis == "etks_adaptive"
-                    # store the re-analyzed ensembles for future statistics
-                    post_analysis[:, :, l] = ens
-                    for j in 1:l-1
-                        post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
-                    end
-                end
-
                 # step 2d: compute the re-analyzed initial condition if we have an assimilation update
                 ens_0 = ens_update!(ens_0, trans)
-
-            elseif analysis == "etks_adaptive"
-                # store the re-analyzed ensembles for future statistics
-                post_analysis[:, :, l] = ens
-
-                # compute the innovation versus the last cycle's analysis state
-                pre_analysis[:, :, l + shift] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
             end
         end
         # reset the ensemble with the re-analyzed prior 
         ens = copy(ens_0)
-
-        if analysis == "etks_adaptive"
-            # reset the analysis innovations for the next DAW
-            pre_analysis = copy(post_analysis)
-        end
     end
 
     # step 3: propagate the posterior initial condition forward to the shift-forward time
@@ -1026,29 +972,232 @@ function ls_smoother_hybrid(analysis::String, ens::Array{Float64,2}, H::T1, obs:
                 ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
             end
         end
-        if analysis == "etks_adaptive"
+    end
+
+    Dict{String,Array{Float64}}(
+                                "ens" => ens, 
+                                "post" =>  posterior, 
+                                "fore" => forecast, 
+                                "filt" => filtered,
+                                ) 
+end
+
+
+#########################################################################################################################
+# single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
+
+function ls_smoother_hybrid_adaptive(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
+                             obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: ObsH, T2 <: CovM}
+
+    """Lag-shift ensemble kalman smoother analysis step, hybrid version
+
+    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
+    which is pushed forward in time from the initial conidtion to shift-number of observation times.
+
+    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
+    case, a value for the parameter covariance inflation should be included in addition to the state covariance
+    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
+    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
+    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
+    
+    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
+    f_steps = kwargs["f_steps"]::Int64
+    step_model = kwargs["step_model"]
+    posterior = kwargs["posterior"]::Array{Float64,3}
+    
+    # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
+    obs_dim, lag = size(obs)
+    sys_dim, N_ens, shift = size(posterior)
+
+    # for the adaptive inflation shceme
+    # load bool if spinning up tail of innovation statistics
+    @bp
+    tail_spin = kwargs["tail_spin"]::Bool
+
+    # pre_analysis will contain the sequence of the last cycle's analysis states 
+    # over the current DAW 
+    pre_analysis = kwargs["analysis"]::Array{Float64,3}
+
+    # analysis innovations contains the innovation statistics over the previous DAW plus a trail of
+    # length tail * lag to ensure more robust frequentist estimates
+    analysis_innovations = kwargs["analysis_innovations"]::Array{Float64,2}
+
+    # optional parameter estimation
+    if haskey(kwargs, "state_dim")
+        state_dim = kwargs["state_dim"]::Int64
+        param_infl = kwargs["param_infl"]::Float64
+        param_wlk = kwargs["param_wlk"]::Float64
+
+    else
+        state_dim = sys_dim
+    end
+
+    # make a copy of the intial ens for re-analysis
+    ens_0 = copy(ens)
+    
+    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
+    # the first initial condition for the future iterations regardless of sda or mda settings
+    spin = kwargs["spin"]::Bool
+    
+    # step 1: create storage for the posterior, forecast and filter values over the DAW
+    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
+    # last-iterate posterior estimate respectively
+    if spin
+        forecast = Array{Float64}(undef, sys_dim, N_ens, lag)
+        filtered = Array{Float64}(undef, sys_dim, N_ens, lag)
+    else
+        forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
+        filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
+    end
+    
+    if spin
+        ### NOTE: WRITING THIS NOW SO THAT WE WILL HAVE AN ARBITRARY TAIL OF INNOVATION STATISTICS
+        # FROM THE PASS BACK THROUGH THE WINDOW, BUT WILL COMPUTE INNOVATIONS ONLY ON THE NEW 
+        # SHIFT-LENGTH REANALYSIS STATES BY THE SHIFTED DAW
+        # create storage for the analysis means computed at each forward step of the current DAW
+        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
+    else
+        # create storage for the analysis means computed at the shift forward states in the DAW 
+        post_analysis = Array{Float64}(undef, sys_dim, N_ens, shift)
+    end
+    
+    # step 2: forward propagate the ensemble and analyze the observations
+    for l in 1:lag
+        # step 2a: propagate between observation times
+        for j in 1:N_ens
+            for k in 1:f_steps
+                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+            end
+        end
+        if spin
+            # step 2b: store the forecast to compute ensemble statistics before observations become available
+            # if spin, store all new forecast states
+            forecast[:, :, l] = ens
+            
+            # step 2c: apply the transformation and update step
+            trans = transform(analysis, ens, H, obs[:, l], obs_cov)
+            ens = ens_update!(ens, trans)
+            
+            # compute multiplicative inflation of state variables
+            ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+
+            # if including an extended state of parameter values,
+            # compute multiplicative inflation of parameter values
+            if state_dim != sys_dim
+                ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+            end
+            
+            # store all new filtered states
+            filtered[:, :, l] = ens
+        
+            # store the re-analyzed ensembles for future statistics
+            post_analysis[:, :, l] = ens
+            for j in 1:l-1
+                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+            end
+
+            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+            ens_0 = ens_update!(ens_0, trans)
+        
+        elseif l > (lag - shift)
+            # step 2b: store the forecast to compute ensemble statistics before observations become available
+            # if not spin, only store forecasted states for beyond unobserved times beyond previous forecast windows
+            forecast[:, :, l - (lag - shift)] = ens
+            
+            # step 2c: apply the transformation and update step
+            if tail_spin
+                trans = transform(analysis, ens, H, obs[:, l], obs_cov, 
+                                  m_err=analysis_innovations[:, 1:end-shift])
+            else
+                trans = transform(analysis, ens, H, obs[:, l], obs_cov, 
+                                  m_err=analysis_innovations)
+            end
+
+            ens = ens_update!(ens, trans)
+            
+            # store the filtered states for previously unobserved times, not mda values
+            filtered[:, :, l - (lag - shift)] = ens
+            
+            # store the re-analyzed ensembles for future statistics
+            post_analysis[:, :, l] = ens
+            for j in 1:l-1
+                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+            end
+
+            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+            ens_0 = ens_update!(ens_0, trans)
+
+        elseif l > (lag - 2 * shift)
+            # store the re-analyzed ensembles for future statistics
+            post_analysis[:, :, l] = ens
+
+            # compute the innovation versus the last cycle's analysis state
             @bp
-            # compute the analysis innovations over the shift states for the next DAW
-            pre_analysis[:, :, s] = pre_analysis[:, :, s] - ens
+            analysis_innovations[:, :, end - lag + l] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
+        end
+    end
+    # reset the ensemble with the re-analyzed prior 
+    ens = copy(ens_0)
+
+    # reset the analysis innovations for the next DAW
+    pre_analysis = copy(post_analysis)
+    
+    @bp
+    if !tail_spin 
+        # add the new shifted DAW innovations to the statistics and discard the oldest
+        # shift-innovations
+        analysis_innovations = hcat(analysis_innovations[:, shift + 1: end],
+                                    Array{Float64}(undef, sys_dim, shift))
+    end
+
+    # step 3: propagate the posterior initial condition forward to the shift-forward time
+    # step 3a: inflate the posterior covariance
+    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+    
+    # if including an extended state of parameter values,
+    # compute multiplicative inflation of parameter values
+    if state_dim != sys_dim
+        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+    end
+
+    # step 3b: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim
+        param_ens = ens[state_dim + 1:end , :]
+        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+        ens[state_dim + 1:end, :] = param_ens
+    end
+
+    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+    # observation times
+    for s in 1:shift
+        if !mda
+            posterior[:, :, s] = ens
+        end
+        for j in 1:N_ens
+            for k in 1:f_steps
+                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+            end
         end
     end
 
-    if analysis == "etks_adaptive"
-       return  Dict{String,Array{Float64}}(
-                                           "ens" => ens, 
-                                           "post" =>  posterior, 
-                                           "fore" => forecast, 
-                                           "filt" => filtered,
-                                           "anal" => pre_analysis
-                                          )
+    if tail_spin
+        # prepare storage for the new innovations concatenated to the oldest lag-innovations
+        analysis_innovations = hcat(analysis_innovations, 
+                                    Array{Float64}(undef, sys_dim, shift))
     else
-       return  Dict{String,Array{Float64}}(
-                                           "ens" => ens, 
-                                           "post" =>  posterior, 
-                                           "fore" => forecast, 
-                                           "filt" => filtered,
-                                          ) 
+        # reset the analysis innovations window to remove the oldest lag-innovations
+        analysis_innovations = hcat(analysis_innovations[:, shift  + 1: end], 
+                                    Array{Float64}(undef, sys_dim, lag))
     end
+    
+    Dict{String,Array{Float64}}(
+                                "ens" => ens, 
+                                "post" =>  posterior, 
+                                "fore" => forecast, 
+                                "filt" => filtered,
+                                "anal" => pre_analysis,
+                                "inno" => analysis_innovations,
+                               )
 end
 
 
