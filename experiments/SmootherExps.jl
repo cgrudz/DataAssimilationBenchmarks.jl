@@ -1080,13 +1080,13 @@ end
 
 #########################################################################################################################
 
-function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Float64,Int64,Int64,Float64})
+function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,Float64,Int64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1101,7 +1101,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -1126,6 +1126,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
                 "h" => h,
                 "diffusion" => diffusion,
                 "shift" => shift,
+                "adaptive" => adaptive,
                 "mda" => mda 
                              )
 
@@ -1251,6 +1252,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
             "tanl"=> tanl,
             "lag"=> lag,
             "shift"=> shift,
+            "adaptive" => adaptive,
             "mda" => mda,
             "h"=> h,
             "N_ens"=> N_ens, 
@@ -1269,6 +1271,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64, Bool, Floa
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
+            "_adaptive_" * string(adaptive) *
             "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 

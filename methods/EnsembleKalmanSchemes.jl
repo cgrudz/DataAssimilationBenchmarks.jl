@@ -1240,6 +1240,13 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
     
+    # adaptive covariance inflation with finite size formalism (adaptive) is optional,
+    # read as boolean varaible
+    adaptive = kwargs["adaptive"]::Bool
+    if adaptive
+        ϵ_N = 1.0 + (1.0 / N_ens)
+    end
+
     # multiple data assimilation (mda) is optional, read as boolean variable
     mda = kwargs["mda"]::Bool
     if mda
@@ -1265,8 +1272,9 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     w = zeros(N_ens)
     i = 0
 
-    # step 1c: compute the initial ensemble mean and normalized anomalies, storage for the
-    # sequentially computed iterated mean, gradient and and hessian terms 
+    # step 1c: compute the initial ensemble mean and normalized anomalies, 
+    # and storage for the  sequentially computed iterated mean, gradient 
+    # and hessian terms 
     ens_mean_0 = mean(ens, dims=2)
     ens_mean_iter = copy(ens_mean_0) 
     anom_0 = ens .- ens_mean_0 
@@ -1333,8 +1341,20 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         if i > 0
             # step 2e: formally compute the gradient and the hessian from the sequential components, 
             # perform Gauss-Newton step after forecast iteration
-            gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
-            hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+            @bp
+            if adaptive
+                # use the finite size EnKF cost function to produce adaptive inflation
+                w_arg = sum(w.^2) + ϵ_N
+                gradient = N_ens * (w / w_arg) - sum(∇J, dims=2)
+                hessian = Symmetric(
+                                    N_ens * ( w_arg^(-1.0) * I - 2.0 * w * transpose(w) * w_arg^(-2.0) ) + 
+                                    dropdims(sum(hess_J, dims=3), dims=3)
+                                   )
+            else
+                # compute the usual cost function directly
+                gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
+                hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+            end
 
             if analysis == "ienks-transform"
                 T = inv(square_root(hessian)) 
