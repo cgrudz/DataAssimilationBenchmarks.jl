@@ -414,12 +414,12 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
     
-    # define the initial ensembles, squeezing the sys_dim times 1 array from the timeseries generation
+    # define the initial ensembles
     obs = ts["obs"]::Array{Float64, 2}
     init = obs[:, 1]
     sys_dim = length(init)
@@ -463,8 +463,8 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     kwargs["spin"] = spin
     posterior = Array{Float64}(undef, sys_dim, N_ens, shift)
     kwargs["posterior"] = posterior
-    analysis_innovations = Array{Float64}(undef, sys_dim, lag)
-    kwargs["analysis"] = analysis_innovations
+    pre_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
+    kwargs["analysis"] = pre_analysis
     
     # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
     # first-lag posterior values so that the statistics align on the same time points after the spin
