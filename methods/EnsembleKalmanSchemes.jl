@@ -1276,7 +1276,6 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # and storage for the  sequentially computed iterated mean, gradient 
     # and hessian terms 
     ens_mean_0 = mean(ens, dims=2)
-    ens_mean_iter = copy(ens_mean_0) 
     anom_0 = ens .- ens_mean_0 
 
     if spin || mda
@@ -1287,7 +1286,8 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         hess_J = Array{Float64}(undef, N_ens, N_ens, shift)
     end
 
-    # pre-allocate these variables as global for the loops
+    # pre-allocate these variables as global for the loop re-definitions
+    ens_mean_iter = Vector{Float64}(undef, sys_dim) 
     hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
     new_ens = Array{Float64}(undef, sys_dim, N_ens)
 
@@ -1339,21 +1339,19 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         end
 
         if i > 0
-            # step 2e: formally compute the gradient and the hessian from the sequential components, 
-            # perform Gauss-Newton step after forecast iteration
+            # step 2e: formally compute the gradient and the hessian from the sequential 
+            # components, perform Gauss-Newton step after forecast iteration
             if adaptive
-                # use the finite size EnKF cost function to produce adaptive inflation
+                # use the finite size EnKF cost function to produce the gradient calculation 
                 w_arg = sum(w.^2) + ϵ_N
                 gradient = N_ens * (w / w_arg) - sum(∇J, dims=2)
-                hessian = Symmetric(
-                                    N_ens * ( w_arg^(-1.0) * I - 2.0 * w * transpose(w) * w_arg^(-2.0) ) + 
-                                    dropdims(sum(hess_J, dims=3), dims=3)
-                                   )
             else
                 # compute the usual cost function directly
                 gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
-                hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
             end
+
+            # hessian is computed the same for both methods
+            hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
 
             if analysis == "ienks-transform"
                 T = inv(square_root(hessian)) 
@@ -1375,6 +1373,17 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     end
                 
     # step 3: compute posterior initial condiiton and propagate forward in time
+    if adaptive
+        # use the finite size EnKF cost function to produce adaptive inflation with the hessian
+        w_arg = sum(w.^2) + ϵ_N
+        hessian = Symmetric(
+                            N_ens * ( w_arg^(-1.0) * I - 2.0 * w * transpose(w) * w_arg^(-2.0) ) + 
+                            dropdims(sum(hess_J, dims=3), dims=3)
+                           )
+        if analysis == "ienks-transform"
+            T = inv(square_root(hessian)) 
+        end
+    end
     
     # step 3a: perform the analysis of the ensemble
     if analysis == "ienks-transform"
