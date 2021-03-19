@@ -163,7 +163,7 @@ obs_un = 1.0
 obs_dim = 40
 N_ens = 15:2:43
 state_infl = [1.0]#LinRange(1.00, 1.10, 11)
-adaptive = true
+adaptive = true 
 mda = false
 time_series = [time_series_1, time_series_2]
 
