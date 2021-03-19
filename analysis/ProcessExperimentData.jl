@@ -1029,7 +1029,8 @@ function process_all_smoother_state()
         for lag in total_lags
             for N_ens in ensemble_sizes
                 ## NEED TO DECIDE HOW TO HANDLE EnKS-N classic
-                if method == "enks-n_hybrid" || 
+                if method == "enks-n_classsic" ||
+                    method == "enks-n_hybrid" ||
                     method == "etks_adaptive_hybrid"
                         name = method * 
                                 "_smoother_l96_state_benchmark_seed_0000"  *
@@ -1068,58 +1069,23 @@ function process_all_smoother_state()
                     push!(fnames, fpath * method_short * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                 else
                     for infl in total_inflations
-                        if method[end-6:end] == "classic"
-                            name = method * 
-                                    "_smoother_l96_state_benchmark_seed_0000" *
-                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                                    "_obs_un_" * rpad(obs_un, 4, "0") *
-                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
-                                    "_tanl_" * rpad(tanl, 4, "0") * 
-                                    "_h_" * rpad(h, 4, "0") *
-                                    "_lag_" * lpad(lag, 3, "0") * 
-                                    "_shift_" * lpad(shift, 3, "0") *
-                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
-                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
-                                    ".jld"
-
-                            push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
-                        elseif method[end-5:end] == "hybrid"
-                            name = method * 
-                                    "_smoother_l96_state_benchmark_seed_0000" *
-                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                                    "_obs_un_" * rpad(obs_un, 4, "0") *
-                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
-                                    "_tanl_" * rpad(tanl, 4, "0") * 
-                                    "_h_" * rpad(h, 4, "0") *
-                                    "_lag_" * lpad(lag, 3, "0") * 
-                                    "_shift_" * lpad(shift, 3, "0") * 
-                                    "_mda_" * string(mda) *
-                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
-                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
-                                    ".jld"
-                            
-                            push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
-                        else
-                            name = method * 
-                                    "_l96_state_benchmark_seed_0000" *
-                                    "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                                    "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                                    "_obs_un_" * rpad(obs_un, 4, "0") *
-                                    "_nanl_" * lpad(nanl + burn, 5, "0") * 
-                                    "_tanl_" * rpad(tanl, 4, "0") * 
-                                    "_h_" * rpad(h, 4, "0") *
-                                    "_lag_" * lpad(lag, 3, "0") * 
-                                    "_shift_" * lpad(shift, 3, "0") * 
-                                    "_adaptive_" * "false" *
-                                    "_mda_" * string(mda) *
-                                    "_N_ens_" * lpad(N_ens, 3,"0") * 
-                                    "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
-                                    ".jld"
-                            
-                            push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
-                        end
+                        name = method * 
+                                "_l96_state_benchmark_seed_0000" *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                "_tanl_" * rpad(tanl, 4, "0") * 
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") * 
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_adaptive_" * "false" *
+                                "_mda_" * string(mda) *
+                                "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                ".jld"
+                        
+                        push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                     end
                 end
             end
