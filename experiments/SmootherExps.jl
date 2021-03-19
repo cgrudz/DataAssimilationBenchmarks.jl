@@ -39,7 +39,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -76,11 +76,11 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
     # for negative and first time indices
@@ -111,13 +111,13 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             if shift == lag
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
-                anal_rmse[i + j - 2], anal_spread[i + j - 2] = analyze_ensemble(post[:, :, j],
+                post_rmse[i + j - 2], post_spread[i + j - 2] = analyze_ensemble(post[:, :, j],
                                                                                 truth[:, i + j - 2])
 
             elseif i > lag 
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
                 # the first posterior starts with the first prior at time 1, later discarded to align stats
-                anal_rmse[i - lag + j - 1], anal_spread[i - lag + j - 1] = analyze_ensemble(post[:, :, j], 
+                post_rmse[i - lag + j - 1], post_spread[i - lag + j - 1] = analyze_ensemble(post[:, :, j], 
                                                                                     truth[:, i - lag + j - 1])
             end
         end
@@ -138,16 +138,16 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
@@ -160,12 +160,13 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "shift"=> shift,
             "h"=> h,
             "N_ens"=> N_ens, 
+            "mda" => mda,
             "state_infl"=> round(state_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
     name = method * 
-            "_classic_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -174,6 +175,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") *
+            "_mda_" * string(mda) * 
             "_N_ens_" * lpad(N_ens, 3,"0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
@@ -263,12 +265,12 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
@@ -300,7 +302,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             if shift == lag
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
-                anal_rmse[i + j - 2], anal_spread[i + j - 2] = analyze_ensemble(post[1:state_dim, :, j],
+                post_rmse[i + j - 2], post_spread[i + j - 2] = analyze_ensemble(post[1:state_dim, :, j],
                                                                                 truth[:, i + j - 2])
 
                 para_rmse[i + j - 2], 
@@ -309,7 +311,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             elseif i > lag 
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
                 # the first posterior starts with the first prior at time 1, later discarded to align stats
-                anal_rmse[i - lag + j - 1], anal_spread[i - lag + j - 1] = analyze_ensemble(post[1:state_dim, :, j], 
+                post_rmse[i - lag + j - 1], post_spread[i - lag + j - 1] = analyze_ensemble(post[1:state_dim, :, j], 
                                                                                     truth[:, i - lag + j - 1])
 
                 para_rmse[i - lag + j - 1], 
@@ -334,19 +336,19 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
     para_rmse = para_rmse[2: nanl + 1]
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "param_rmse"=> para_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "param_spread"=> para_spread,
             "method"=> method,
             "seed" => seed, 
@@ -361,6 +363,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "tanl"=> tanl,
             "lag"=> lag,
             "shift"=> shift,
+            "mda"=> false,
             "h"=> h,
             "N_ens"=> N_ens, 
             "state_infl"=> round(state_infl, digits=2),
@@ -369,7 +372,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     
     path = "./data/" * method * "_classic/" 
     name = method * 
-            "_classic_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_classic_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -380,6 +383,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") *
+            "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
             "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
@@ -451,11 +455,11 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -512,7 +516,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
 
             for j in 1:shift
                 # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
             end
 
             # turn off the initial spin period, continue hereafter on the normal assimilation cycle
@@ -533,7 +537,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
                                                                                     truth[:, i + lag - 1 - shift + j])
                 
                 # analysis statistics computed beyond the first shift
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
             end
         end
     end
@@ -543,16 +547,16 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
@@ -571,7 +575,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     
     path = "./data/" * method * "_hybrid/" 
     name = method * 
-            "_hybrid_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_hybrid_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -659,11 +663,11 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -736,7 +740,7 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
 
             for j in 1:shift
                 # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
             end
 
             # turn off the initial spin period, continue hereafter on the normal assimilation cycle
@@ -757,7 +761,7 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
                                                                                     truth[:, i + lag - 1 - shift + j])
                 
                 # analysis statistics computed beyond the first shift
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
             end
         end
     end
@@ -767,16 +771,16 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
@@ -799,7 +803,7 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
 
     path = "./data/" * method * "_hybrid/" 
     name = method * 
-            "_hybrid_smoother_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_hybrid_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -905,12 +909,12 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
@@ -970,8 +974,8 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
 
             for j in 1:shift
                 # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
-                anal_rmse[i - 2 + j], 
-                anal_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
+                post_rmse[i - 2 + j], 
+                post_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
                                                           truth[:, i - 2 + j])
                 
                 para_rmse[i - 2 + j], 
@@ -998,8 +1002,8 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
                                                                         truth[:, i + lag - 1 - shift + j])
                 
                 # analysis statistics computed beyond the first shift
-                anal_rmse[i - 2 + j], 
-                anal_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
+                post_rmse[i - 2 + j], 
+                post_spread[i - 2 + j] = analyze_ensemble(post[1:state_dim, :, j], 
                                                           truth[:, i - 2 + j])
                 
                 para_rmse[i - 2 + j], 
@@ -1017,19 +1021,19 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
     para_rmse = para_rmse[2: nanl + 1]
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "param_rmse"=> para_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "param_spread"=> para_spread,
             "method"=> method,
             "seed" => seed, 
@@ -1053,7 +1057,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
 
     path = "./data/" * method * "_hybrid/" 
     name = method * 
-            "_hybrid_smoother_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_hybrid_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -1079,13 +1083,13 @@ end
 
 #########################################################################################################################
 
-function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,Float64,Int64,Int64,Float64})
+function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1100,7 +1104,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -1125,7 +1129,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
                 "h" => h,
                 "diffusion" => diffusion,
                 "shift" => shift,
-                "adaptive" => adaptive,
                 "mda" => mda 
                              )
 
@@ -1138,11 +1141,11 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
     # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
     filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
     
     fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
     filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    anal_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
     # create storage for the iteration sequence
     iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
@@ -1194,7 +1197,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
 
             for j in 1:shift
                 # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
                 
             end
 
@@ -1216,7 +1219,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
                                                                                     truth[:, i + lag - 1 - shift + j])
                 
                 # analysis statistics computed beyond the first shift
-                anal_rmse[i - 2 + j], anal_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
+                post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
 
             end
 
@@ -1229,17 +1232,17 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
     fore_spread = fore_spread[2: nanl + 1]
     filt_rmse = filt_rmse[2: nanl + 1]
     filt_spread = filt_spread[2: nanl + 1]
-    anal_rmse = anal_rmse[2: nanl + 1]
-    anal_spread = anal_spread[2: nanl + 1]
+    post_rmse = post_rmse[2: nanl + 1]
+    post_spread = post_spread[2: nanl + 1]
     iteration_sequence = iteration_sequence[2:nanl+1]
 
     data = Dict{String,Any}(
             "fore_rmse"=> fore_rmse,
             "filt_rmse"=> filt_rmse,
-            "anal_rmse"=> anal_rmse,
+            "post_rmse"=> post_rmse,
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
-            "anal_spread"=> anal_spread,
+            "post_spread"=> post_spread,
             "iteration_sequence" => iteration_sequence,
             "method"=> method,
             "seed" => seed, 
@@ -1251,7 +1254,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
             "tanl"=> tanl,
             "lag"=> lag,
             "shift"=> shift,
-            "adaptive" => adaptive,
             "mda" => mda,
             "h"=> h,
             "N_ens"=> N_ens, 
@@ -1270,7 +1272,6 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Bool,F
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
-            "_adaptive_" * string(adaptive) *
             "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
