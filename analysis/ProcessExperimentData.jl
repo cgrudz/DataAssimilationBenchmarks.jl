@@ -874,14 +874,15 @@ function process_all_smoother_state()
     mda = false
     diffusion = 0.00
     method_list = [
-                   "enks-n_hybrid", 
-                   "etks_hybrid", 
-                   "etks_classic", 
-                   "etks_adaptive_hybrid", 
+                   #"enks-n_classic", 
+                   #"enks-n_hybrid", 
+                   #"etks_hybrid", 
+                   #"etks_classic", 
+                   #"etks_adaptive_hybrid", 
                    "ienks-bundle", 
                    "ienks-transform",
-                   "ienks-n-bundle",
-                   "ienks-n-transform"
+                   #"ienks-n-bundle",
+                   #"ienks-n-transform"
                   ]
     ensemble_sizes = 15:2:43 
     ensemble_size = length(ensemble_sizes)
@@ -893,18 +894,21 @@ function process_all_smoother_state()
     # define the storage dictionary here
     data = Dict{String, Array{Float64}}()
     for method in method_list
-        if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid" ||
-           method == "ienks-n-bundle" || method == "ienks-n-transform"
-            data[method * "_anal_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
-            data[method * "_filt_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
-            data[method * "_fore_rmse"] = Array{Float64}(undef, total_lag, ensemble_size) 
-            data[method * "_anal_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
-            data[method * "_filt_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
-            data[method * "_fore_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
-            if method[1:5] == "ienks"
-                data[method * "_iteration_mean"] = Array{Float64}(undef, total_lag, ensemble_size)
-                data[method * "_iteration_std"] = Array{Float64}(undef, total_lag, ensemble_size)
-            end
+        if method == "enks-n_hybrid" || 
+            method == "enks-n_classic" ||
+            method == "etks_adaptive_hybrid" ||
+            method == "ienks-n-bundle" || 
+            method == "ienks-n-transform"
+                data[method * "_anal_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
+                data[method * "_filt_rmse"] = Array{Float64}(undef, total_lag, ensemble_size)
+                data[method * "_fore_rmse"] = Array{Float64}(undef, total_lag, ensemble_size) 
+                data[method * "_anal_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
+                data[method * "_filt_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
+                data[method * "_fore_spread"] = Array{Float64}(undef, total_lag, ensemble_size)
+                if method[1:5] == "ienks"
+                    data[method * "_iteration_mean"] = Array{Float64}(undef, total_lag, ensemble_size)
+                    data[method * "_iteration_std"] = Array{Float64}(undef, total_lag, ensemble_size)
+                end
         else
             data[method * "_anal_rmse"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
             data[method * "_filt_rmse"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size) 
@@ -913,8 +917,8 @@ function process_all_smoother_state()
             data[method * "_filt_spread"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
             data[method * "_fore_spread"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
             if method[1:5] == "ienks"
-                data[method * "_iteration_mean"] = Array{Float64}(undef, total_lag, ensemble_size)
-                data[method * "_iteration_std"] = Array{Float64}(undef, total_lag, ensemble_size)
+                data[method * "_iteration_mean"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
+                data[method * "_iteration_std"] = Array{Float64}(undef, total_lag, total_inflation, ensemble_size)
             end
         end
     end
@@ -925,8 +929,11 @@ function process_all_smoother_state()
         for k in 0:total_lag - 1
             # loop ensemble size 
             for j in 0:ensemble_size - 1
-                if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid" ||
-                    method == "ienks-n-bundle" || method == "ienks-n-transform"
+                if method == "enks-n_hybrid" || 
+                    method == "enks-n_classic" ||
+                    method == "etks_adaptive_hybrid" ||
+                    method == "ienks-n-bundle" || 
+                    method == "ienks-n-transform"
                     try
                         tmp = load(fnames[1+j+k*ensemble_size])
                         
@@ -1021,25 +1028,26 @@ function process_all_smoother_state()
         fnames = []
         for lag in total_lags
             for N_ens in ensemble_sizes
-                if method == "enks-n_hybrid" || method == "etks_adaptive_hybrid"
-                    name = method * 
-                            "_smoother_l96_state_benchmark_seed_0000"  *
-                            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                            "_obs_un_" * rpad(obs_un, 4, "0") *
-                            "_nanl_" * lpad(nanl + burn, 5, "0") * 
-                            "_tanl_" * rpad(tanl, 4, "0") * 
-                            "_h_" * rpad(h, 4, "0") *
-                            "_lag_" * lpad(lag, 3, "0") * 
-                            "_shift_" * lpad(shift, 3, "0") * 
-                            "_mda_" * string(mda) *
-                            "_N_ens_" * lpad(N_ens, 3,"0") * 
-                            "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
-                            ".jld"
+                ## NEED TO DECIDE HOW TO HANDLE EnKS-N classic
+                if method == "enks-n_hybrid" || 
+                    method == "etks_adaptive_hybrid"
+                        name = method * 
+                                "_smoother_l96_state_benchmark_seed_0000"  *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                "_tanl_" * rpad(tanl, 4, "0") * 
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") * 
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_" * string(mda) *
+                                "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
+                                ".jld"
 
                     push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
                 elseif method == "ienks-n-bundle" || method == "ienks-n-transform"
-                    @bp
                     method_short = method[1:5] * method[8:end] 
                     name =  method_short * 
                             "_l96_state_benchmark_seed_0000"  *
