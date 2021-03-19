@@ -20,8 +20,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     t1 = time()
 
     # Define experiment parameters
-    @bp
-    time_series, scheme, seed, obs_un, obs_dim, N_ens, infl = args
+    time_series, method, seed, obs_un, obs_dim, N_ens, infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -52,7 +51,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
     
-    # define kwargs for the filtering scheme
+    # define kwargs for the filtering method
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
@@ -69,10 +68,10 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
-    anal_rmse = Vector{Float64}(undef, nanl)
+    filt_rmse = Vector{Float64}(undef, nanl)
     
     fore_spread = Vector{Float64}(undef, nanl)
-    anal_spread = Vector{Float64}(undef, nanl)
+    filt_spread = Vector{Float64}(undef, nanl)
 
     # loop over the number of observation-forecast-analysis cycles
     for i in 1:nanl
@@ -89,19 +88,19 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
 
         # after the forecast step, perform assimilation of the observation
         @bp
-        analysis = ensemble_filter(scheme, ens, H, obs[:, i], obs_cov, infl, kwargs)
+        analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, infl, kwargs)
         ens = analysis["ens"]
 
         # compute the analysis statistics
-        anal_rmse[i], anal_spread[i] = analyze_ensemble(ens, truth[:, i])
+        filt_rmse[i], filt_spread[i] = analyze_ensemble(ens, truth[:, i])
     end
 
     data = Dict{String,Any}(
             "fore_rmse" => fore_rmse,
-            "anal_rmse" => anal_rmse,
+            "filt_rmse" => filt_rmse,
             "fore_spread" => fore_spread,
-            "anal_spread" => anal_spread,
-            "scheme" => scheme,
+            "filt_spread" => filt_spread,
+            "method" => method,
             "seed" => seed, 
             "diffusion" => diffusion,
             "sys_dim" => sys_dim,
@@ -114,9 +113,9 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
             "state_infl" => round(infl, digits=2)
            ) 
         
-    path = "./data/" * scheme * "/" 
-    name = scheme * 
-            "_filter_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+    path = "./data/" * method * "/" 
+    name = method * 
+            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -141,7 +140,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     t1 = time()
 
     # Define experiment parameters
-    time_series, scheme, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -212,11 +211,11 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
 
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
-    anal_rmse = Vector{Float64}(undef, nanl)
+    filt_rmse = Vector{Float64}(undef, nanl)
     para_rmse = Vector{Float64}(undef, nanl)
     
     fore_spread = Vector{Float64}(undef, nanl)
-    anal_spread = Vector{Float64}(undef, nanl)
+    filt_spread = Vector{Float64}(undef, nanl)
     para_spread = Vector{Float64}(undef, nanl)
 
     # loop over the number of observation-forecast-analysis cycles
@@ -233,14 +232,14 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(scheme, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
+        analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage
         param_ens = ens[state_dim+1:end, :]
 
         # compute the analysis statistics
-        anal_rmse[i], anal_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
+        filt_rmse[i], filt_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
         para_rmse[i], para_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
@@ -250,12 +249,12 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
 
     data = Dict{String,Any}(
             "fore_rmse" => fore_rmse,
-            "anal_rmse" => anal_rmse,
+            "filt_rmse" => filt_rmse,
             "param_rmse" => para_rmse,
             "fore_spread" => fore_spread,
-            "anal_spread" => anal_spread,
+            "filt_spread" => filt_spread,
             "param_spread" => para_spread,
-            "scheme" => scheme,
+            "method" => method,
             "seed" => seed, 
             "diffusion" => diffusion,
             "sys_dim" => sys_dim,
@@ -272,9 +271,9 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "param_infl" => round(param_infl, digits=2)
             )
     
-    path = "./data/" * scheme * "/" 
-    name =  scheme * 
-            "_filter_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+    path = "./data/" * method * "/" 
+    name =  method * 
+            "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_state_dim_" * lpad(state_dim, 2, "0") * 

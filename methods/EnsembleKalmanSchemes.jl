@@ -211,7 +211,7 @@ end
 ########################################################################################################################
 # auxiliary function for square root inverses of multiple types of covariance matrices wrapped 
 
-function square_root_inv(M::T, full::Bool=false) where {T <: CovM}
+function square_root_inv(M::T; full::Bool=false) where {T <: CovM}
     # if full=true, will return the square root additionally for later use
     # as part of the calculation
     if T <: UniformScaling
@@ -232,9 +232,10 @@ function square_root_inv(M::T, full::Bool=false) where {T <: CovM}
         # stable square root inverse for close-to-singular inverse calculations
         F = svd(M)
         if full
-            Symmetric(F.U * Diagonal(1 ./ sqrt.(F.S)) * F.Vt), Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt) 
+            Symmetric(F.U * Diagonal(1.0 ./ sqrt.(F.S)) * F.Vt), 
+            Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt) 
         else
-            Symmetric(F.U * Diagonal(1 ./ sqrt.(F.S)) * F.Vt)
+            Symmetric(F.U * Diagonal(1.0 ./ sqrt.(F.S)) * F.Vt)
         end
     end
 end
@@ -244,8 +245,9 @@ end
 # transform auxilliary function for EnKF, ETKF, EnKS, ETKS
 
 function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{Float64}, 
-                   obs_cov::T2; conditioning::T3=0.0001I, 
-                   m_err::Array{Float64,2}=(1.0 ./ zeros(1,1))) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
+                   obs_cov::T2; conditioning::T3=1000.0I, 
+                   m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
+                   Q::T1=1.0I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
     """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
     "analysis" is a string which determines the type of transform update.  The observation error covariance should be
@@ -390,7 +392,8 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         F = svd(A)
         Σ_inv = Diagonal([1.0 ./ F.S[1:N_ens-1]; 0.0]) 
         p_inv = F.V * Σ_inv * transpose(F.U)
-        G = Symmetric(1.0I + (N_ens - 1.0) * p_inv * conditioning * transpose(p_inv))
+        ## NOTE: want to
+        G = Symmetric(1.0I + (N_ens - 1.0) * p_inv * Q * transpose(p_inv))
         
         # step 2c: compute the model error adjusted anomalies
         A = A * square_root(G)
@@ -601,11 +604,12 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         # step 12: package the transform output tuple
         H_sqrt_inv, w, U
     
-    elseif analysis=="ienks-bundle" || analysis=="ienks-transform"
-        # this computes the weighted observed anomalies as per the Gauss-Newton, bundle or transform
-        # version of the IEnKS -- bundle uses a small uniform scalar epsilon, transform uses a matrix
-        # as the conditioning, with bundle used by default
-        # this returns a sequential-in-time value for the cost function gradient and hessian
+    elseif analysis[1:5]=="ienks" 
+        # this computes the weighted observed anomalies as per the  
+        # bundle or transform version of the IEnKS -- bundle uses a small uniform 
+        # scalar epsilon, transform uses a matrix as the conditioning, 
+        # with bundle used by default this returns a sequential-in-time value for 
+        # the cost function gradient and hessian
         
         # step 1: compute the ensemble mean in observation space
         y_mean = mean(H * ens, dims=2)
@@ -1274,10 +1278,8 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
     
-    # adaptive covariance inflation with finite size formalism (adaptive) is optional,
-    # read as boolean varaible
-    adaptive = kwargs["adaptive"]::Bool
-    if adaptive
+    # adaptive covariance inflation with finite size formalism 
+    if analysis[1:7] == "ienks-n"
         ϵ_N = 1.0 + (1.0 / N_ens)
     end
 
@@ -1310,6 +1312,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # and storage for the  sequentially computed iterated mean, gradient 
     # and hessian terms 
     ens_mean_0 = mean(ens, dims=2)
+    ens_mean_iter = copy(ens_mean_0) 
     anom_0 = ens .- ens_mean_0 
 
     if spin || mda
@@ -1321,15 +1324,14 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     end
 
     # pre-allocate these variables as global for the loop re-definitions
-    ens_mean_iter = Vector{Float64}(undef, sys_dim) 
     hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
     new_ens = Array{Float64}(undef, sys_dim, N_ens)
 
     # step 1e: define the conditioning for bundle versus transform varaints
-    if analysis == "ienks-bundle"
+    if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
         T = ϵ*I
         T_inv = (1.0 / ϵ)*I
-    elseif analysis == "ienks-transform"
+    elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
         T = 1.0*I
         T_inv = 1.0*I
     end
@@ -1377,10 +1379,10 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         if i > 0
             # step 2e: formally compute the gradient and the hessian from the sequential 
             # components, perform Gauss-Newton step after forecast iteration
-            if adaptive
+            if analysis[1:7] == "ienks-n" 
                 # use the finite size EnKF cost function to produce the gradient calculation 
-                w_arg = sum(w.^2.0) + ϵ_N
-                gradient = N_ens * (w / w_arg) - sum(∇J, dims=2)
+                ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
+                gradient = N_ens * ζ * w - sum(∇J, dims=2)
             else
                 # compute the usual cost function directly
                 gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
@@ -1389,8 +1391,8 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
             # hessian is computed the same for both methods
             hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
 
-            if analysis == "ienks-transform"
-                T, T_inv = square_root_inv(hessian, true)
+            if analysis == "ienks-transform" || analysis == "ienks-n-transform"
+                T, T_inv = square_root_inv(hessian, full=true)
             end
 
             Δw = hessian \ gradient
@@ -1410,24 +1412,22 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                 
     # step 3: compute posterior initial condiiton and propagate forward in time
     # step 3a: perform the analysis of the ensemble
-    if adaptive
+    if analysis[1:7] == "ienks-n" 
         # use the finite size EnKF cost function to produce adaptive inflation with the hessian
-        w_arg = sum(w.^2.0) + ϵ_N
+        ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
         hessian = Symmetric(
-                            N_ens * ( w_arg^(-1.0) * I - 2.0 * w * transpose(w) * w_arg^(-2.0) ) + 
+                            N_ens * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
                             dropdims(sum(hess_J, dims=3), dims=3)
                            )
-        H_minus_half = square_root_inv(hessian)
+        T = square_root_inv(hessian)
     else
-        if analysis == "ienks-transform"
-            H_minus_half = T
-        else
-            H_minus_half = square_root_inv(hessian)
+        if analysis == "ienks-bundle"
+            T = square_root_inv(hessian)
         end
     end
     # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
     U = rand_orth(N_ens)
-    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * H_minus_half * U
+    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * T * U
 
     # step 3b: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
