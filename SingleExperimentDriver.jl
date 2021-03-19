@@ -64,7 +64,7 @@ end
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
 
 function classic_smoother_state_exp()
-    args = (time_series, "etks", 0, 51, 1, 1.0, 40, 35, 1.05)
+    args = (time_series, "enks-n", 0, 10, 1, 1.0, 40, 25, 1.00)
     classic_state(args)
 end
 
