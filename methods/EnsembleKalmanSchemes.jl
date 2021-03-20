@@ -1381,6 +1381,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
             # step 2e: formally compute the gradient and the hessian from the sequential 
             # components, perform Gauss-Newton step after forecast iteration
             if analysis[1:7] == "ienks-n" 
+                @bp
                 # use the finite size EnKF cost function to produce the gradient calculation 
                 ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
                 gradient = N_ens * ζ * w - sum(∇J, dims=2)
@@ -1415,6 +1416,7 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # step 3a: perform the analysis of the ensemble
     if analysis[1:7] == "ienks-n" 
         # use the finite size EnKF cost function to produce adaptive inflation with the hessian
+        @bp
         ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
         hessian = Symmetric(
                             N_ens * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
