@@ -247,7 +247,7 @@ end
 function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{Float64}, 
                    obs_cov::T2; conditioning::T3=1000.0I, 
                    m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
-                   Q::T1=1.0I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
+                   Q::T2=1.0I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
     """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
     "analysis" is a string which determines the type of transform update.  The observation error covariance should be
@@ -684,6 +684,7 @@ function ensemble_filter(analysis::String, ens::Array{Float64,2}, H::T1, obs::Ve
     end
 
     # step 1: compute the tranform and update ensemble
+    @bp
     ens = ens_update!(ens, transform(analysis, ens, H, obs, obs_cov)) 
 
     # step 2a: compute multiplicative inflation of state variables

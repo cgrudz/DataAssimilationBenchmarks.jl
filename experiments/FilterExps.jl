@@ -87,7 +87,6 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens, truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        @bp
         analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, infl, kwargs)
         ens = analysis["ens"]
 
@@ -232,6 +231,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
+        @bp
         analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 

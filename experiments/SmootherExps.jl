@@ -26,6 +26,9 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
 
+    # define static mda parameter, not used for classic scheme
+    mda=false
+
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
@@ -64,7 +67,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "h" => h,
                 "diffusion" => diffusion,
                 "shift" => shift,
-                "mda" => false
+                "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
@@ -196,6 +199,9 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
+    # define static mda parameter, not used for classic scheme
+    mda=false
+
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
@@ -209,7 +215,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -247,7 +253,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "param_wlk" => param_wlk,
                 "param_infl" => param_infl,
                 "shift" => shift,
-                "mda" => false
+                "mda" => mda 
                              )
 
     # define the observation sequence where we project the true state into the observation space and
@@ -363,7 +369,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "tanl"=> tanl,
             "lag"=> lag,
             "shift"=> shift,
-            "mda"=> false,
+            "mda"=> mda,
             "h"=> h,
             "N_ens"=> N_ens, 
             "state_infl"=> round(state_infl, digits=2),
@@ -418,7 +424,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -848,7 +854,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -1104,7 +1110,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -1149,6 +1155,8 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
     # create storage for the iteration sequence
     iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
+
+    # create conter for the analyses
     k = 1
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
