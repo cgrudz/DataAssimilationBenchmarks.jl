@@ -169,17 +169,16 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 ########################################################################################################################
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 #
-schemes = ["ienks-bundle", "ienks-transform"]
+schemes = ["ienks-bundle"]#, "ienks-transform"]
 seed = 0
-lag = 1:3:52
+lag = 43:3:52
 shift = 1
 obs_un = 1.0
 obs_dim = 40
 N_ens = 15:2:43
-state_infl = [1.0]#LinRange(1.00, 1.10, 11)
-adaptive = true 
+state_infl = LinRange(1.00, 1.10, 11)
 mda = false
-time_series = [time_series_1, time_series_2]
+time_series = [time_series_2]
 
 # load the experiments
 args = Tuple[]
@@ -188,7 +187,7 @@ for ts in time_series
         for l in lag
             for N in N_ens
                 for s_infl in state_infl
-                    tmp = (ts, scheme, seed, l, shift, adaptive, mda, obs_un, obs_dim, N, s_infl)
+                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
                     push!(args, tmp)
                 end
             end

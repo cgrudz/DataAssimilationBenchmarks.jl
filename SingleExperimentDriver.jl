@@ -110,9 +110,11 @@ end
 # iterative_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 function iterative_smoother_state_exp()
-    args = (time_series, "ienks-transform", 0, 31, 1, false, 1.0, 40, 20, 1.01)
+    args = (time_series, "ienks-bundle", 0, 22, 1, false, 1.0, 40, 20, 1.01)
     iterative_state(args)
 end
+
+iterative_smoother_state_exp()
 
 
 ########################################################################################################################
