@@ -948,16 +948,21 @@ function process_all_smoother_state()
                     method == "ienks-n-transform"
                     try
                         # attempt to load the file
-                        tmp = load(fnames[1+j+k*ensemble_size])
+                        name = fnames[1+j+k*ensemble_size] 
+                        tmp = load(name)
                         
                         # if succesfull, compute the stats over the interaval
                         for analysis in analysis_list
                             for stat in stat_list
-                                analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
-                                data[method * "_" * analysis * "_" * stat][
-                                                                           total_lag - k, 
-                                                                           j + 1
-                                                                          ] = mean(analysis_stat[burn+1: nanl+burn])
+                                try
+                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_lag - k, 
+                                                                               j + 1
+                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                catch
+                                    print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                end
                             end
                         end
                         if method[1:5] == "ienks"
@@ -997,17 +1002,22 @@ function process_all_smoother_state()
                     for i in 1:total_inflation
                         try
                             # attempt to load the file
-                            tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
+                            name = fnames[i + j*total_inflation + k*ensemble_size*total_inflation] 
+                            tmp = load(name)
                             
                             # if succesfull, compute the stats over the interaval
                             for analysis in analysis_list
                                 for stat in stat_list
-                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
-                                    data[method * "_" * analysis * "_" * stat][
-                                                                               total_lag - k, 
-                                                                               total_inflation + 1- i, 
-                                                                               j+1
-                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                    try 
+                                        analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                        data[method * "_" * analysis * "_" * stat][
+                                                                                   total_lag - k, 
+                                                                                   total_inflation + 1- i, 
+                                                                                   j+1
+                                                                                  ] = mean(analysis_stat[burn+1: nanl+burn])
+                                    catch
+                                        print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                    end
                                 end
                             end
                             if method[1:5] == "ienks"
@@ -1286,6 +1296,6 @@ end
 
 
 ########################################################################################################################
-reprocess_all_smoother_state()
+process_all_smoother_state()
 
 end
