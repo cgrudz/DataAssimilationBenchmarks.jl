@@ -864,7 +864,7 @@ function process_all_smoother_state()
     
     # parameters for the file names and separating out experiments
     t1 = time()
-    tanl = 0.05
+    tanl = 0.10
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
