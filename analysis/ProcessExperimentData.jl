@@ -11,7 +11,8 @@ using LinearAlgebra
 using HDF5
 using Glob
 export process_filter_state_glob, process_filter_state_strings, process_filter_param, process_classic_smoother_state, 
-       process_classic_smoother_param, process_hybrid_smoother_state, process_all_smoother_state
+       process_classic_smoother_param, process_hybrid_smoother_state, process_all_smoother_state, 
+       reprocess_all_smoother_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -888,7 +889,7 @@ function process_all_smoother_state()
     analysis_list = [
                      "fore",
                      "filt",
-                     "anal"
+                     "post"
                     ]
 
     stat_list = [
@@ -947,16 +948,21 @@ function process_all_smoother_state()
                     method == "ienks-n-transform"
                     try
                         # attempt to load the file
-                        tmp = load(fnames[1+j+k*ensemble_size])
+                        name = fnames[1+j+k*ensemble_size] 
+                        tmp = load(name)
                         
                         # if succesfull, compute the stats over the interaval
                         for analysis in analysis_list
                             for stat in stat_list
-                                analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
-                                data[method * "_" * analysis * "_" * stat][
-                                                                           total_lag - k, 
-                                                                           j + 1
-                                                                          ] = mean(analysis_stat[burn+1: nanl+burn])
+                                try
+                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_lag - k, 
+                                                                               j + 1
+                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                catch
+                                    print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                end
                             end
                         end
                         if method[1:5] == "ienks"
@@ -996,17 +1002,22 @@ function process_all_smoother_state()
                     for i in 1:total_inflation
                         try
                             # attempt to load the file
-                            tmp = load(fnames[i + j*total_inflation + k*ensemble_size*total_inflation])
+                            name = fnames[i + j*total_inflation + k*ensemble_size*total_inflation] 
+                            tmp = load(name)
                             
                             # if succesfull, compute the stats over the interaval
                             for analysis in analysis_list
                                 for stat in stat_list
-                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
-                                    data[method * "_" * analysis * "_" * stat][
-                                                                               total_lag - k, 
-                                                                               total_inflation + 1- i, 
-                                                                               j+1
-                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                    try 
+                                        analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                        data[method * "_" * analysis * "_" * stat][
+                                                                                   total_lag - k, 
+                                                                                   total_inflation + 1- i, 
+                                                                                   j+1
+                                                                                  ] = mean(analysis_stat[burn+1: nanl+burn])
+                                    catch
+                                        print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                    end
                                 end
                             end
                             if method[1:5] == "ienks"
@@ -1134,6 +1145,152 @@ function process_all_smoother_state()
             h5write(h5name, key, data[key])
         end
     end
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+end
+
+
+########################################################################################################################
+
+function reprocess_all_smoother_state()
+    # will create an array of the average RMSE and spread for each experiment, sorted by analysis filter or 
+    # forecast step ensemble size is increasing from the origin on the horizontal axis
+    # inflation is increasing from the origin in the middle axis, lag is increasing from the origin
+    # on the left axis
+    
+    # parameters for the file names and separating out experiments
+    t1 = time()
+    tanl = 0.10
+    h = 0.01
+    obs_un = 1.0
+    obs_dim = 40
+    sys_dim = 40
+    nanl = 20000
+    burn = 5000
+    shift = 1
+    mda = true 
+    diffusion = 0.00
+    method_list = [
+                   #"etks_classic", 
+                   "etks_hybrid", 
+                   #"enks-n_classic", 
+                   #"enks-n_hybrid", 
+                   #"ienks-bundle", 
+                   #"ienks-transform",
+                   #"ienks-n-bundle",
+                   #"ienks-n-transform",
+                   #"etks_adaptive_hybrid", 
+                  ]
+    
+    stat_list = [
+                 "rmse",
+                 "spread"
+                ]
+                 
+
+    ensemble_sizes = 15:2:43 
+    ensemble_size = length(ensemble_sizes)
+    total_inflations = LinRange(1.00, 1.10, 11)
+    total_inflation = length(total_inflations)
+    total_lags = 1:3:52
+    total_lag = length(total_lags)
+
+    # auxilliary function to process data
+    function process_data(fnames::Vector{String}, method::String)
+        # loop lag
+        for k in 0:total_lag - 1
+            # loop ensemble size 
+            for j in 0:ensemble_size - 1
+                if method == "enks-n_hybrid" || 
+                    method == "enks-n_classic" ||
+                    method == "etks_adaptive_hybrid" ||
+                    method == "ienks-n-bundle" || 
+                    method == "ienks-n-transform"
+                    name = fnames[1+j+k*ensemble_size]
+                    try
+                        # attempt to load the file
+                        tmp = load(name)
+                        for stat in stat_list
+                            tmp["post_" * stat] = tmp["anal_" * stat]
+                            tmp = delete!(tmp, "anal_" * stat)
+                        end
+                        save(name, tmp)
+                    catch
+                        print("error on " * name * "\n")
+                    end
+                else
+                    #loop inflation
+                    for i in 1:total_inflation
+                        name = fnames[i + j*total_inflation + k*ensemble_size*total_inflation]
+                        try
+                            # attempt to load the file
+                            tmp = load(name)
+                            for stat in stat_list
+                                tmp["post_" * stat] = tmp["anal_" * stat]
+                                tmp = delete!(tmp, "anal_" * stat)
+                            end
+                            save(name, tmp)
+                        catch
+                            print("error on " * name * "\n")
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    # for each DA method in the experiment, process the data, loading into the dictionary
+    fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/"
+    for method in method_list
+        fnames = []
+        for lag in total_lags
+            for N_ens in ensemble_sizes
+                if method == "enks-n_classic" ||
+                    method == "enks-n_hybrid" ||
+                    method == "ienks-n-bundle" ||
+                    method == "ienks-n-transform" ||
+                    method == "etks_adaptive_hybrid"
+                        name = method * 
+                                "_l96_state_benchmark_seed_0000"  *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                "_tanl_" * rpad(tanl, 4, "0") * 
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") * 
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_" * string(mda) *
+                                "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
+                                ".jld"
+
+                    push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
+                else
+                    for infl in total_inflations
+                        name = method * 
+                                "_l96_state_benchmark_seed_0000" *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                "_tanl_" * rpad(tanl, 4, "0") * 
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") * 
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_" * string(mda) *
+                                "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                ".jld"
+                        
+                        push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
+                    end
+                end
+            end
+        end
+        fnames = Array{String}(fnames)
+        process_data(fnames, method)
+    end
+
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
 
