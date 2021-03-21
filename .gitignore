@@ -65,6 +65,8 @@ enkf-n/
 enks-n_hybrid/
 enks-n_classic/
 ienks-bundle/
+ienks-n-bundle/
 ienks-transform/
+ienks-n-transform/
 data/input_data/
 analysis/processed*

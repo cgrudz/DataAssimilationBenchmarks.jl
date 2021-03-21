@@ -1281,7 +1281,11 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     
     # adaptive covariance inflation with finite size formalism 
     if analysis[1:7] == "ienks-n"
+        # epsilon inflation factor corresponding to unknown forecast distribution mean
         ϵ_N = 1.0 + (1.0 / N_ens)
+
+        # effective ensemble size from Marc's code, verify this later
+        N_effective = N_ens + 1.0
     end
 
     # multiple data assimilation (mda) is optional, read as boolean variable
@@ -1384,14 +1388,18 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
                 @bp
                 # use the finite size EnKF cost function to produce the gradient calculation 
                 ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
-                gradient = N_ens * ζ * w - sum(∇J, dims=2)
+                gradient = N_effective * ζ * w - sum(∇J, dims=2)
+
+                # hessian is computed with the effective ensemble size
+                hessian = Symmetric((N_effective - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
             else
                 # compute the usual cost function directly
                 gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
+
+                # hessian is computed with the ensemble rank
+                hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
             end
 
-            # hessian is computed the same for both methods
-            hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
 
             if analysis == "ienks-transform" || analysis == "ienks-n-transform"
                 T, T_inv = square_root_inv(hessian, full=true)
@@ -1419,14 +1427,12 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
         @bp
         ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
         hessian = Symmetric(
-                            N_ens * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
+                            N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
                             dropdims(sum(hess_J, dims=3), dims=3)
                            )
         T = square_root_inv(hessian)
-    else
-        if analysis == "ienks-bundle"
-            T = square_root_inv(hessian)
-        end
+    elseif analysis == "ienks-bundle"
+        T = square_root_inv(hessian)
     end
     # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
     U = rand_orth(N_ens)
