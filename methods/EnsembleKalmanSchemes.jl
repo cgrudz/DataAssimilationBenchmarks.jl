@@ -1279,212 +1279,428 @@ function ls_smoother_iterative(analysis::String, ens::Array{Float64,2}, H::T1, o
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
     
-    # adaptive covariance inflation with finite size formalism 
-    if analysis[1:7] == "ienks-n"
-        # epsilon inflation factor corresponding to unknown forecast distribution mean
-        ϵ_N = 1.0 + (1.0 / N_ens)
-
-        # effective ensemble size from Marc's code, verify this later
-        N_effective = N_ens + 1.0
-    end
-
-    # multiple data assimilation (mda) is optional, read as boolean variable
-    mda = kwargs["mda"]::Bool
-    if mda
-        obs_weights = kwargs["obs_weights"]::Vector{Float64}
-    else
-        obs_weights = ones(lag)
-    end
-
-    # step 1: define the data assimilation quantities
-
-    # step 1a: create storage for the posterior, forecast and filter values over the DAW
-    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
-    # last-iterate posterior estimate respectively
+    # step 1: create storage for the posterior filter values over the DAW, 
+    # forecast values in the DAW+shift
     if spin
-        forecast = Array{Float64}(undef, sys_dim, N_ens, lag)
+        forecast = Array{Float64}(undef, sys_dim, N_ens, lag + shift)
         filtered = Array{Float64}(undef, sys_dim, N_ens, lag)
     else
         forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
         filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
     end
 
-    # step 1b: define the initial correction and iteration count
-    w = zeros(N_ens)
-    i = 0
+    # step 1a: determine if using finite-size or MDA formalism in the below
+    if analysis[1:7] == "ienks-n"
+        # epsilon inflation factor corresponding to unknown forecast distribution mean
+        ϵ_N = 1.0 + (1.0 / N_ens)
 
-    # step 1c: compute the initial ensemble mean and normalized anomalies, 
-    # and storage for the  sequentially computed iterated mean, gradient 
-    # and hessian terms 
-    ens_mean_0 = mean(ens, dims=2)
-    ens_mean_iter = copy(ens_mean_0) 
-    anom_0 = ens .- ens_mean_0 
+        # effective ensemble size
+        N_effective = N_ens + 1.0
+    end
 
-    if spin || mda
-        ∇J = Array{Float64}(undef, N_ens, lag)
-        hess_J = Array{Float64}(undef, N_ens, N_ens, lag)
+    # multiple data assimilation (mda) is optional, read as boolean variable
+    mda = kwargs["mda"]::Bool
+    
+    # algorithm splits on the use of MDA or not
+    if mda
+        ## define the rebalancing weights for the first sweep of the algorithm
+        #reb_weights = kwargs["reb_weights"]::Vector{Float64}
+
+        ## define the mda weights for the second pass of the algorithm
+        #obs_weights = kwargs["obs_weights"]::Vector{Float64}
+
+        ## k gives the total number of iterations of the algorithm over both the
+        ## rebalancing and the MDA steps
+        #k = 0
+
+        ## stage gives the algorithm stage, 0 is rebalancing, 1 is MDA
+        #stage = 0
+
+        ### store a copy of the original ensemble for use over the rebalancing and MDA
+        ##ens_0 = copy(ens)
+
+        ## step 2a: (re)-compute the initial ensemble mean and normalized anomalies, 
+        ## and storage for the sequentially computed iterated mean, gradient 
+        ## and hessian terms 
+        #ens_mean_0 = mean(ens, dims=2)
+        #anom_0 = ens .- ens_mean_0 
+
+        #∇J = Array{Float64}(undef, N_ens, lag)
+        #hess_J = Array{Float64}(undef, N_ens, N_ens, lag)
+
+        ## pre-allocate these variables as global for the loop re-definitions
+        #hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
+        #new_ens = Array{Float64}(undef, sys_dim, N_ens)
+        #
+        #while stage <=1
+        #    # step 2b: (re)-define the conditioning for bundle versus transform varaints
+        #    if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
+        #        T = ϵ*I
+        #        T_inv = (1.0 / ϵ)*I
+        #    elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
+        #        T = 1.0*I
+        #        T_inv = 1.0*I
+        #    end
+
+        #    # step 2c: (re)-define the iteration count and the base-point for the optimization
+        #    ens_mean_iter = copy(ens_mean_0) 
+        #    w = zeros(N_ens)
+        #    if stage == 0
+        #        # stage 0 contains a zeroth iteration for the forecast statistics
+        #        i = 0
+        #    else
+        #        i = 1
+        #    end
+        #    
+        #    # step 3: begin iterative optimization with the rebalancing weights
+        #    while i <= max_iter 
+        #        # step 3a: redefine the conditioned ensemble with updated mean, after first forecast
+        #        # in the rebalancing step, always in the MDA step
+        #        if i > 0 
+        #            ens = ens_mean_iter .+ anom_0 * T
+        #        end
+
+        #        # step 3b: forward propagate the ensemble and sequentially store the forecast or construct cost function
+        #        for l in 1:lag
+        #            # propagate between observation times
+        #            for j in 1:N_ens
+        #                for k in 1:f_steps
+        #                    ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+        #                end
+        #            end
+
+        #            # step 3c: store the forecast to compute ensemble statistics before observations become available
+        #            # NOTE: this should only occur on the first pass before observations are assimilated into the first prior
+        #            # and performed with the un-scaled or conditioned ensemble during the rebalancing stage
+        #            if i == 0 && stage == 0
+        #                if spin
+        #                    forecast[:, :, l] = ens
+        #                elseif l > (lag - shift)
+        #                    forecast[:, :, l - (lag - shift)] = ens
+        #                end
+
+        #            # step 3d: compute the sequential terms of the gradient and hessian of the cost function, weights depend on
+        #            # the stage of the algorithm
+        #            elseif stage == 0 
+        #                ∇J[:,l], hess_J[:, :, l] = transform(analysis, ens, H, obs[:, l], obs_cov * reb_weights[l], conditioning=T_inv)
+
+        #            elseif stage == 1
+        #                ∇J[:,l], hess_J[:, :, l] = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l], conditioning=T_inv)
+        #            end
+
+        #        end
+
+        #        if i > 0 
+        #            # step 2e: formally compute the gradient and the hessian from the sequential 
+        #            # components, perform Gauss-Newton step after forecast iteration
+        #            if analysis[1:7] == "ienks-n" 
+        #                # use the finite size EnKF cost function to produce the gradient calculation 
+        #                ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
+        #                gradient = N_effective * ζ * w - sum(∇J, dims=2)
+
+        #                # hessian is computed with the effective ensemble size
+        #                hessian = Symmetric((N_effective - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+        #            else
+        #                # compute the usual cost function directly
+        #                gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
+
+        #                # hessian is computed with the ensemble rank
+        #                hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+        #            end
+
+        #            if analysis == "ienks-transform" || analysis == "ienks-n-transform"
+        #                T, T_inv = square_root_inv(hessian, full=true)
+        #            end
+
+        #            Δw = hessian \ gradient
+        #            w -= Δw 
+        #            # step 2f: update the mean via the increment, always with the zeroth iterate of the ensemble,
+        #            # but store the next iterate of the ensemble for reuse in the final analysis
+        #            ens_mean_iter = ens_mean_0 + anom_0 * w
+        #            
+        #            if norm(Δw) < tol
+        #                break
+        #            end
+        #        end
+        #        
+        #        # update the iteration count
+        #        i+=1
+        #    end
+
+        #    # step 3: compute posterior initial condiiton and propagate forward in time
+        #    # step 3a: perform the analysis of the ensemble
+        #    if analysis[1:7] == "ienks-n" 
+        #        # use the finite size EnKF cost function to produce adaptive inflation with the hessian
+        #        ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
+        #        hessian = Symmetric(
+        #                            N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
+        #                            dropdims(sum(hess_J, dims=3), dims=3)
+        #                           )
+        #        T = square_root_inv(hessian)
+        #    elseif analysis == "ienks-bundle"
+        #        T = square_root_inv(hessian)
+        #    end
+        #    # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
+        #    U = rand_orth(N_ens)
+        #    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * T * U
+
+        #    # step 3b: if performing parameter estimation, apply the parameter model
+        #    if state_dim != sys_dim
+        #        param_ens = ens[state_dim + 1:end , :]
+        #        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+        #        ens[state_dim + 1:end, :] = param_ens
+        #    end
+
+        #    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+        #    # observation times, store the filtered state as the forward propagated value at new observation
+        #    # times, store the posterior at the times discarded at the next shift
+        #    if stage == 0
+        #        for l in 1:lag
+        #            if l <= shift
+        #                posterior[:, :, l] = ens
+        #            end
+        #            for j in 1:N_ens
+        #                for k in 1:f_steps
+        #                    ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+        #                end
+        #            end
+        #            if spin
+        #                filtered[:, :, l] = ens
+
+        #            elseif l > lag - shift
+        #                filtered[:, :, l-(lag - shift)] = ens
+        #            end
+        #        end
+        #    else
+        #        for l in 1:shift
+        #            for j in 1:N_ens
+        #                for k in 1:f_steps
+        #                    ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+        #                end
+        #            end
+        #            if l == shift
+        #                new_ens = copy(ens)
+        #            end
+        #        end
+        #    end
+        #    stage += 1
+        #    k += i
+        #end
+        #
+        ## store and inflate the forward posterior at the new initial condition
+        #ens = new_ens
+        #ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+
+        ## if including an extended state of parameter values,
+        ## compute multiplicative inflation of parameter values
+        #if state_dim != sys_dim
+        #    ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
+        #end
+
+        #Dict{String,Array{Float64}}(
+        #                            "ens" => ens, 
+        #                            "post" =>  posterior, 
+        #                            "fore" => forecast, 
+        #                            "filt" => filtered,
+        #                            "iterations" => Array{Float64}([k])
+        #                           ) 
     else
-        ∇J = Array{Float64}(undef, N_ens, shift)
-        hess_J = Array{Float64}(undef, N_ens, N_ens, shift)
-    end
+        # step 1b: define the initial correction and iteration count, note that i will
+        # give the number of iterations of the optimization and does not take into
+        # account the forecast / filtered iteration; for an optmized routine of the
+        # transform version, forecast / filtered statistics can be computed within
+        # the iteration count i; for the optimized bundle version, forecast / filtered
+        # statistics need to be computed with an additional iteration due to the epsilon
+        # scaling of the ensemble
+        w = zeros(N_ens)
+        i = 1
 
-    # pre-allocate these variables as global for the loop re-definitions
-    hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
-    new_ens = Array{Float64}(undef, sys_dim, N_ens)
+        # step 1c: compute the initial ensemble mean and normalized anomalies, 
+        # and storage for the  sequentially computed iterated mean, gradient 
+        # and hessian terms 
+        ens_mean_0 = mean(ens, dims=2)
+        ens_mean_iter = copy(ens_mean_0) 
+        anom_0 = ens .- ens_mean_0 
 
-    # step 1e: define the conditioning for bundle versus transform varaints
-    if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
-        T = ϵ*I
-        T_inv = (1.0 / ϵ)*I
-    elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
-        T = 1.0*I
-        T_inv = 1.0*I
-    end
-
-    # step 2: begin iterative optimization
-    while i <= max_iter 
-        # step 2a: redefine the conditioned ensemble with updated mean, after first forecast
-        if i > 0
-            ens = ens_mean_iter .+ anom_0 * T
+        if spin 
+            ∇J = Array{Float64}(undef, N_ens, lag)
+            hess_J = Array{Float64}(undef, N_ens, N_ens, lag)
+        else
+            ∇J = Array{Float64}(undef, N_ens, shift)
+            hess_J = Array{Float64}(undef, N_ens, N_ens, shift)
         end
 
-        # step 2b: forward propagate the ensemble and sequentially store the forecast or construct cost function
-        for l in 1:lag
-            # propagate between observation times
+        # pre-allocate these variables as global for the loop re-definitions
+        hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
+        new_ens = Array{Float64}(undef, sys_dim, N_ens)
+
+        # step 1e: define the conditioning for bundle versus transform varaints
+        if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
+            T = ϵ*I
+            T_inv = (1.0 / ϵ)*I
+        elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
+            T = 1.0*I
+            T_inv = 1.0*I
+        end
+
+        # step 2: begin iterative optimization
+        while i <= max_iter 
+            # step 2a: redefine the conditioned ensemble with updated mean, after the first spin run
+            # or for all runs if after the spin cycle
+            if !spin || i > 1 
+                ens = ens_mean_iter .+ anom_0 * T
+            end
+
+            # step 2b: forward propagate the ensemble and sequentially store the forecast or construct cost function
+            for l in 1:lag
+                # propagate between observation times
+                for j in 1:N_ens
+                    for k in 1:f_steps
+                        ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+                    end
+                end
+                if spin
+                    if i == 1
+                       # if spin, store the forecast over the entire DAW on the first iteration
+                       forecast[:, :, l] = ens
+                    else
+                        # otherwise, compute the sequential terms of the gradient and hessian of the cost function
+                        # over all observations in the DAW
+                        ∇J[:,l], hess_J[:, :, l] = transform(analysis, ens, H, obs[:, l], obs_cov, conditioning=T_inv)
+                    end
+                elseif l > (lag - shift)
+                    # compute the sequential terms of the gradient and hessian of the cost function only for the 
+                    # shift-length new observations in the DAW 
+                    ∇J[:,l - (lag - shift)], 
+                    hess_J[:, :, l - (lag - shift)] = transform(analysis, ens, H, obs[:, l], obs_cov, conditioning=T_inv)
+                end
+            end
+
+            # skip this section in the first spin cycle, return and begin optimization
+            if !spin || i > 1
+                # step 2c: otherwise, formally compute the gradient and the hessian from the 
+                # sequential components, perform Gauss-Newton step after forecast iteration
+                if analysis[1:7] == "ienks-n" 
+                    # use the finite size EnKF cost function to produce the gradient calculation 
+                    ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
+                    gradient = N_effective * ζ * w - sum(∇J, dims=2)
+
+                    # hessian is computed with the effective ensemble size
+                    hessian = Symmetric((N_effective - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+                else
+                    # compute the usual cost function directly
+                    gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
+
+                    # hessian is computed with the ensemble rank
+                    hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
+                end
+                if analysis == "ienks-transform" || analysis == "ienks-n-transform"
+                    # re-define the conditioning matrix and its inverse for the transform 
+                    # and update steps
+                    T, T_inv = square_root_inv(hessian, full=true)
+                end
+
+                # compute the weights update
+                Δw = hessian \ gradient
+
+                # update the weights
+                w -= Δw 
+
+                # update the mean via the increment, always with the zeroth iterate of the ensemble
+                ens_mean_iter = ens_mean_0 + anom_0 * w
+                
+                if norm(Δw) < tol
+                    break
+                end
+            end
+            
+            # update the iteration count
+            i+=1
+        end
+        # step 3: compute posterior initial condiiton and propagate forward in time
+        # step 3a: perform the analysis of the ensemble
+        if analysis[1:7] == "ienks-n" 
+            # use the finite size EnKF cost function to produce adaptive inflation with the hessian
+            ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
+            hessian = Symmetric(
+                                N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
+                                dropdims(sum(hess_J, dims=3), dims=3)
+                               )
+            
+            # redefine the ensemble transform for the final update
+            T = square_root_inv(hessian)
+        elseif analysis == "ienks-bundle"
+            # redefine the ensemble transform for the final update,
+            # this is already computed in-loop for the ienks-transform
+            T = square_root_inv(hessian)
+        end
+
+        # compute the analyzed ensemble by the iterated mean and the transformed original anomalies
+        U = rand_orth(N_ens)
+        ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * T * U
+
+        # step 3b: if performing parameter estimation, apply the parameter model
+        if state_dim != sys_dim
+            param_ens = ens[state_dim + 1:end , :]
+            param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+            ens[state_dim + 1:end, :] = param_ens
+        end
+
+        # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+        # observation times, store the filtered state as the forward propagated value at the 
+        # new observation times within the DAW, the forecast states as those beyond the DAW, and
+        # store the posterior at the times discarded at the next shift
+        for l in 1:lag + shift
+            if l <= shift
+                # store the posterior ensemble at times that will be discarded
+                posterior[:, :, l] = ens
+            end
+
+            # shift the ensemble forward Δt
             for j in 1:N_ens
                 for k in 1:f_steps
                     ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
                 end
             end
 
-            # step 2c: store the forecast to compute ensemble statistics before observations become available
-            # NOTE: this should only occur on the first pass before observations are assimilated into the first prior
-            # and performed with the un-scaled or conditioned ensemble
-            if i == 0
-                if spin
-                    forecast[:, :, l] = ens
-                elseif l > (lag - shift)
-                    forecast[:, :, l - (lag - shift)] = ens
-                end
-
-            # step 2d: compute the sequential terms of the gradient and hessian of the cost function if in spin, 
-            # multiple DA (mda=true) or whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-            # after the initial forecast
-            elseif mda || spin
-                ∇J[:,l], hess_J[:, :, l] = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l], conditioning=T_inv)
-
-            elseif l > (lag - shift)
-                ∇J[:,l - (lag - shift)], 
-                hess_J[:, :, l - (lag - shift)] = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l], conditioning=T_inv)
-
+            if l == shift
+                # store the shift-forward ensemble for the initial condition in the new DAW
+                new_ens = copy(ens)
             end
 
-        end
-
-        if i > 0
-            # step 2e: formally compute the gradient and the hessian from the sequential 
-            # components, perform Gauss-Newton step after forecast iteration
-            if analysis[1:7] == "ienks-n" 
-                @bp
-                # use the finite size EnKF cost function to produce the gradient calculation 
-                ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
-                gradient = N_effective * ζ * w - sum(∇J, dims=2)
-
-                # hessian is computed with the effective ensemble size
-                hessian = Symmetric((N_effective - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
-            else
-                # compute the usual cost function directly
-                gradient = (N_ens - 1.0) * w - sum(∇J, dims=2)
-
-                # hessian is computed with the ensemble rank
-                hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
-            end
-
-
-            if analysis == "ienks-transform" || analysis == "ienks-n-transform"
-                T, T_inv = square_root_inv(hessian, full=true)
-            end
-
-            Δw = hessian \ gradient
-            w -= Δw 
-            # step 2f: update the mean via the increment, always with the zeroth iterate of the ensemble,
-            # but store the next iterate of the ensemble for reuse in the final analysis
-            ens_mean_iter = ens_mean_0 + anom_0 * w
-            
-            if norm(Δw) < tol
-                break
+            if spin && l <= lag
+                # store spin filtered states at all times up to lag
+                filtered[:, :, l] = ens
+            elseif spin && l > lag
+                # store the remaining spin forecast states at shift times beyond the DAW
+                forecast[:, :, l] = ens
+            elseif l > lag - shift && l <= lag
+                # store filtered states for newly assimilated observations
+                filtered[:, :, l - (lag - shift)] = ens
+            elseif l > lag
+                # store forecast states at shift times beyond the DAW
+                forecast[:, :, l - lag] = ens
             end
         end
         
-        # update the iteration count
-        i+=1
-    end
-                
-    # step 3: compute posterior initial condiiton and propagate forward in time
-    # step 3a: perform the analysis of the ensemble
-    if analysis[1:7] == "ienks-n" 
-        # use the finite size EnKF cost function to produce adaptive inflation with the hessian
-        @bp
-        ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
-        hessian = Symmetric(
-                            N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
-                            dropdims(sum(hess_J, dims=3), dims=3)
-                           )
-        T = square_root_inv(hessian)
-    elseif analysis == "ienks-bundle"
-        T = square_root_inv(hessian)
-    end
-    # we compute the analyzed ensemble by the iterated mean and the transformed original anomalies
-    U = rand_orth(N_ens)
-    ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * T * U
+        # store and inflate the forward posterior at the new initial condition
+        ens = new_ens
+        ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
 
-    # step 3b: if performing parameter estimation, apply the parameter model
-    if state_dim != sys_dim
-        param_ens = ens[state_dim + 1:end , :]
-        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
-        ens[state_dim + 1:end, :] = param_ens
-    end
-
-    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
-    # observation times, store the filtered state as the forward propagated value at new observation
-    # times, store the posterior at the times discarded at the next shift
-    for l in 1:lag
-        if l <= shift
-            posterior[:, :, l] = ens
+        # if including an extended state of parameter values,
+        # compute multiplicative inflation of parameter values
+        if state_dim != sys_dim
+            ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
         end
-        for j in 1:N_ens
-            for k in 1:f_steps
-                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
-            end
-        end
-        if l == shift
-            new_ens = copy(ens)
-        end
-        if spin
-            filtered[:, :, l] = ens
 
-        elseif l > lag - shift
-            filtered[:, :, l-(lag - shift)] = ens
-        end
+        Dict{String,Array{Float64}}(
+                                    "ens" => ens, 
+                                    "post" =>  posterior, 
+                                    "fore" => forecast, 
+                                    "filt" => filtered,
+                                    "iterations" => Array{Float64}([i])
+                                   ) 
     end
-    
-    # store and inflate the forward posterior at the new initial condition
-    ens = new_ens
-    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
-
-    # if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim
-        ens = inflate_param!(ens, param_infl, sys_dim, state_dim)
-    end
-
-    Dict{String,Array{Float64}}(
-                                "ens" => ens, 
-                                "post" =>  posterior, 
-                                "fore" => forecast, 
-                                "filt" => filtered,
-                                "iterations" => Array{Float64}([i])
-                               ) 
 end
 
 

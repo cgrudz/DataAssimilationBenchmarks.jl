@@ -1110,7 +1110,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -1194,19 +1194,18 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
         if spin
             for j in 1:lag 
-                # compute forecast and filter statistics on the first lag states during spin period
+                # compute filter statistics on the first lag states during spin period
+                filt_rmse[i - 1 + j], filt_spread[i - 1 + j] = analyze_ensemble(filt[:, :, j], 
+                                                                                    truth[:, i - 1 + j]) 
+            end
+            for j in 1:lag+shift
+                # compute the forecast statistics on the first lag+shift states during the spin period
                 fore_rmse[i - 1 + j], fore_spread[i - 1 + j] = analyze_ensemble(fore[:, :, j], 
                                                                                     truth[:, i - 1 + j])
-                
-                filt_rmse[i - 1 + j], filt_spread[i - 1 + j] = analyze_ensemble(filt[:, :, j], 
-                                                                                    truth[:, i - 1 + j])
-                
             end
-
             for j in 1:shift
                 # compute only the reanalyzed prior and the shift-forward forecasted reanalysis
                 post_rmse[i - 2 + j], post_spread[i - 2 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 2 + j])
-                
             end
 
             # turn off the initial spin period, continue hereafter on the normal assimilation cycle
@@ -1218,9 +1217,8 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
                 # compute the forecast, filter and analysis statistics
                 # indices for the forecast, filter, analysis and truth arrays are in absolute time,
                 # forecast / filter stats computed beyond the first lag period for the spin
-                fore_rmse[i + lag - 1 - shift + j], 
-                fore_spread[i + lag - 1 - shift + j] = analyze_ensemble(fore[:, :, j], 
-                                                                                    truth[:, i + lag - 1 - shift + j])
+                fore_rmse[i + lag - 1 + j], 
+                fore_spread[i + lag - 1+ j] = analyze_ensemble(fore[:, :, j], truth[:, i + lag - 1 + j])
                 
                 filt_rmse[i + lag - 1 - shift + j], 
                 filt_spread[i + lag - 1 - shift + j] = analyze_ensemble(filt[:, :, j], 
