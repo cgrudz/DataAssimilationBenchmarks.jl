@@ -864,7 +864,7 @@ function process_all_smoother_state()
     
     # parameters for the file names and separating out experiments
     t1 = time()
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -881,8 +881,8 @@ function process_all_smoother_state()
                    "enks-n_hybrid", 
                    "ienks-bundle", 
                    "ienks-transform",
-                   #"ienks-n-bundle",
-                   #"ienks-n-transform",
+                   "ienks-n-bundle",
+                   "ienks-n-transform",
                    #"etks_adaptive_hybrid", 
                   ]
     
