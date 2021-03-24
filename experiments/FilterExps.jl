@@ -3,9 +3,8 @@ module FilterExps
 ########################################################################################################################
 ########################################################################################################################
 # imports and exports
-using Debugger
+using Debugger, JLD
 using Random, Distributions, Statistics
-using JLD
 using LinearAlgebra
 using EnsembleKalmanSchemes, DeSolvers, L96
 export filter_state, filter_param
@@ -35,7 +34,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)

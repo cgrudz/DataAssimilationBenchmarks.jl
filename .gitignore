@@ -70,3 +70,4 @@ ienks-transform/
 ienks-n-transform/
 data/input_data/
 analysis/processed*
+data/*

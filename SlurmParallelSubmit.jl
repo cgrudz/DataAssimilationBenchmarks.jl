@@ -146,7 +146,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #                for s_infl in state_infl
 #                    #tanl = parse(Float64,ts[66:69])
 #                    #name = scheme *
-#                    #            "_hybrid_l96_state_benchmark_seed_0000" *
+#                    #            "_single_iteration_l96_state_benchmark_seed_0000" *
 #                    #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
 #                    #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
 #                    #            "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -160,7 +160,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #                    #            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
 #                    #            ".jld"
 #
-#                    #fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/" * scheme * "_hybrid/diffusion_0.00/"
+#                    #fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/" * scheme * "_single_iteration/diffusion_0.00/"
 #                    #try
 #                    #    f = load(fpath*name)
 #                    #catch
@@ -175,7 +175,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/hybrid_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -184,7 +184,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #    write(f,"#SBATCH -n 1\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"hybrid_smoother_state\"")
+#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
 #    close(f)
 #    my_command = `sbatch  submit_job.sl`
 #    run(my_command)

@@ -8,7 +8,7 @@ using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
 using EnsembleKalmanSchemes, DeSolvers, L96
-export classic_state, classic_param, hybrid_state, hybrid_param, iterative_state
+export classic_state, classic_param, single_iteration_state, single_iteration_param, iterative_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -403,7 +403,7 @@ end
 
 #########################################################################################################################
 
-function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
+function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
     
     # time the experiment
     t1 = time()
@@ -424,7 +424,7 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -504,7 +504,8 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
         end
 
         # peform the analysis
-        analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+                                                obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -579,9 +580,9 @@ function hybrid_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
             "state_infl"=> round(state_infl, digits=2)
            )
     
-    path = "./data/" * method * "_hybrid/" 
-    name = method * 
-            "_hybrid_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+    path = "./data/" * method * "_single_iteration/" 
+    name = method * "_single_iteration" *
+            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -604,7 +605,8 @@ end
 
 #########################################################################################################################
 
-function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64}, tail::Int64=3)
+function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64}, 
+                                         tail::Int64=3)
     
     # time the experiment
     t1 = time()
@@ -625,7 +627,7 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -712,7 +714,8 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
         end
 
         # peform the analysis
-        analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+                                                obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -807,9 +810,9 @@ function hybrid_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,
         data["tail"] = tail
     end
 
-    path = "./data/" * method * "_hybrid/" 
-    name = method * 
-            "_hybrid_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+    path = "./data/" * method * "_single_iteration/" 
+    name = method * "_single_iteration" *
+            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -832,7 +835,7 @@ end
 
 #########################################################################################################################
 
-function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
+function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
                                   Float64,Float64,Int64,Float64,Float64})
     
     # time the experiment
@@ -854,7 +857,7 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -959,7 +962,8 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
             end
         end
 
-        analysis = ls_smoother_hybrid(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+                                                obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -1061,9 +1065,9 @@ function hybrid_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,I
            )
     
 
-    path = "./data/" * method * "_hybrid/" 
-    name = method * 
-            "_hybrid_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+    path = "./data/" * method * "_single_iteration/" 
+    name = method * "_single_iteration" *
+            "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -1105,12 +1109,13 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     h = 0.01
     dx_dt = L96.dx_dt
     step_model = rk4_step!
-    
+    ls_smoother_iterative = ls_smoother_gauss_newton
+
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -1172,15 +1177,26 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
-            # if still processing observations from the spin cycle, deal with special weights
-            # given by the number of times the observation is assimilated
             # NOTE: mda spin weights are only designed for shift=1
-            if i <= lag
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag]
+            if spin
+                # for the first rebalancing step, all observations are new and get fully assimilated
+                # observation weights are given with respect to a special window in terms of the
+                # number of times the observation will be assimilated
+                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
+                kwargs["reb_weights"] = ones(lag) 
 
-            # otherwise equal weights
+            elseif i <= lag
+                # if still processing observations from the spin cycle, deal with special weights
+                # given by the number of times the observation is assimilated
+                obs_weights = [i-1:lag-1; ones(i-1) * lag]
+                kwargs["obs_weights"] = obs_weights
+                one_minus_α_k = (Vector{Float64}(1:lag)) ./ obs_weights
+                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
+
             else
+                # otherwise equal weights
                 kwargs["obs_weights"] = ones(lag) * lag
+                kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
             end
         end
         

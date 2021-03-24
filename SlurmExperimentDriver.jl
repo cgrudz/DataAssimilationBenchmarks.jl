@@ -39,10 +39,10 @@ end
 ########################################################################################################################
 # Hybrid smoothers
 ########################################################################################################################
-function hybrid_smoother_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/hybrid_state_smoother_input_args.jld")
+function single_iteration_smoother_state_exp(j)
+    f = load("/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld")
     args = f["experiments"][j]
-    hybrid_state(args)
+    single_iteration_state(args)
 end
 
 
@@ -68,8 +68,8 @@ if s == "filter_state"
     filter_state_exp(t)
 elseif s == "classic_smoother_state"
     classic_smoother_state_exp(t)
-elseif s == "hybrid_smoother_state"
-    hybrid_smoother_state_exp(t)
+elseif s == "single_iteration_smoother_state"
+    single_iteration_smoother_state_exp(t)
 elseif s == "iterative_smoother_state"
     iterative_smoother_state_exp(t)
 end
