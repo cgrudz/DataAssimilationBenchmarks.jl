@@ -11,7 +11,7 @@ using LinearAlgebra
 using HDF5
 using Glob
 export process_filter_state_glob, process_filter_state_strings, process_filter_param, process_classic_smoother_state, 
-       process_classic_smoother_param, process_hybrid_smoother_state, process_all_smoother_state, 
+       process_classic_smoother_param, process_single_iteration_smoother_state, process_all_smoother_state, 
        reprocess_all_smoother_state
 
 ########################################################################################################################
@@ -634,7 +634,7 @@ end
 
 ########################################################################################################################
 
-function process_hybrid_smoother_state()
+function process_single_iteration_smoother_state()
     # will create an array of the average RMSE and spread for each experiment, sorted by analysis or forecast step
     # ensemble size is increasing from the origin on the horizontal axis
     # inflation is increasing from the origin on the vertical axis
@@ -700,7 +700,7 @@ function process_hybrid_smoother_state()
 
     # for each DA method in the experiment, process the data, loading into the dictionary
     for method in method_list
-        fnames = Glob.glob("../storage/smoother_state/" * method * "_hybrid" *
+        fnames = Glob.glob("../storage/smoother_state/" * method * "_single_iteration" *
                            "/diffusion_" * rpad(diffusion, 4, "0") *
                             "/*_nanl_" * lpad(nanl + burn, 5, "0")  *  
                             "*_tanl_" * rpad(tanl, 4, "0") * 
@@ -712,7 +712,7 @@ function process_hybrid_smoother_state()
     end
 
     # create jld file name with relevant parameters
-    jlname = "processed_hybrid_smoother_state" * 
+    jlname = "processed_single_iteration_smoother_state" * 
              "_diffusion_" * rpad(diffusion, 4, "0") *
              "_tanl_" * rpad(tanl, 4, "0") * 
              "_nanl_" * lpad(nanl, 5, "0") * 
@@ -721,7 +721,7 @@ function process_hybrid_smoother_state()
              ".jld"
 
     # create hdf5 file name with relevant parameters
-    h5name = "processed_hybrid_smoother_state" * 
+    h5name = "processed_single_iteration_smoother_state" * 
              "_diffusion_" * rpad(diffusion, 4, "0") *
              "_tanl_" * rpad(tanl, 4, "0") * 
              "_nanl_" * lpad(nanl, 5, "0") * 
@@ -876,14 +876,16 @@ function process_all_smoother_state()
     diffusion = 0.00
     method_list = [
                    "etks_classic", 
-                   "etks_hybrid", 
-                   "enks-n_classic", 
-                   "enks-n_hybrid", 
+                   "etks_single_iteration", 
+                   #"enks-n-primal_classic", 
+                   "enks-n-dual_classic", 
+                   #"enks-n-primal_single_iteration", 
+                   "enks-n-dual_single_iteration", 
                    "ienks-bundle", 
                    "ienks-transform",
                    "ienks-n-bundle",
                    "ienks-n-transform",
-                   #"etks_adaptive_hybrid", 
+                   #"etks_adaptive_single_iteration", 
                   ]
     
     analysis_list = [
@@ -908,11 +910,8 @@ function process_all_smoother_state()
     # define the storage dictionary here
     data = Dict{String, Array{Float64}}()
     for method in method_list
-        if method == "enks-n_hybrid" || 
-            method == "enks-n_classic" ||
-            method == "etks_adaptive_hybrid" ||
-            method == "ienks-n-bundle" || 
-            method == "ienks-n-transform"
+        if method[1:6] == "enks-n" || 
+            method[1:7] == "ienks-n" || 
                 for analysis in analysis_list
                     for stat in stat_list
                         data[method * "_" * analysis * "_" * stat] = Array{Float64}(undef, total_lag, ensemble_size)
@@ -941,11 +940,8 @@ function process_all_smoother_state()
         for k in 0:total_lag - 1
             # loop ensemble size 
             for j in 0:ensemble_size - 1
-                if method == "enks-n_hybrid" || 
-                    method == "enks-n_classic" ||
-                    method == "etks_adaptive_hybrid" ||
-                    method == "ienks-n-bundle" || 
-                    method == "ienks-n-transform"
+                if method[1:6] == "enks-n" || 
+                    method[1:7] == "ienks-n" || 
                     try
                         # attempt to load the file
                         name = fnames[1+j+k*ensemble_size] 
@@ -1071,11 +1067,8 @@ function process_all_smoother_state()
         fnames = []
         for lag in total_lags
             for N_ens in ensemble_sizes
-                if method == "enks-n_classic" ||
-                    method == "enks-n_hybrid" ||
-                    method == "ienks-n-bundle" ||
-                    method == "ienks-n-transform" ||
-                    method == "etks_adaptive_hybrid"
+                if method[1:6] == "enks-n" ||
+                    method[1:7] == "ienks-n" ||
                         name = method * 
                                 "_l96_state_benchmark_seed_0000"  *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
@@ -1171,14 +1164,14 @@ function reprocess_all_smoother_state()
     diffusion = 0.00
     method_list = [
                    #"etks_classic", 
-                   "etks_hybrid", 
+                   "etks_single_iteration", 
                    #"enks-n_classic", 
-                   #"enks-n_hybrid", 
+                   #"enks-n_single_iteration", 
                    #"ienks-bundle", 
                    #"ienks-transform",
                    #"ienks-n-bundle",
                    #"ienks-n-transform",
-                   #"etks_adaptive_hybrid", 
+                   #"etks_adaptive_single_iteration", 
                   ]
     
     stat_list = [
@@ -1200,9 +1193,9 @@ function reprocess_all_smoother_state()
         for k in 0:total_lag - 1
             # loop ensemble size 
             for j in 0:ensemble_size - 1
-                if method == "enks-n_hybrid" || 
+                if method == "enks-n_single_iteration" || 
                     method == "enks-n_classic" ||
-                    method == "etks_adaptive_hybrid" ||
+                    method == "etks_adaptive_single_iteration" ||
                     method == "ienks-n-bundle" || 
                     method == "ienks-n-transform"
                     name = fnames[1+j+k*ensemble_size]
@@ -1245,10 +1238,10 @@ function reprocess_all_smoother_state()
         for lag in total_lags
             for N_ens in ensemble_sizes
                 if method == "enks-n_classic" ||
-                    method == "enks-n_hybrid" ||
+                    method == "enks-n_single_iteration" ||
                     method == "ienks-n-bundle" ||
                     method == "ienks-n-transform" ||
-                    method == "etks_adaptive_hybrid"
+                    method == "etks_adaptive_single_iteration"
                         name = method * 
                                 "_l96_state_benchmark_seed_0000"  *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
