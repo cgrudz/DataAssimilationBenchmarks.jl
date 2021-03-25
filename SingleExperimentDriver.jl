@@ -1,19 +1,12 @@
 ########################################################################################################################
 module SingleExperimentDriver 
 ########################################################################################################################
+########################################################################################################################
 # imports and exports
-using Random, Distributions
-using Debugger
-using Distributed
-using LinearAlgebra
-using JLD
-using DeSolvers
-using L96 
-using EnsembleKalmanSchemes
-using FilterExps
-using SmootherExps
+using Debugger 
+using FilterExps, SmootherExps
 export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp, 
-        hybrid_smoother_state_exp, hybrid_smoother_param_exp, iterative_smoother_state_exp
+        single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, iterative_smoother_state_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -40,7 +33,7 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
 
 function filter_state_exp()
-    args = (time_series, "etkf", 0, 1.0, 40, 25, 1.00)
+    args = (time_series, "enkf-n-primal", 0, 1.0, 40, 25, 1.00)
     filter_state(args)
 end
 
@@ -82,25 +75,25 @@ end
 ########################################################################################################################
 
 ########################################################################################################################
-# Hybrid smoothers
+# Single iteration smoothers
 ########################################################################################################################
-# hybrid_state single run for degbugging, arguments are
+# single_iteration_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 
-function hybrid_smoother_state_exp()
-    args = (time_series, "etks", 0, 3, 1, false, 1.0, 40, 25, 1.00)
-    hybrid_state(args)
+function single_iteration_smoother_state_exp()
+    args = (time_series, "enks-n-primal", 0, 4, 1, false, 1.0, 40, 25, 1.00)
+    single_iteration_state(args)
 end
 
 
 ########################################################################################################################
-# hybrid_param single run for debugging, arguments are
+# single_iteration_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, 
 # param_wlk, N_ens, state_infl, param_infl = args
 
-function hybrid_smoother_param_exp()
-    args = (time_series, "etks", 0, 1, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
-    hybrid_param(args)
+function single_iteration_smoother_param_exp()
+    args = (time_series, "enks", 0, 1, 1, false, 1.0, 40, 0.03, 0.0100, 25, 1.05, 1.00)
+    single_iteration_param(args)
 end
 
 
@@ -110,7 +103,7 @@ end
 # iterative_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 function iterative_smoother_state_exp()
-    args = (time_series, "ienks-n-transform", 0, 22, 1, false, 1.0, 40, 20, 1.00)
+    args = (time_series, "ienks-bundle", 0, 31, 1, true, 1.0, 40, 25, 1.01)
     iterative_state(args)
 end
 
