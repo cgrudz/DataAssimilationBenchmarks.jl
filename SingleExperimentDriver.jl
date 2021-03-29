@@ -33,7 +33,7 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
 
 function filter_state_exp()
-    args = (time_series, "enkf-n-dual", 0, 1.0, 40, 25, 1.00)
+    args = (time_series, "enkf-n-primal", 0, 1.0, 40, 25, 1.00)
     filter_state(args)
 end
 
@@ -81,7 +81,7 @@ end
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "enks-n-primal", 0, 4, 1, false, 1.0, 40, 25, 1.00)
+    args = (time_series, "etks", 0, 43, 1, false, 1.0, 40, 25, 1.02)
     single_iteration_state(args)
 end
 

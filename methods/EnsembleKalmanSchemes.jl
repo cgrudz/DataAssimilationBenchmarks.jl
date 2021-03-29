@@ -284,7 +284,6 @@ end
 function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{Float64}, 
                    obs_cov::T2; conditioning::T3=1000.0I, 
                    m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
-                   linsearch::Bool=false,
                    tol::Float64 = 0.0001,
                    j_max::Int64=50,
                    Q::T2=1.0I) where {T1 <: ObsH, T2 <: CovM, T3 <: ConM}
@@ -579,6 +578,89 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
     
     elseif analysis=="enkf-n-primal" || analysis=="enks-n-primal"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
+        ## This uses the standard Gauss-Newton-based minimization of the cost function for the adaptive
+        ## inflation, whereas enkf-n-ls / enks-n-ls uses the optimized linesearch
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+
+        # step 1: compute the observed ensemble and ensemble mean 
+        Y = H * ens
+        y_mean = mean(Y, dims=2)
+
+        # step 2: compute the weighted anomalies in observation space
+        
+        # first we find the observation error covariance inverse
+        obs_sqrt_inv = square_root_inv(obs_cov)
+        
+        # then compute the sensitivity matrix in observation space 
+        S = obs_sqrt_inv * (Y .- y_mean)
+
+        # step 3: compute the weighted innovation
+        δ = obs_sqrt_inv * (obs - y_mean)
+        
+        # step 4: 
+        ϵ_N = 1.0 + (1.0 / N_ens)
+        
+        # step 5: set up the optimization
+        
+        # step 5:a the inial choice is no change to the mean state
+        w = zeros(N_ens)
+        
+        # step 5b: define the primal cost function
+        function P(w::Vector{Float64})
+            cost = (δ - S * w)
+            cost = sum(cost.^2.0) + (N_ens + 1.0) * log(ϵ_N + sum(w.^2.0))
+            0.5 * cost
+        end
+
+        # step 5c: define the primal gradient
+        function ∇P!(storage::Vector{Float64}, w::Vector{Float64})
+            ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+            storage[:] = (N_ens + 1.0) * ζ * w - transpose(S) * (δ - S * w) 
+            storage
+        end
+
+        # step 5d: define the primal hessian
+        function H_P!(storage::Array{Float64,2}, w::Vector{Float64})
+            ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+            hess = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            storage[:,:] = transpose(S) * S + (N_ens + 1.0) * hess
+            storage
+        end
+        
+        # step 6: perform the optimization by simple Newton
+        j = 0
+        T = Array{Float64}(undef, N_ens, N_ens)
+        while j < j_max
+            # compute the gradient and hessian
+            grad_w = ∇P!(Array{Float64}(undef, N_ens), w)
+            hess_w = H_P!(Array{Float64}(undef, N_ens, N_ens), w)
+            
+            # perform Newton approximation
+            Δw = hess_w \ grad_w 
+            w -= Δw 
+            
+            if norm(Δw) < tol
+                break
+            end
+        end
+
+        # step 7: compute the update transform
+        T = Symmetric(H_P!(Array{Float64}(undef, N_ens, N_ens), w))
+        T = square_root_inv(T)
+        
+        # step 8:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
+
+        # step 9: package the transform output tuple
+        T, w, U
+    
+    elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
+        ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
+        ## This uses line-search with the strong Wolfe condition as the basis for the Newton-based
+        ## minimization of the cost function for the adaptive inflation by default. May also use
+        ## other line-search methods, with HagerZhang the next best option by initial tests
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -614,53 +696,33 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         end
 
         # step 5c: define the primal gradient
-        function g!(storage::Vector{Float64}, w::Vector{Float64})
+        function ∇J!(storage::Vector{Float64}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             storage[:] = (N_ens + 1.0) * ζ * w - transpose(S) * (δ - S * w) 
             storage
         end
 
         # step 5d: define the primal hessian
-        function h!(storage::Array{Float64,2}, w::Vector{Float64})
+        function H_J!(storage::Array{Float64,2}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             hess = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
             storage[:,:] = transpose(S) * S + (N_ens + 1.0) * hess
             storage
         end
         
-        if linsearch
-            # step 6: find the argmin for the update weights
-            # step 6a: define the line search algorithm with Newton
-            # we use StrongWolfe for RMSE performance as the default linesearch
-            # method, see the LineSearches docs, alternative choice is commented below
-            # ln_search = HagerZhang()
-            ln_search = StrongWolfe()
-            opt_alg = Newton(linesearch = ln_search)
+        # step 6: find the argmin for the update weights
+        # step 6a: define the line search algorithm with Newton
+        # we use StrongWolfe for RMSE performance as the default linesearch
+        # method, see the LineSearches docs, alternative choice is commented below
+        # ln_search = HagerZhang()
+        ln_search = StrongWolfe()
+        opt_alg = Newton(linesearch = ln_search)
 
-            # step 6b: perform the optimization
-            w = Optim.optimize(J, g!, h!, w, method=opt_alg, x_tol=tol).minimizer
-
-        else
-            # perform the optimization by simple Newton
-            j = 0
-            T = Array{Float64}(undef, N_ens, N_ens)
-            while j < j_max
-                # compute the gradient and hessian
-                grad_w = g!(Array{Float64}(undef, N_ens), w)
-                hess_w = h!(Array{Float64}(undef, N_ens, N_ens), w)
-                
-                # perform Newton approximation
-                Δw = hess_w \ grad_w 
-                w -= Δw 
-                
-                if norm(Δw) < tol
-                    break
-                end
-            end
-        end
+        # step 6b: perform the optimization
+        w = Optim.optimize(J, ∇J!, H_J!, w, method=opt_alg, x_tol=tol).minimizer
 
         # step 7: compute the update transform
-        T = Symmetric(h!(Array{Float64}(undef, N_ens, N_ens), w))
+        T = Symmetric(H_J!(Array{Float64}(undef, N_ens, N_ens), w))
         T = square_root_inv(T)
         
         # step 8:  generate mean preserving random orthogonal matrix as in sakov oke 08
