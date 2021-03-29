@@ -11,8 +11,7 @@ The directory is structured as follows:
   * data - dummy output directory for consistency with the server
 
 ## To do
-  * Write EnKF-N, this will be a simple extension of the hybrid approach to the ETKS
-		* This needs to be benchmarked versus the tuned inflation to see the overal performance
-	* Write the DEnKF update? This is also a simple extension of the hybrid formalism
-	* Write the EnKS-N formalism for SDA
-	* Determine the role of adaptive inflation in each scheme with MDA
+	* Write the DEnKF update? This is also a simple extension of the single-iteration formalism
+	* Decide if adaptive inflation in each scheme with MDA will be used, estimating power of the distribution
+	* get final publication version of the state estimation code prepared
+	* begin work on the stochastic model / parameter estimation / adaptive inflation schemes
