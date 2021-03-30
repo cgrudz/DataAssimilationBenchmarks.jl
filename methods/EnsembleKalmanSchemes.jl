@@ -1479,15 +1479,15 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
             end
 
             # step 1e: (re)-define the iteration count and the base-point for the optimization
-            i = 1
+            i = 0
             ens_mean_iter = copy(ens_mean_0) 
             w = zeros(N_ens)
             
             # step 2: begin iterative optimization
-            while i <= max_iter 
+            while i < max_iter 
                 # step 2a: redefine the conditioned ensemble with updated mean, after 
                 # first spin run in stage 0 
-                if !spin || i > 1 || stage > 0
+                if !spin || i > 0 || stage > 0
                     ens = ens_mean_iter .+ anom_0 * T
                 end
 
@@ -1501,7 +1501,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                         end
                     end
 
-                    if spin && i == 1 && stage==0
+                    if spin && i == 0 && stage==0
                         # if first spin, store the forecast over the entire DAW
                         forecast[:, :, l] = ens
 
@@ -1519,7 +1519,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                 end
 
                 # skip this section in the first spin cycle, return and begin optimization
-                if !spin || i > 1 || stage > 0
+                if !spin || i > 0 || stage > 0
                     # step 2c: otherwise, formally compute the gradient and the hessian from the 
                     # sequential components, perform Gauss-Newton step after forecast iteration
                     if analysis[1:7] == "ienks-n" 
@@ -1661,7 +1661,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
         # statistics need to be computed with an additional iteration due to the epsilon
         # scaling of the ensemble
         w = zeros(N_ens)
-        i = 1
+        i = 0
 
         # step 1c: compute the initial ensemble mean and normalized anomalies, 
         # and storage for the  sequentially computed iterated mean, gradient 
@@ -1692,10 +1692,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
         end
 
         # step 2: begin iterative optimization
-        while i <= max_iter 
+        while i < max_iter 
             # step 2a: redefine the conditioned ensemble with updated mean, after the 
             # first spin run or for all runs if after the spin cycle
-            if !spin || i > 1 
+            if !spin || i > 0 
                 ens = ens_mean_iter .+ anom_0 * T
             end
 
@@ -1709,7 +1709,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                     end
                 end
                 if spin
-                    if i == 1
+                    if i == 0
                        # if first spin, store the forecast over the entire DAW
                        forecast[:, :, l] = ens
                     else
@@ -1726,7 +1726,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
             end
 
             # skip this section in the first spin cycle, return and begin optimization
-            if !spin || i > 1
+            if !spin || i > 0
                 # step 2c: otherwise, formally compute the gradient and the hessian from the 
                 # sequential components, perform Gauss-Newton step after forecast iteration
                 if analysis[1:7] == "ienks-n" 
