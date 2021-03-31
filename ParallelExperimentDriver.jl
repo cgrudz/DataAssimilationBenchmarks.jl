@@ -184,7 +184,7 @@ for scheme in schemes
     for l in lag
         for N in N_ens
             for s_infl in state_infl
-                m in mdas
+                for m in mdas
                     tmp = (time_series, scheme, seed, l, shift, m, obs_un, obs_dim, N, s_infl)
                     push!(args, tmp)
                 end
