@@ -176,7 +176,7 @@ obs_un = 1.0
 obs_dim = 40
 N_ens = 15:2:43
 state_infl = [1.0]#LinRange(1.0, 1.10, 11)
-mda = true
+mdas = [false, true]
 
 # load the experiments
 args = Tuple[]
@@ -184,8 +184,10 @@ for scheme in schemes
     for l in lag
         for N in N_ens
             for s_infl in state_infl
-                tmp = (time_series, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-                push!(args, tmp)
+                m in mdas
+                    tmp = (time_series, scheme, seed, l, shift, m, obs_un, obs_dim, N, s_infl)
+                    push!(args, tmp)
+                end
             end
         end
     end
