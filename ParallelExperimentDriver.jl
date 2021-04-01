@@ -4,10 +4,10 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 using Debugger
-@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark")
-@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/methods")
-@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/models")
-@everywhere push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/experiments")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
 @everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96
 
 ########################################################################################################################
@@ -37,27 +37,27 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ########################################################################################################################
 ## [time_series, scheme, seed, obs_un, obs_dim, N_ens, infl] = args
 #
-schemes = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
-seed = 0
-obs_un = 1.0
-obs_dim = 40
-N_ens = 15:43
-infl = [1.0]#LinRange(1.0, 1.20, 21)
-
-# load the experiments
-args = Tuple[]
-for scheme in schemes
-    for N in N_ens
-        for α in infl
-            tmp = (time_series, scheme, seed, obs_un, obs_dim, N, α)
-            push!(args, tmp)
-        end
-    end
-end
-
-experiment = FilterExps.filter_state
-
-
+#schemes = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
+#seed = 0
+#obs_un = 1.0
+#obs_dim = 40
+#N_ens = 15:43
+#infl = [1.0]#LinRange(1.0, 1.20, 21)
+#
+## load the experiments
+#args = Tuple[]
+#for scheme in schemes
+#    for N in N_ens
+#        for α in infl
+#            tmp = (time_series, scheme, seed, obs_un, obs_dim, N, α)
+#            push!(args, tmp)
+#        end
+#    end
+#end
+#
+#experiment = FilterExps.filter_state
+#
+#
 ########################################################################################################################
 # filter_param 
 ########################################################################################################################
@@ -167,32 +167,34 @@ experiment = FilterExps.filter_state
 ########################################################################################################################
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
-#
-#schemes = ["etks"]
-#seed = 0
-#lag = 1:5:51
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-#N_ens = 15:2:43
-#state_infl = LinRange(1.0, 1.10, 11)
-#mda = true
-#
-## load the experiments
-#args = Tuple[]
-#for scheme in schemes
-#    for l in lag
-#        for N in N_ens
-#            for s_infl in state_infl
-#                tmp = (time_series, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-#                push!(args, tmp)
-#            end
-#        end
-#    end
-#end
-#
-#experiment = SmootherExps.hybrid_state
-#
+
+schemes = ["enks-n-dual", "enks-n-primal", "enks-n-primal-ls"]
+seed = 0
+lag = 1:3:52
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+N_ens = 15:2:43
+state_infl = [1.0]#LinRange(1.0, 1.10, 11)
+mdas = [false, true]
+
+# load the experiments
+args = Tuple[]
+for scheme in schemes
+    for l in lag
+        for N in N_ens
+            for s_infl in state_infl
+                for m in mdas
+                    tmp = (time_series, scheme, seed, l, shift, m, obs_un, obs_dim, N, s_infl)
+                    push!(args, tmp)
+                end
+            end
+        end
+    end
+end
+
+experiment = SmootherExps.single_iteration_state
+
 ########################################################################################################################
 # hybrid_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
