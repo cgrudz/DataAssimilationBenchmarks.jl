@@ -1037,18 +1037,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, H
                     
                     # step 2d: compute the re-analyzed initial condition for posterior statistics with rebalancing step
                     posterior[:, :, 1] = ens_update!(posterior[:, :, 1], trans)
-                    
-                    # on final iteration, inflate the covariance
-                    if l == lag
-                        # compute multiplicative inflation of state variables
-                        posterior[:, :, 1] = inflate_state!(posterior[:, :, 1], state_infl, sys_dim, state_dim)
-
-                        # if including an extended state of parameter values,
-                        # compute multiplicative inflation of parameter values
-                        if state_dim != sys_dim
-                            posterior[:, :, 1] = inflate_param!(posterior[:, :, 1], param_infl, sys_dim, state_dim)
-                        end
-                    end
+                
                 else
                     # step 2c: perform the filtering step with mda weights
                     trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
