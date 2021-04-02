@@ -49,25 +49,5 @@ Thumbs.db
 *.txt
 
 # no actual data, keep output 'data' directory for server sync directory tree
-storage/*
-state_filter/
-param_filter/
-enkf/
-etkf/
-state_smoother/
-param_smoother/
-enks_hybrid/
-enks_classic/
-etks_hybrid/
-etks_classic/
-etks_adaptive_hybrid/
-enkf-n/
-enks-n_hybrid/
-enks-n_classic/
-ienks-bundle/
-ienks-n-bundle/
-ienks-transform/
-ienks-n-transform/
-data/input_data/
-analysis/processed*
-data/*
+*.jld
+*.h5
