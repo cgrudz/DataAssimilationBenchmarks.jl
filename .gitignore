@@ -51,3 +51,5 @@ Thumbs.db
 # no actual data, keep output 'data' directory for server sync directory tree
 *.jld
 *.h5
+*.png
+*.eps
