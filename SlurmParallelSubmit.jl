@@ -195,8 +195,6 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # Iterative smoothers
 ########################################################################################################################
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
-
-
 # load all standard parameter configurations
 sys_dim = 40
 obs_dim = 40

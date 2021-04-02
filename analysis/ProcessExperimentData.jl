@@ -872,19 +872,19 @@ function process_all_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = false
+    mda = true 
     diffusion = 0.00
     method_list = [
-                   "etks_classic", 
+                   #"etks_classic", 
                    "etks_single_iteration", 
                    #"enks-n-primal_classic", 
-                   "enks-n-dual_classic", 
+                   #"enks-n-dual_classic", 
                    #"enks-n-primal_single_iteration", 
-                   "enks-n-dual_single_iteration", 
+                   #"enks-n-dual_single_iteration", 
                    "ienks-bundle", 
                    "ienks-transform",
-                   "ienks-n-bundle",
-                   "ienks-n-transform",
+                   #"ienks-n-bundle",
+                   #"ienks-n-transform",
                    #"etks_adaptive_single_iteration", 
                   ]
     
@@ -911,7 +911,7 @@ function process_all_smoother_state()
     data = Dict{String, Array{Float64}}()
     for method in method_list
         if method[1:6] == "enks-n" || 
-            method[1:7] == "ienks-n" || 
+            method[1:7] == "ienks-n" 
                 for analysis in analysis_list
                     for stat in stat_list
                         data[method * "_" * analysis * "_" * stat] = Array{Float64}(undef, total_lag, ensemble_size)
@@ -941,7 +941,7 @@ function process_all_smoother_state()
             # loop ensemble size 
             for j in 0:ensemble_size - 1
                 if method[1:6] == "enks-n" || 
-                    method[1:7] == "ienks-n" || 
+                    method[1:7] == "ienks-n"  
                     try
                         # attempt to load the file
                         name = fnames[1+j+k*ensemble_size] 
@@ -1068,7 +1068,7 @@ function process_all_smoother_state()
         for lag in total_lags
             for N_ens in ensemble_sizes
                 if method[1:6] == "enks-n" ||
-                    method[1:7] == "ienks-n" ||
+                    method[1:7] == "ienks-n" 
                         name = method * 
                                 "_l96_state_benchmark_seed_0000"  *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
@@ -1152,7 +1152,7 @@ function reprocess_all_smoother_state()
     
     # parameters for the file names and separating out experiments
     t1 = time()
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
