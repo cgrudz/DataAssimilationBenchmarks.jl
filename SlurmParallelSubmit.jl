@@ -197,76 +197,76 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 #
 #
-## load all standard parameter configurations
-#sys_dim = 40
-#obs_dim = 40
-#nanl = 25000
-#h = 0.01
-#schemes = ["ienks-n-bundle", "ienks-n-transform"]
-#seed = 0
-#lag = 1:3:52
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-#N_ens = 15:2:43
-#state_infl = [1.0]#LinRange(1.00, 1.10, 11)
-#mda = false
-#time_series = [time_series_1, time_series_2]
-#
-## load the experiments
-#args = Tuple[]
-#for ts in time_series
-#    for scheme in schemes
-#        for l in lag
-#            for N in N_ens
-#                for s_infl in state_infl
-#                    #tanl = parse(Float64,time_series_1[66:69])
-#                    #name = scheme *
-#                    #            "_l96_state_benchmark_seed_0000" *
-#                    #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
-#                    #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
-#                    #            "_obs_un_" * rpad(obs_un, 4, "0") *
-#                    #            "_nanl_" * lpad(nanl, 5, "0") *
-#                    #            "_tanl_" * rpad(tanl, 4, "0") *
-#                    #            "_h_" * rpad(h, 4, "0") *
-#                    #            "_lag_" * lpad(l, 3, "0") *
-#                    #            "_shift_" * lpad(shift, 3, "0") *
-#                    #            "_mda_" * string(mda) *
-#                    #            "_N_ens_" * lpad(N, 3,"0") *
-#                    #            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                    #            ".jld"
-#
-#                    #fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/" * scheme * "/diffusion_0.00/"
-#                    #try
-#                    #    f = load(fpath*name)
-#                    #    
-#                    #catch
-#                    #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-#                    #    push!(args, tmp)
-#                    #end
-#                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-#                    push!(args, tmp)
-#                end
-#            end
-#        end
-#    end
-#end
-#
-#
-#name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
-#save(name, "experiments", args)
-#
-#for j in 1:length(args) 
-#    f = open("./submit_job.sl", "w")
-#    write(f,"#!/bin/bash\n")
-#    write(f,"#SBATCH -n 1\n")
-#    write(f,"#SBATCH -o ensemble_run.out\n")
-#    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
-#    close(f)
-#    my_command = `sbatch  submit_job.sl`
-#    run(my_command)
-#end
+# load all standard parameter configurations
+sys_dim = 40
+obs_dim = 40
+nanl = 25000
+h = 0.01
+schemes = ["ienks-bundle", "ienks-transform"]
+seed = 0
+lag = 1:3:52
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+N_ens = 15:2:43
+state_infl = LinRange(1.00, 1.10, 11)
+mda = true
+time_series = [time_series_1, time_series_2]
+
+# load the experiments
+args = Tuple[]
+for ts in time_series
+    for scheme in schemes
+        for l in lag
+            for N in N_ens
+                for s_infl in state_infl
+                    #tanl = parse(Float64,time_series_1[66:69])
+                    #name = scheme *
+                    #            "_l96_state_benchmark_seed_0000" *
+                    #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                    #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                    #            "_obs_un_" * rpad(obs_un, 4, "0") *
+                    #            "_nanl_" * lpad(nanl, 5, "0") *
+                    #            "_tanl_" * rpad(tanl, 4, "0") *
+                    #            "_h_" * rpad(h, 4, "0") *
+                    #            "_lag_" * lpad(l, 3, "0") *
+                    #            "_shift_" * lpad(shift, 3, "0") *
+                    #            "_mda_" * string(mda) *
+                    #            "_N_ens_" * lpad(N, 3,"0") *
+                    #            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
+                    #            ".jld"
+
+                    #fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/" * scheme * "/diffusion_0.00/"
+                    #try
+                    #    f = load(fpath*name)
+                    #    
+                    #catch
+                    #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+                    #    push!(args, tmp)
+                    #end
+                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+                    push!(args, tmp)
+                end
+            end
+        end
+    end
+end
+
+
+name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
+save(name, "experiments", args)
+
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
 
 ########################################################################################################################
 
