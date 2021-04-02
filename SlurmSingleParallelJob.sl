@@ -1,10 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=ParallelEnsembleRun
-#SBATCH --nodes=1
-#SBATCH --ntasks=32
-#SBATCH --cpus-per-task=1
-#SBATCH --hint=compute_bound
-#SBATCH --mem-per-cpu=2500M
+#SBATCH -n 32
+#SBATCH -t 12-00:00:00
+#SBATCH --mem-per-cpu=5000M
 #SBATCH -t 12-00:00:00
 #SBATCH -o ensemble.out
 #SBATCH -e ensemble.err
