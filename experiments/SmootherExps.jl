@@ -1161,7 +1161,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     # create storage for the iteration sequence
     iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
 
-    # create conter for the analyses
+    # create counter for the analyses
     k = 1
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
@@ -1199,8 +1199,19 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
                 kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
             end
         end
-        
-        analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], obs_cov, state_infl, kwargs)
+        @bp
+        if method[1:4] == "lin-"
+            if spin
+                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                                                 obs_cov, state_infl, kwargs)
+            else
+                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                                                 obs_cov, state_infl, kwargs, max_iter=1)
+            end
+        else
+            analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], 
+                                             obs_cov, state_infl, kwargs)
+        end
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]

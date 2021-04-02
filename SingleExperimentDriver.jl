@@ -81,7 +81,7 @@ end
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "enks-n-primal", 0, 4, 1, false, 1.0, 40, 25, 1.00)
+    args = (time_series, "enks-n-primal", 0, 25, 1, false, 1.0, 40, 21, 1.00)
     single_iteration_state(args)
 end
 
@@ -103,7 +103,7 @@ end
 # iterative_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 function iterative_smoother_state_exp()
-    args = (time_series, "ienks-bundle", 0, 31, 1, true, 1.0, 40, 25, 1.01)
+    args = (time_series, "lin-ienks-n-transform", 0, 25, 1, false, 1.0, 40, 21, 1.00)
     iterative_state(args)
 end
 

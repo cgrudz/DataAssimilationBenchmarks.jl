@@ -2,14 +2,9 @@
 module GenerateTimeseries 
 ########################################################################################################################
 # imports and exports
-using Random, Distributions
-using Debugger
-using Distributed
-using LinearAlgebra
-using JLD
-using DeSolvers
-using L96 
-#using DifferentialEquations
+using Debuggerm JLD, Distributed
+using Random, Distributions, LinearAlgebra
+using DeSolvers, L96 
 export l96_timeseries
 
 ########################################################################################################################
