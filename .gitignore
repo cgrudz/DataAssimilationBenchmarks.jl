@@ -44,7 +44,6 @@ Thumbs.db
 *.out 
 
 # no simulation auxilliary files
-.sl
 *.err
 *.txt
 
