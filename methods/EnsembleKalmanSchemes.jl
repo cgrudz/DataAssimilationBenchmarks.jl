@@ -1363,7 +1363,7 @@ end
 
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1, obs::Array{Float64,2}, 
                              obs_cov::T2, state_infl::Float64, kwargs::Dict{String,Any};
-                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=50) where {T1 <: ObsH, T2 <: CovM}
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10) where {T1 <: ObsH, T2 <: CovM}
 
 
     """Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
