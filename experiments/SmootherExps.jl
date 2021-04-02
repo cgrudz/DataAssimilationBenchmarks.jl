@@ -627,7 +627,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25
 
     # set seed 
     Random.seed!(seed)
