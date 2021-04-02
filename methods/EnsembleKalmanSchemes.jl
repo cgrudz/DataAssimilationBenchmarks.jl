@@ -637,8 +637,10 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
             grad_w = ∇P!(Array{Float64}(undef, N_ens), w)
             hess_w = H_P!(Array{Float64}(undef, N_ens, N_ens), w)
             
-            # perform Newton approximation
-            Δw = hess_w \ grad_w 
+            # perform Newton approximation, simultaneously computing
+            # the update transform T with the SVD based inverse at once
+            T, hessian_inv = square_root_inv(Symmetric(hess_w), inverse=true)
+            Δw = hessian_inv * grad_w 
             w -= Δw 
             
             if norm(Δw) < tol
@@ -646,19 +648,15 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
             end
         end
 
-        # step 7: compute the update transform
-        T = Symmetric(H_P!(Array{Float64}(undef, N_ens, N_ens), w))
-        T = square_root_inv(T)
-        
-        # step 8:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        # step 7:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
 
-        # step 9: package the transform output tuple
+        # step 8: package the transform output tuple
         T, w, U
     
     elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
-        ## This uses line-search with the strong Wolfe condition as the basis for the Newton-based
+        ## This uses linesearch with the strong Wolfe condition as the basis for the Newton-based
         ## minimization of the cost function for the adaptive inflation by default. May also use
         ## other line-search methods, with HagerZhang the next best option by initial tests
         # step 0: infer the system, observation and ensemble dimensions 
@@ -1459,10 +1457,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
         # step through two stages starting at zero
         while stage <=1
             # step 1d: (re)-define the conditioning for bundle versus transform varaints
-            if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
+            if analysis[end-5:end] == "bundle"
                 T = ϵ*I
                 T_inv = (1.0 / ϵ)*I
-            elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
+            elseif analysis[end-8:end] == "transform"
                 T = 1.0*I
                 T_inv = 1.0*I
             end
@@ -1526,7 +1524,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                         hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
                     end
 
-                    if analysis == "ienks-transform" || analysis == "ienks-n-transform"
+                    if analysis[end-8:end] == "transform"
                         # transform method requires each of the below, and we make 
                         # all calculations simultaneously via the SVD for stability
                         T, T_inv, hessian_inv = square_root_inv(hessian, full=true)
@@ -1534,7 +1532,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                         # compute the weights update
                         Δw = hessian_inv * gradient
                     else
-                        # compute the weights update
+                        # compute the weights update by the standard linear equation solver
                         Δw = hessian \ gradient
                     end
 
@@ -1672,10 +1670,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
         new_ens = Array{Float64}(undef, sys_dim, N_ens)
 
         # step 1e: define the conditioning for bundle versus transform varaints
-        if analysis == "ienks-bundle" || analysis == "ienks-n-bundle"
+        if analysis[end-5:end] == "bundle"
             T = ϵ*I
             T_inv = (1.0 / ϵ)*I
-        elseif analysis == "ienks-transform" || analysis == "ienks-n-transform"
+        elseif analysis[end-8:end] == "transform"
             T = 1.0*I
             T_inv = 1.0*I
         end
@@ -1732,14 +1730,18 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
                     # hessian is computed with the ensemble rank
                     hessian = Symmetric((N_ens - 1.0) * I + dropdims(sum(hess_J, dims=3), dims=3))
                 end
-                if analysis == "ienks-transform" || analysis == "ienks-n-transform"
-                    # re-define the conditioning matrix and its inverse for the transform 
-                    # and update steps
-                    T, T_inv = square_root_inv(hessian, full=true)
-                end
+                if analysis[end-8:end] == "transform"
+                    # transform method requires each of the below, and we make 
+                    # all calculations simultaneously via the SVD for stability
+                    T, T_inv, hessian_inv = square_root_inv(hessian, full=true)
+                    
+                    # compute the weights update
+                    Δw = hessian_inv * gradient
+                else
+                    # compute the weights update by the standard linear equation solver
+                    Δw = hessian \ gradient
 
-                # compute the weights update
-                Δw = hessian \ gradient
+                end
 
                 # update the weights
                 w -= Δw 
@@ -1768,6 +1770,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, H::T1
             
             # redefine the ensemble transform for the final update
             T = square_root_inv(hessian)
+
         elseif analysis == "ienks-bundle"
             # redefine the ensemble transform for the final update,
             # this is already computed in-loop for the ienks-transform
