@@ -645,6 +645,8 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
             
             if norm(Δw) < tol
                 break
+            else
+                j+=1
             end
         end
 
