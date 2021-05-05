@@ -488,6 +488,82 @@ function transform(analysis::String, ens::Array{Float64,2}, H::T1, obs::Vector{F
         # step 11: package the transform output tuple
         T, w, U
 
+#    elseif analysis=="etkf-hybrid" || analysis=="etks-hybrid"
+#        ## This is the default method for the ensemble square root transform
+#        # step 0: infer the system, observation and ensemble dimensions 
+#        sys_dim, N_ens = size(ens)
+#        obs_dim = length(obs)
+#
+#        # step 1: compute the background in observation space, and the square root hybrid
+#        # covariance
+#        Y = H * conditioning
+#        x_mean = mean(ens, dims=2)
+#        X = (ens .- x_mean)
+#        Σ = inv(conditioning) * X
+#
+#        # step 2: compute the ensemble mean in observation space
+#        Y_ens = H * ens
+#        y_mean = mean(Y_ens, dims=2)
+#        
+#        # step 3: compute the sensitivity matrix in observation space
+#        obs_sqrt_inv = square_root_inv(obs_cov)
+#        Γ = obs_sqrt_inv * Y
+#
+#        # step 4: compute the weighted innovation
+#        δ = obs_sqrt_inv * ( obs - y_mean )
+#       
+#        # step 5: run the Gauss-Newton optimization of the cost function
+#
+#        # step 5a: define the gradient of the cost function for the hybridized covariance
+#        function ∇J!(w_full::Vector{Float64})
+#            # define the factor to be inverted and compute with the SVD
+#            w = w_full[1:end-2]
+#            α_1 = w_full[end-1]
+#            α_2 = w_full[end]
+#            K = (N_ens - 1.0) / α_1 * I + transpose(Σ) * Σ 
+#            F = svd(K)
+#            K_inv = F.U * Diagonal(1.0 ./ F.S) * F.Vt
+#            grad_w = transpose(Γ) * (δ - Γ * w) + w / α_2 - K_inv * w / α_2
+#            grad_1 = 1 / α_2 * transpose(w) * K_inv * ( (1.0 - N_ens) / α_1^2.0 * I) *
+#                     k_inv * w
+#            grad_2 =  -transpose(w) * w / α_2^2.0 + transpose(w) * K_inv * w / α_2^2.0
+#            [grad_w; grad_1; grad_2]
+#        end
+#
+#        # step 5b: run the Gauss-Newton iteration
+#        w = zeros(N_ens)
+#        α_1 = 0.5
+#        α_2 = 0.5
+#        j = 0
+#        w_full = [w; α_1; α_2]
+#
+#        while j < j_max
+#            # compute the gradient and hessian approximation
+#            grad_w = ∇J(w_full)
+#            hess_w = grad_w * transpose(grad_w)
+#
+#            # perform Newton approximation, simultaneously computing
+#            # the update transform T with the SVD based inverse at once
+#            T, hessian_inv = square_root_inv(Symmetric(hess_w), inverse=true)
+#            Δw = hessian_inv * grad_w
+#            w_full -= Δw
+#
+#            if norm(Δw) < tol
+#                break
+#            else
+#                j+=1
+#            end
+#        end
+#
+#        # step 6: store the ensemble weights
+#
+#        # step 6: generate mean preserving random orthogonal matrix as in sakov oke 08
+#        U = rand_orth(N_ens)
+#
+#        # step 7: package the transform output tuple
+#        T, w, U
+#
+#
     elseif analysis=="enkf-n-dual" || analysis=="enks-n-dual"
         ## This computes the dual form of the EnKF-N transform as in bocquet, raanes, hannart 2015
         ## NOTE: may want to test higher order hessian-based approaches later, 

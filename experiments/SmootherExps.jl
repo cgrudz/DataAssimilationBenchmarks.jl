@@ -55,7 +55,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -76,14 +76,14 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
     # for negative and first time indices
@@ -258,7 +258,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
     H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
     obs =  H * obs + obs_un * rand(Normal(), size(obs))
@@ -268,16 +268,16 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
 
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
     # for negative and first time indices
@@ -437,7 +437,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -458,14 +458,14 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -640,7 +640,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -668,14 +668,14 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -869,7 +869,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
     
     # define the initial state ensemble
@@ -915,16 +915,16 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -1128,7 +1128,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
@@ -1149,17 +1149,17 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # create storage for the iteration sequence
-    iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    iteration_sequence = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # create counter for the analyses
     k = 1
