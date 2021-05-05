@@ -871,20 +871,22 @@ function process_all_smoother_state()
     sys_dim = 40
     nanl = 20000
     burn = 5000
-    shift = 1
-    mda = true 
+    shift = 2
+    mda = false
     diffusion = 0.00
     method_list = [
-                   #"etks_classic", 
+                   "etks_classic", 
                    "etks_single_iteration", 
-                   #"enks-n-primal_classic", 
+                   "enks-n-primal_classic", 
                    #"enks-n-dual_classic", 
-                   #"enks-n-primal_single_iteration", 
+                   "enks-n-primal_single_iteration", 
                    #"enks-n-dual_single_iteration", 
-                   "ienks-bundle", 
+                   #"ienks-bundle", 
                    "ienks-transform",
+                   "lin-ienks-transform",
                    #"ienks-n-bundle",
-                   #"ienks-n-transform",
+                   "ienks-n-transform",
+                   "lin-ienks-n-transform",
                    #"etks_adaptive_single_iteration", 
                   ]
     
@@ -904,14 +906,20 @@ function process_all_smoother_state()
     ensemble_size = length(ensemble_sizes)
     total_inflations = LinRange(1.00, 1.10, 11)
     total_inflation = length(total_inflations)
-    total_lags = 1:3:52
+    if shift == 1
+        total_lags = 1:3:52
+    elseif shift == 2
+        total_lags = 4:3:52
+        total_lags = [2; total_lags]
+    end
     total_lag = length(total_lags)
 
     # define the storage dictionary here
     data = Dict{String, Array{Float64}}()
     for method in method_list
         if method[1:6] == "enks-n" || 
-            method[1:7] == "ienks-n" 
+            method[1:7] == "ienks-n" ||
+            method[1:11] == "lin-ienks-n"
                 for analysis in analysis_list
                     for stat in stat_list
                         data[method * "_" * analysis * "_" * stat] = Array{Float64}(undef, total_lag, ensemble_size)
@@ -941,7 +949,8 @@ function process_all_smoother_state()
             # loop ensemble size 
             for j in 0:ensemble_size - 1
                 if method[1:6] == "enks-n" || 
-                    method[1:7] == "ienks-n"  
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
                     try
                         # attempt to load the file
                         name = fnames[1+j+k*ensemble_size] 
@@ -1062,13 +1071,14 @@ function process_all_smoother_state()
     end
 
     # for each DA method in the experiment, process the data, loading into the dictionary
-    fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/"
+    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/"
     for method in method_list
         fnames = []
         for lag in total_lags
             for N_ens in ensemble_sizes
                 if method[1:6] == "enks-n" ||
-                    method[1:7] == "ienks-n" 
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
                         name = method * 
                                 "_l96_state_benchmark_seed_0000"  *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
@@ -1084,7 +1094,26 @@ function process_all_smoother_state()
                                 "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
                                 ".jld"
 
-                    push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
+                    push!(fnames, fpath * method * "/" * name)
+                elseif method == "etks_classic"
+                    for infl in total_inflations
+                        name = method * 
+                                "_l96_state_benchmark_seed_0000" *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") * 
+                                "_tanl_" * rpad(tanl, 4, "0") * 
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") * 
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_false" *
+                                "_N_ens_" * lpad(N_ens, 3,"0") * 
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                ".jld"
+                        
+                        push!(fnames, fpath * method * "/" * name)
+                    end
                 else
                     for infl in total_inflations
                         name = method * 
@@ -1102,7 +1131,7 @@ function process_all_smoother_state()
                                 "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
                                 ".jld"
                         
-                        push!(fnames, fpath * method * "/diffusion_" * rpad(diffusion, 4, "0") * "/" * name)
+                        push!(fnames, fpath * method * "/" * name)
                     end
                 end
             end
@@ -1118,6 +1147,7 @@ function process_all_smoother_state()
              "_nanl_" * lpad(nanl, 5, "0") * 
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
+             "_shift_" * lpad(shift, 3, "0") * 
              ".jld"
 
     # create hdf5 file name with relevant parameters
@@ -1127,6 +1157,7 @@ function process_all_smoother_state()
              "_nanl_" * lpad(nanl, 5, "0") * 
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
+             "_shift_" * lpad(shift, 3, "0") * 
              ".h5"
 
     # write out file in jld
@@ -1159,8 +1190,8 @@ function reprocess_all_smoother_state()
     sys_dim = 40
     nanl = 20000
     burn = 5000
-    shift = 1
-    mda = true 
+    shift = 2
+    mda = false
     diffusion = 0.00
     method_list = [
                    #"etks_classic", 

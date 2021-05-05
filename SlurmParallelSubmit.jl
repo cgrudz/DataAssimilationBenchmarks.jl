@@ -127,13 +127,14 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #h = 0.01
 #schemes = ["etks"]
 #seed = 0
-#lag = 1:3:31
-#shift = 1
+#lag = 4:3:31
+#lag = [2;lag]
+#shift = 2
 #obs_un = 1.0
 #obs_dim = 40
 #N_ens = 15:2:43
 #state_infl = LinRange(1.00, 1.10, 11)
-#time_series = [time_series_1]#, time_series_2]
+#time_series = [time_series_1, time_series_2]
 #mda = false
 #
 #
@@ -167,8 +168,8 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #                    #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
 #                    #    push!(args, tmp)
 #                    #end
-#                    #tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-#                    #push!(args, tmp)
+#                    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+#                    push!(args, tmp)
 #                end
 #            end
 #        end
@@ -219,32 +220,32 @@ for mda in mdas
             for l in lag
                 for N in N_ens
                     for s_infl in state_infl
-                        #tanl = parse(Float64,time_series_1[66:69])
-                        #name = scheme *
-                        #            "_l96_state_benchmark_seed_0000" *
-                        #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
-                        #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
-                        #            "_obs_un_" * rpad(obs_un, 4, "0") *
-                        #            "_nanl_" * lpad(nanl, 5, "0") *
-                        #            "_tanl_" * rpad(tanl, 4, "0") *
-                        #            "_h_" * rpad(h, 4, "0") *
-                        #            "_lag_" * lpad(l, 3, "0") *
-                        #            "_shift_" * lpad(shift, 3, "0") *
-                        #            "_mda_" * string(mda) *
-                        #            "_N_ens_" * lpad(N, 3,"0") *
-                        #            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-                        #            ".jld"
+                        tanl = parse(Float64,ts[66:69])
+                        name = scheme *
+                                    "_l96_state_benchmark_seed_0000" *
+                                    "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                    "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                    "_obs_un_" * rpad(obs_un, 4, "0") *
+                                    "_nanl_" * lpad(nanl, 5, "0") *
+                                    "_tanl_" * rpad(tanl, 4, "0") *
+                                    "_h_" * rpad(h, 4, "0") *
+                                    "_lag_" * lpad(l, 3, "0") *
+                                    "_shift_" * lpad(shift, 3, "0") *
+                                    "_mda_" * string(mda) *
+                                    "_N_ens_" * lpad(N, 3,"0") *
+                                    "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
+                                    ".jld"
 
-                        #fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/" * scheme * "/diffusion_0.00/"
-                        #try
-                        #    f = load(fpath*name)
-                        #    
-                        #catch
-                        #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-                        #    push!(args, tmp)
-                        #end
-                        tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
-                        push!(args, tmp)
+                        fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/" * scheme * "/"
+                        try
+                            f = load(fpath*name)
+                            
+                        catch
+                            tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+                            push!(args, tmp)
+                        end
+                        #tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, N, s_infl)
+                        #push!(args, tmp)
                     end
                 end
             end
@@ -271,3 +272,4 @@ end
 ########################################################################################################################
 
 end
+
