@@ -19,12 +19,12 @@ export classic_state, classic_param, single_iteration_state, single_iteration_pa
 # dictionary in a JLD.  Returns runtime in minutes.
 ########################################################################################################################
 
-function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Int64,Float64})
+function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Int64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # define static mda parameter, not used for classic scheme
     mda=false
@@ -66,14 +66,16 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    @bp
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -96,7 +98,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
-        analysis = ls_smoother_classic(method, ens, H, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -157,6 +159,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "sys_dim"=> sys_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "nanl"=> nanl,
             "tanl"=> tanl,
             "lag"=> lag,
@@ -173,6 +176,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -192,12 +196,13 @@ end
 
 #########################################################################################################################
 
-function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Float64,Int64,Float64,Float64})
+function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Float64,Float64,
+                                   Int64,Float64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # define static mda parameter, not used for classic scheme
     mda=false
@@ -215,7 +220,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -249,6 +254,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "step_model" => step_model, 
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "state_dim" => state_dim,
                 "param_wlk" => param_wlk,
                 "param_infl" => param_infl,
@@ -260,12 +266,9 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
-    H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), size(obs))
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-
-    # define the observation operator on the extended state, used for the ensemble
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
 
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -290,7 +293,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
-        analysis = ls_smoother_classic(method, ens, H, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -363,6 +366,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "state_dim" => state_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "param_err" => param_err,
             "param_wlk" => param_wlk,
             "nanl"=> nanl,
@@ -382,6 +386,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -403,13 +408,13 @@ end
 
 #########################################################################################################################
 
-function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
+function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -424,7 +429,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -448,14 +453,15 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -504,7 +510,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
         end
 
         # peform the analysis
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -570,6 +576,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "sys_dim"=> sys_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "nanl"=> nanl,
             "tanl"=> tanl,
             "lag"=> lag,
@@ -586,6 +593,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -605,14 +613,14 @@ end
 
 #########################################################################################################################
 
-function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64}, 
-                                         tail::Int64=3)
+function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
+                                                     Float64,Int64,Float64};tail::Int64=3)
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -627,7 +635,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -651,6 +659,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
@@ -663,9 +672,9 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     end
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -714,7 +723,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
         end
 
         # peform the analysis
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -796,6 +805,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
             "sys_dim"=> sys_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "nanl"=> nanl,
             "tanl"=> tanl,
             "lag"=> lag,
@@ -816,6 +826,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -835,14 +846,15 @@ end
 
 #########################################################################################################################
 
-function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
+function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,
                                   Float64,Float64,Int64,Float64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, lag, 
+    shift, mda, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -892,28 +904,26 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define kwargs
     kwargs = Dict{String,Any}(
-                "dx_dt" => dx_dt,
-                "f_steps" => f_steps,
-                "step_model" => step_model, 
-                "dx_params" => [f],
-                "h" => h,
-                "diffusion" => diffusion,
-                "state_dim" => state_dim,
-                "shift" => shift,
-                "param_wlk" => param_wlk,
-                "param_infl" => param_infl,
-                "mda" => mda 
+                "dx_dt"=> dx_dt,
+                "f_steps"=> f_steps,
+                "step_model"=> step_model, 
+                "dx_params"=> [f],
+                "h"=> h,
+                "diffusion"=> diffusion,
+                "gamma"=> γ,
+                "state_dim"=> state_dim,
+                "shift"=> shift,
+                "param_wlk"=> param_wlk,
+                "param_infl"=> param_infl,
+                "mda"=> mda 
                              )
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), size(obs))
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
-    # define the observation operator on the extended state, used for the ensemble
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
-    
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
     fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
@@ -962,7 +972,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             end
         end
 
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -1051,6 +1061,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "sys_dim"=> sys_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "param_wlk" => param_wlk,
             "param_infl" => param_infl,
             "nanl"=> nanl,
@@ -1071,6 +1082,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -1093,13 +1105,13 @@ end
 
 #########################################################################################################################
 
-function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
+function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1115,7 +1127,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -1133,20 +1145,21 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
     # define kwargs
     kwargs = Dict{String,Any}(
-                "dx_dt" => dx_dt,
-                "f_steps" => f_steps,
-                "step_model" => step_model, 
-                "dx_params" => [f],
-                "h" => h,
-                "diffusion" => diffusion,
-                "shift" => shift,
-                "mda" => mda 
+                "dx_dt"=> dx_dt,
+                "f_steps"=> f_steps,
+                "step_model"=> step_model, 
+                "dx_params"=> [f],
+                "h"=> h,
+                "diffusion"=> diffusion,
+                "gamma"=> γ,
+                "shift"=> shift,
+                "mda"=> mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -1202,14 +1215,14 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
         @bp
         if method[1:4] == "lin-"
             if spin
-                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs)
             else
-                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs, max_iter=1)
             end
         else
-            analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], 
+            analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
                                              obs_cov, state_infl, kwargs)
         end
         ens = analysis["ens"]
@@ -1276,13 +1289,14 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "fore_spread"=> fore_spread,
             "filt_spread"=> filt_spread,
             "post_spread"=> post_spread,
-            "iteration_sequence" => iteration_sequence,
+            "iteration_sequence"=> iteration_sequence,
             "method"=> method,
             "seed" => seed, 
             "diffusion"=> diffusion,
             "sys_dim"=> sys_dim,
             "obs_dim"=> obs_dim, 
             "obs_un"=> obs_un,
+            "gamma"=> γ,
             "nanl"=> nanl,
             "tanl"=> tanl,
             "lag"=> lag,
@@ -1300,6 +1314,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
