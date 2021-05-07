@@ -41,7 +41,6 @@ function alternating_obs_operator!(ens::Array{Float64, 2}, obs_dim::Int64, kwarg
     by Asch, Bocquet, Nodet pg. 181 """
 
     sys_dim, N_ens = size(ens)
-    @bp
 
     if haskey(kwargs, "state_dim")
         # performing parameter estimation, load the dynamic state dimension
@@ -290,7 +289,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
                    obs_cov::T1, kwargs::Dict{String,Any}; conditioning::T2=1000.0I, 
                    m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
                    tol::Float64 = 0.0001,
-                   j_max::Int64=50,
+                   j_max::Int64=40,
                    Q::T1=1.0I) where {T1 <: CovM, T2 <: ConM}
     """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
@@ -733,6 +732,94 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 8: package the transform output tuple
         T, w, U
     
+    elseif analysis[1:4]=="mlef" || analysis[1:4]=="mles"
+        ## This computes the tuned form of the iterative ETKF cost function in the MLEF
+        ## formalism, pg. 180 Asch, Bocquet, Nodet.
+        ## This uses the standard Gauss-Newton-based minimization of the cost function for the
+        ## nonlinear least-squares with nonlinear observation operator 
+        
+        # step 0: infer the system, observation and ensemble dimensions 
+        sys_dim, N_ens = size(ens)
+        obs_dim = length(obs)
+        
+        # step 1: set up the optimization, inial choice is no change to the mean state
+        ens_mean_0 = mean(ens, dims=2)
+        anom_0 = ens .- ens_mean_0
+        w = zeros(N_ens)
+
+        # pre-compute the observation error covariance square root
+        obs_sqrt_inv = square_root_inv(obs_cov)
+
+        # define these variables as global compared to the while loop
+        hess_w = Array{Float64}(undef, N_ens, N_ens)
+        ens_mean_iter = copy(ens_mean_0)
+
+        # define the conditioning 
+        if analysis[end-5:end] == "bundle"
+            @bp
+            T = inv(conditioning) 
+            T_inv = conditioning
+        elseif analysis[end-8:end] == "transform"
+            T = 1.0*I
+            T_inv = 1.0*I
+        end
+        
+        # step 2: perform the optimization by simple Newton
+        j = 0
+
+        while j < j_max
+            # step 2a: compute the observed ensemble and ensemble mean 
+            @bp
+            ens_mean_iter = ens_mean_0 + anom_0 * w
+            ens = ens_mean_iter .+ anom_0 * T
+            Y = alternating_obs_operator!(ens, obs_dim, kwargs)
+            y_mean = mean(Y, dims=2)
+
+            # step 2b: compute the weighted anomalies in observation space, conditioned
+            # with T inverse
+            S = obs_sqrt_inv * (Y .- y_mean) * T_inv 
+
+            # step 2c: compute the weighted innovation
+            δ = obs_sqrt_inv * (obs - y_mean)
+        
+            # step 2d: compute the gradient and hessian
+            grad_w = (N_ens - 1.0)  * w - transpose(S) * δ
+            hess_w = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            
+            # step 2e: perform Newton approximation, simultaneously computing
+            # the update transform T with the SVD based inverse at once
+            if analysis[end-8:end] == "transform"
+                T, T_inv, hessian_inv = square_root_inv(Symmetric(hess_w), full=true)
+                Δw = hessian_inv * grad_w 
+            else
+                Δw = hess_w \ grad_w
+            end
+
+            # 2f: update the weights
+            @bp
+            w -= Δw 
+            
+            if norm(Δw) < tol
+                break
+            else
+                # step 2g: update the iterative mean state
+                j+=1
+            end
+        end
+
+        # 2h: if bundle, update the transform
+        if analysis[end-5:end] == "bundle"
+            @bp
+            T = square_root_inv(hess_w)
+        end
+
+        # step 3:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        @bp
+        U = rand_orth(N_ens)
+
+        # step 4: package the transform output tuple
+        T, w, U
+    
     elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
         ## This uses linesearch with the strong Wolfe condition as the basis for the Newton-based
@@ -864,6 +951,7 @@ function ens_update!(ens::Array{Float64,2}, transform::T0) where {T0 <: TransM}
         x_mean = mean(ens, dims=2)
 
         # step 2: compute the non-normalized anomalies
+        @bp
         X = ens .- x_mean
 
         # step 3: compute the update

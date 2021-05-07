@@ -33,7 +33,7 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## [time_series, scheme, seed, obs_un, obs_dim, γ, N_ens, infl] = args
 
 function filter_state_exp()
-    args = (time_series, "etkf", 0, 1.0, 40, 1.0, 20, 1.04)
+    args = (time_series, "mlef-bundle", 0, 1.0, 40, 1.0, 25, 1.01)
     filter_state(args)
 end
 

@@ -147,27 +147,27 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
-            "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "mda" => mda,
-            "state_infl"=> round(state_infl, digits=2)
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
+            "seed"  => seed, 
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
+            "h" => h,
+            "N_ens" => N_ens, 
+            "mda"  => mda,
+            "state_infl" => round(state_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
@@ -351,33 +351,33 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "param_rmse"=> para_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "param_spread"=> para_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "param_rmse" => para_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "param_spread" => para_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
             "state_dim" => state_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
             "param_err" => param_err,
             "param_wlk" => param_wlk,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
-            "mda"=> mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2),
-            "param_infl" => round(param_infl, digits=2)
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
+            "mda" => mda,
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2),
+            "param_infl"  => round(param_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
@@ -564,27 +564,27 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
     path = "./data/" * method * "_single_iteration/" 
@@ -793,27 +793,27 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
     if method == "etks_adaptive"
@@ -904,18 +904,18 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define kwargs
     kwargs = Dict{String,Any}(
-                "dx_dt"=> dx_dt,
-                "f_steps"=> f_steps,
-                "step_model"=> step_model, 
-                "dx_params"=> [f],
-                "h"=> h,
-                "diffusion"=> diffusion,
-                "gamma"=> γ,
-                "state_dim"=> state_dim,
-                "shift"=> shift,
-                "param_wlk"=> param_wlk,
-                "param_infl"=> param_infl,
-                "mda"=> mda 
+                "dx_dt" => dx_dt,
+                "f_steps" => f_steps,
+                "step_model" => step_model, 
+                "dx_params" => [f],
+                "h" => h,
+                "diffusion" => diffusion,
+                "gamma" => γ,
+                "state_dim" => state_dim,
+                "shift" => shift,
+                "param_wlk" => param_wlk,
+                "param_infl" => param_infl,
+                "mda" => mda 
                              )
 
     # define the observation sequence where we project the true state into the observation space and
@@ -1047,32 +1047,32 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "param_rmse"=> para_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "param_spread"=> para_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "param_rmse" => para_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "param_spread" => para_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
             "param_wlk" => param_wlk,
             "param_infl" => param_infl,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2),
-            "param_infl"=> round(param_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2),
+            "param_infl" => round(param_infl, digits=2)
            )
     
 
@@ -1145,15 +1145,15 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
     # define kwargs
     kwargs = Dict{String,Any}(
-                "dx_dt"=> dx_dt,
-                "f_steps"=> f_steps,
-                "step_model"=> step_model, 
-                "dx_params"=> [f],
-                "h"=> h,
-                "diffusion"=> diffusion,
-                "gamma"=> γ,
-                "shift"=> shift,
-                "mda"=> mda 
+                "dx_dt" => dx_dt,
+                "f_steps" => f_steps,
+                "step_model" => step_model, 
+                "dx_params" => [f],
+                "h" => h,
+                "diffusion" => diffusion,
+                "gamma" => γ,
+                "shift" => shift,
+                "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
@@ -1283,28 +1283,28 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     iteration_sequence = iteration_sequence[2:nanl+1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "iteration_sequence"=> iteration_sequence,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "iteration_sequence" => iteration_sequence,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "gamma"=> γ,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
 

@@ -34,7 +34,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25
 
     # set seed 
     Random.seed!(seed)
@@ -156,7 +156,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -172,7 +172,8 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs) + obs_un * rand(Normal(), obs_dim, nanl)
+    obs = alternating_obs_operator!(obs, obs_dim, kwargs) 
+    obs += obs_un * rand(Normal(), size(obs))
     
     # define the associated time invariant observation error covariance
     obs_cov = obs_un^2.0 * I
