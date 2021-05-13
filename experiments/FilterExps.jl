@@ -28,13 +28,13 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -54,7 +54,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
-              "step_model" => step_model, 
+              "step_model" => step_model!, 
               "dx_params" => [f],
               "h" => h,
               "diffusion" => diffusion,
@@ -62,7 +62,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
              )
 
     # define the observation operator, observation error covariance and observations with error 
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs) 
+    obs = alternating_obs_operator(obs, obs_dim, kwargs) 
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -79,7 +79,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
         for j in 1:N_ens
             # loop over the integration steps between observations
             for k in 1:f_steps
-                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
             end
         end
 
@@ -150,7 +150,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -172,7 +172,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs) 
+    obs = alternating_obs_operator(obs, obs_dim, kwargs) 
     obs += obs_un * rand(Normal(), size(obs))
     
     # define the associated time invariant observation error covariance
@@ -183,7 +183,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
-              "step_model" => step_model,
+              "step_model" => step_model!,
               "h" => h,
               "diffusion" => diffusion,
               "gamma" => γ,
@@ -220,7 +220,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         for j in 1:N_ens
             for k in 1:f_steps
                 # loop over the integration steps between observations
-                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
             end
         end
     

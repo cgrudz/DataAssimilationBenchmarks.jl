@@ -36,7 +36,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -62,7 +62,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
@@ -73,7 +73,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation operator, observation error covariance and observations with error 
     @bp
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -214,13 +214,13 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25
 
     # set seed 
     Random.seed!(seed)
@@ -251,7 +251,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "h" => h,
                 "diffusion" => diffusion,
                 "gamma" => γ,
@@ -266,7 +266,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
@@ -423,7 +423,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -449,7 +449,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!,
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
@@ -459,7 +459,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -629,7 +629,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -655,7 +655,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
@@ -672,7 +672,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     end
 
     # define the observation operator, observation error covariance and observations with error 
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -863,7 +863,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -906,7 +906,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
@@ -920,7 +920,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
@@ -1120,14 +1120,14 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     ls_smoother_iterative = ls_smoother_gauss_newton
 
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -1147,7 +1147,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
@@ -1157,7 +1157,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    obs = alternating_obs_operator!(obs, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -1175,7 +1175,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     iteration_sequence = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # create counter for the analyses
-    k = 1
+    m = 1
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -1212,12 +1212,13 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
                 kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
             end
         end
-        @bp
         if method[1:4] == "lin-"
             if spin
+                # on the spin cycle, there are the standard number of iterations allowed to warm up
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs)
             else
+                # after this, the number of iterations allowed is set to one
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs, max_iter=1)
             end
@@ -1229,8 +1230,8 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
         fore = analysis["fore"]
         filt = analysis["filt"]
         post = analysis["post"]
-        iteration_sequence[k] = analysis["iterations"][1]
-        k+=1
+        iteration_sequence[m] = analysis["iterations"][1]
+        m+=1
 
         if spin
             for j in 1:lag 

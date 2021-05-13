@@ -9,7 +9,7 @@ export rk4_step!, tay2_step!
 ########################################################################################################################
 # four-stage Runge-Kutta scheme
 
-function rk4_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
+function rk4_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """One step of integration rule for l96 4 stage Runge-Kutta as discussed in Grudzien et al. 2020
 
     The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
@@ -89,13 +89,13 @@ function rk4_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     
     # repack the parameter in the extended state
     x[begin: state_dim] = x_step  
-    return x
+    x
 end
 
 ########################################################################################################################
 # deterministic 2nd order Taylor Method
 
-function tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
+function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """Second order Taylor method for step size h and state vector x.
 
     Arguments are given as
@@ -118,13 +118,13 @@ function tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     dx = dx_dt(x, params, t)
 
     # second order taylor expansion
-    x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
+    x[:] = x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
 end
 
 ########################################################################################################################
 # Euler-Murayama step
 
-function em_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
+function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """This will propagate the state x one step forward by Euler-Murayama
 
     Step size is h and the Wiener process is assumed to have a scalar diffusion coefficient"""
@@ -155,7 +155,7 @@ function em_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
     W = ξ * sqrt(h)
 
     # step forward by interval h
-    x +  h * dx_dt(x, params, t) + diffusion * W
+    x[:] = x +  h * dx_dt(x, params, t) + diffusion * W
 end
 
 ########################################################################################################################
