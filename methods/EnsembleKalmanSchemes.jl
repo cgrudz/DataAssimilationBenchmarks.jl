@@ -26,6 +26,11 @@ TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{
                Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
                Array{Float64,2}}
 
+# vectors and ensemble members of sample
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+# arrays and views of arrays
+ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
 
 ########################################################################################################################
 ########################################################################################################################
@@ -82,9 +87,8 @@ function alternating_obs_operator(ens::Array{Float64, 2}, obs_dim::Int64, kwargs
     γ = kwargs["gamma"]
     if γ > 1.0
         for i in 1:N_ens
-            x = obs[:, i]
+            x = @view obs[:, i]
             x = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
-            obs[:, i] = x
         end
     end
     return obs
@@ -180,7 +184,7 @@ function inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int6
         X = ens .- x_mean
         infl =  Matrix(1.0I, sys_dim, sys_dim) 
         infl[1:state_dim, 1:state_dim] .*= inflation 
-        ens[:,:] = x_mean .+ infl * X
+        ens .= x_mean .+ infl * X
     end
 end
 
@@ -201,7 +205,7 @@ function inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int6
         X = ens .- x_mean
         infl =  Matrix(1.0I, sys_dim, sys_dim) 
         infl[state_dim+1: end, state_dim+1: end] .*= inflation
-        ens[:, :] = x_mean .+ infl * X
+        ens .= x_mean .+ infl * X
     end
 end
 
@@ -353,24 +357,24 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         T, w, U
     
     elseif analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"
-        ## This computes the tuned form of the iterative ETKF cost function in the MLEF
-        ## formalism, pg. 180 Asch, Bocquet, Nodet.
-        ## This uses Newton-based minimiztion with linesearch
+        ## This computes the tuned inflation form of the iterative ETKF cost function in the MLEF
+        ## formalism, pg. 180 Asch, Bocquet, Nodet, using Newton-based minimiztion with linesearch
         
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
         
-        # step 1: set up the optimization, inial choice is no change to the mean state
+        # step 1: set up inputs for the optimization 
+        
+        # step 1a: inial choice is no change to the mean state
         ens_mean_0 = mean(ens, dims=2)
         anom_0 = ens .- ens_mean_0
         w = zeros(N_ens)
 
-        # pre-compute the observation error covariance square root
+        # step 1b: pre-compute the observation error covariance square root
         obs_sqrt_inv = square_root_inv(obs_cov)
 
-
-        # define the conditioning 
+        # step 1c: define the conditioning 
         if analysis[end-5:end] == "bundle"
             T = inv(conditioning) 
             T_inv = conditioning
@@ -379,47 +383,14 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             T_inv = 1.0*I
         end
 
-        function NewtonOptimize(f, g!, fg!, w0::Vector{Float64}, linesearch) 
-            w = copy(w0)
-            gvec = similar(w)
-            g!(gvec, w)
-            fw = f(w)
-            gnorm = norm(gvec) 
+        # step 1d: define the storage of the gradient and Hessian as global to the functions
+        grad_w = Vector{Float64}(undef, N_ens)
+        hess_w = Array{Float64}(undef, N_ens, N_ens)
 
-            # Univariate line search functions
-            ϕ(α) = f(w .+ α.*s)
-            function dϕ(α)
-                g!(gvec, w .+ α.*s)
-                return dot(gvec, s)
-            end
-            function ϕdϕ(α)
-                phi = fg!(gvec, w .+ α.*s)
-                dphi = dot(gvec, s)
-                return (phi, dphi)
-            end
-
-            s = similar(gvec) # Step direction
-
-            iter = 0
-            while iter < maxiter && gnorm > tol
-                iter += 1
-                s .= -gvec
-
-                dϕ_0 = dot(s, gvec)
-                α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
-
-                @. x = x + α*s
-                g!(gvec, x)
-                gnorm = norm(gvec)
-            end
-
-            return (fw, w, iter)
-        end
-        
-        # define the optimization function for the cost / gradient / hessian with re-used
-        # computations throughout
-        function fgh!(F,G,H,w::Vector{Float64}; transform=false)
-            # step 2a: compute the observed ensemble and ensemble mean 
+        # step 2: define the linesearch
+        function newton_ls!(T::T1, T_inv::T1, w::Vector{Float64}, 
+                          linesearch) where {T1 <: ConM}
+            # step 2a: define the linearization of the observation operator 
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * T 
             Y = alternating_obs_operator(ens, obs_dim, kwargs)
@@ -432,45 +403,75 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             # step 2c: compute the weighted innovation
             δ = obs_sqrt_inv * (obs - y_mean)
         
-            # gradient, hessian and cost function evaluations
-            if G != nothing
-                G[:] = (N_ens - 1.0)  * w - transpose(S) * δ
+            # step 2d: gradient, hessian and cost function definitions
+            function g!(grad_w::Vector{Float64}, w::Vector{Float64})
+                grad_w[:] = (N_ens - 1.0)  * w - transpose(S) * δ
             end
-            if H != nothing
-                H[:, :] = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            function h!(hess_w::Array{Float64}, w::Vector{Float64})
+                hess_w .= Symmetric((N_ens - 1.0)*I + transpose(S) * S)
             end
-            if F != nothing
+            function f(w::Vector{Float64})
                 return (N_ens - 1.0) * sum(w.^2.0) + sum( (δ - S * w).^2.0)
             end
-            if transform
-                return Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            
+            # step 2e: find the Newton direction and the transform update if needed
+            @bp
+            g!(grad_w, w)
+            h!(hess_w, w)
+            fx = f(w)
+            p = -hess_w \ grad_w
+            if analysis[end-8:end] == "transform"
+                T, T_inv = square_root_inv(Symmetric(hess_w), sq_rt=true)
             end
-            nothing
+            
+            # step 2f: univariate line search functions
+            ϕ(α) = f(w .+ α.*p)
+            function dϕ(α)
+                g!(grad_w, w .+ α.*p)
+                return dot(grad_w, p)
+            end
+            function ϕdϕ(α)
+                phi = f(gvec, w .+ α.*p)
+                g!(gvec, w .+ α.*p)
+                dphi = dot(gvec, p)
+                return (phi, dphi)
+            end
+
+            # step 2g: define the linesearch
+            dϕ_0 = dot(p, grad_w)
+            α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+            Δw = α * p
+            w .= w + Δw
+            
+            return Δw
         end
         
-        # step 2: optimize
+        # step 3: optimize
         
-        # step 2a: perform the optimization by Newton with linesearch
+        # step 3a: perform the optimization by Newton with linesearch
         # we use StrongWolfe for RMSE performance as the default linesearch
-        # method, see the LineSearches docs, alternative choice is commented below
         # ln_search = HagerZhang()
         ln_search = StrongWolfe()
-        opt_alg = Newton(linesearch = ln_search)
+
+        j = 0
+        Δw = ones(N_ens)
+
+        while j < j_max && norm(Δw) > tol
+            @bp
+            Δw = newton_ls!(T, T_inv, w, ln_search)
+        end
         
-        w = Optim.optimize(Optim.only_fgh!(fgh!), w, method=opt_alg, x_tol=tol).minimizer
+        if analysis[end-5:end] == "bundle"
+            T = square_root_inv(hess_w)
+        end
 
-        # step 2b: compute the transform
-        T = Symmetric(fgh!(nothing, nothing, Array{Float64}(undef, N_ens, N_ens), w, transform=true))
-        T = square_root_inv(T)
-
-        # step 3:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        # step 3b:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
 
         # step 4: package the transform output tuple
         T, w, U
     
     elseif analysis[1:6]=="mlef-n" || analysis[1:6]=="mles-n"
-        
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -984,8 +985,8 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 5d: define the primal hessian
         function H_P!(hess::Array{Float64,2}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess[:,:] = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
-            hess[:,:] = transpose(S) * S + (N_ens + 1.0) * hess
+            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess .= transpose(S) * S + (N_ens + 1.0) * hess
         end
         
         # step 6: perform the optimization by simple Newton
@@ -1067,8 +1068,8 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 5d: define the primal hessian
         function H_J!(hess::Array{Float64,2}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
-            hess[:,:] = transpose(S) * S + (N_ens + 1.0) * hess
+            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess .= transpose(S) * S + (N_ens + 1.0) * hess
         end
         
         # step 6: find the argmin for the update weights
@@ -1127,7 +1128,7 @@ end
 ########################################################################################################################
 # auxilliary function for updating ensembles 
 
-function ens_update!(ens::Array{Float64,2}, transform::T0) where {T0 <: TransM}
+function ens_update!(ens::T0, transform::T1) where {T0 <: ArView, T1 <: TransM}
     """ Updates ensemble by right-transform method
 
     In the case where this follows the stochastic EnKF as in Carrassi et al. 2018,
@@ -1135,9 +1136,9 @@ function ens_update!(ens::Array{Float64,2}, transform::T0) where {T0 <: TransM}
     the right transform for the anomalies, the weights for the mean and the random, mean-
     preserving orthogonal matrix."""
 
-    if T0 <: Array{Float64,2}
+    if T1 <: Array{Float64,2}
         # step 1: update the ensemble with right transform
-        ens[:,:] = ens * transform 
+        ens .= ens * transform 
     
     else
         # step 0: infer dimensions and unpack the transform
@@ -1152,7 +1153,7 @@ function ens_update!(ens::Array{Float64,2}, transform::T0) where {T0 <: TransM}
 
         # step 3: compute the update
         ens_transform = w .+ T * U * sqrt(N_ens - 1.0)
-        ens[:,:] = x_mean .+ X * ens_transform
+        ens .= x_mean .+ X * ens_transform
     end
 end
 
@@ -1245,8 +1246,8 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         
         # step 2a: propagate between observation times
         for j in 1:N_ens
-            for k in 1:f_steps
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
 
@@ -1270,8 +1271,8 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         filtered[:, :, s] = ens
         
         # step 2e: re-analyze the posterior in the lag window of states
-        for l in 1:lag
-            posterior[:, :, l] = ens_update!(posterior[:, :, l], trans)
+        @views for l in 1:lag
+            ens_update!(posterior[:, :, l], trans)
         end
     end
             
@@ -1362,8 +1363,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             for l in 1:lag
                 # step 2a: propagate between observation times
                 for j in 1:N_ens
-                    for k in 1:f_steps
-                        ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                    @views for k in 1:f_steps
+                        step_model!(ens[:, j], 0.0, kwargs)
                     end
                 end
                 if i == 0
@@ -1383,7 +1384,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
 
                     if spin 
                         # compute multiplicative inflation of state variables
-                        ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+                        inflate_state!(ens, state_infl, sys_dim, state_dim)
 
                         # if including an extended state of parameter values,
                         # compute multiplicative inflation of parameter values
@@ -1400,7 +1401,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                     end
                     
                     # step 2d: compute the re-analyzed initial condition for posterior statistics with rebalancing step
-                    posterior[:, :, 1] = ens_update!(posterior[:, :, 1], trans)
+                    @views ens_update!(posterior[:, :, 1], trans)
                 
                 else
                     # step 2c: perform the filtering step with mda weights
@@ -1420,8 +1421,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
         for l in 1:lag
             # step 2a: propagate between observation times
             for j in 1:N_ens
-                for k in 1:f_steps
-                    ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                @views for k in 1:f_steps
+                    step_model!(ens[:, j], 0.0, kwargs)
                 end
             end
             if spin
@@ -1455,7 +1456,6 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                 
                 # step 2c: apply the transformation and update step
                 trans = transform(analysis, ens, obs[:, l], obs_cov, kwargs)
-
                 ens_update!(ens, trans)
                 
                 # store the filtered states for previously unobserved times, not mda values
@@ -1482,8 +1482,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
     # step 3b: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
         param_ens = ens[state_dim + 1:end , :]
-        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
-        ens[state_dim + 1:end, :] = param_ens
+        param_ens .= param_ens + param_wlk * rand(Normal(), size(param_ens))
+        ens[state_dim + 1:end , :] = param_ens
     end
 
     # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
@@ -1493,8 +1493,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             posterior[:, :, s] = ens
         end
         for j in 1:N_ens
-            for k in 1:f_steps
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
     end
@@ -1589,8 +1589,8 @@ function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Floa
     for l in 1:lag
         # step 2a: propagate between observation times
         for j in 1:N_ens
-            for k in 1:f_steps
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
         if spin
@@ -1696,8 +1696,8 @@ function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Floa
             posterior[:, :, s] = ens
         end
         for j in 1:N_ens
-            for k in 1:f_steps
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
     end
@@ -1849,8 +1849,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                 for l in 1:lag
                     # propagate between observation times
                     for j in 1:N_ens
-                        for k in 1:f_steps
-                            ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                        @views for k in 1:f_steps
+                            step_model!(ens[:, j], 0.0, kwargs)
                         end
                     end
 
@@ -1959,8 +1959,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
 
                     # shift the ensemble forward Δt
                     for j in 1:N_ens
-                        for k in 1:f_steps
-                            ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                        @views for k in 1:f_steps
+                            step_model!(ens[:, j], 0.0, kwargs)
                         end
                     end
 
@@ -1981,8 +1981,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             else
                 for l in 1:shift
                     for j in 1:N_ens
-                        for k in 1:f_steps
-                            ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                        @views for k in 1:f_steps
+                            step_model!(ens[:, j], 0.0, kwargs)
                         end
                     end
                 end
@@ -2059,8 +2059,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             for l in 1:lag
                 # propagate between observation times
                 for j in 1:N_ens
-                    for k in 1:f_steps
-                        ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                    @views for k in 1:f_steps
+                        step_model!(ens[:, j], 0.0, kwargs)
                     end
                 end
                 if spin
@@ -2173,8 +2173,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
 
             # shift the ensemble forward Δt
             for j in 1:N_ens
-                for k in 1:f_steps
-                    ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                @views for k in 1:f_steps
+                    step_model!(ens[:, j], 0.0, kwargs)
                 end
             end
 

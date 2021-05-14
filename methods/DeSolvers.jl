@@ -7,9 +7,17 @@ using Random, Distributions
 export rk4_step!, tay2_step!
 
 ########################################################################################################################
+########################################################################################################################
+# Type union declarations for multiple dispatch
+
+# vectors and ensemble members of sample
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+########################################################################################################################
+########################################################################################################################
 # four-stage Runge-Kutta scheme
 
-function rk4_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
+function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     """One step of integration rule for l96 4 stage Runge-Kutta as discussed in Grudzien et al. 2020
 
     The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
@@ -41,10 +49,12 @@ function rk4_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     # check if extended state vector
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
+        v = @view x[begin: state_dim]
         param_est = true
     else
         # the state dim equals the system dim
         state_dim = sys_dim
+        v = @view x[begin: state_dim]
         param_est = false
     end
 
@@ -79,16 +89,13 @@ function rk4_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     end
 
     # terms of the RK scheme recursively evolve the dynamic state components alone
-    k1 = dx_dt(x[begin: state_dim], params, t) * h + diffusion * W
-    k2 = dx_dt(x[begin: state_dim] + 0.5 * k1, params, t + 0.5 * h) * h + diffusion * W
-    k3 = dx_dt(x[begin: state_dim] + 0.5 * k2, params, t + 0.5 * h) * h + diffusion * W
-    k4 = dx_dt(x[begin: state_dim] + k3, params, t + h) * h + diffusion * W
+    k1 = dx_dt(v, params, t) * h + diffusion * W
+    k2 = dx_dt(v + 0.5 * k1, params, t + 0.5 * h) * h + diffusion * W
+    k3 = dx_dt(v + 0.5 * k2, params, t + 0.5 * h) * h + diffusion * W
+    k4 = dx_dt(v + k3, params, t + h) * h + diffusion * W
     
     # compute the update to the dynamic variables
-    x_step = x[begin: state_dim]+ (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4)
-    
-    # repack the parameter in the extended state
-    x[begin: state_dim] = x_step  
+    x[begin: state_dim] = v + (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4) 
     x
 end
 
@@ -118,7 +125,7 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     dx = dx_dt(x, params, t)
 
     # second order taylor expansion
-    x[:] = x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
+    x .= x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
 end
 
 ########################################################################################################################
@@ -155,7 +162,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     W = ξ * sqrt(h)
 
     # step forward by interval h
-    x[:] = x +  h * dx_dt(x, params, t) + diffusion * W
+    x .= x +  h * dx_dt(x, params, t) + diffusion * W
 end
 
 ########################################################################################################################

@@ -12,6 +12,13 @@ export classic_state, classic_param, single_iteration_state, single_iteration_pa
 
 ########################################################################################################################
 ########################################################################################################################
+# Type union declarations for multiple dispatch
+
+# vectors and ensemble members of sample
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+########################################################################################################################
+########################################################################################################################
 # Main smoothing experiments, debugged and validated for use with schemes in methods directory
 ########################################################################################################################
 # All experiments are funcitonalized so that they can be called from an array of parameter values which will typically
@@ -42,7 +49,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -220,7 +227,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -429,7 +436,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)

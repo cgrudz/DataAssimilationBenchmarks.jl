@@ -34,7 +34,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -78,8 +78,8 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
         # for each ensemble member
         for j in 1:N_ens
             # loop over the integration steps between observations
-            for k in 1:f_steps
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
 
@@ -218,9 +218,9 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     for i in 1:nanl
         # for each ensemble member
         for j in 1:N_ens
-            for k in 1:f_steps
+            @views for k in 1:f_steps
                 # loop over the integration steps between observations
-                ens[:, j] = step_model!(ens[:, j], 0.0, kwargs)
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
     
@@ -232,15 +232,14 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage
-        param_ens = ens[state_dim+1:end, :]
+        param_ens = @view ens[state_dim+1:end, :]
 
         # compute the analysis statistics
         filt_rmse[i], filt_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
         para_rmse[i], para_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
-        param_ens = param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
-        ens[state_dim+1:end, :] = param_ens
+        param_ens .= param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
     end
 
     data = Dict{String,Any}(
