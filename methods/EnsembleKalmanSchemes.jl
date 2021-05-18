@@ -87,8 +87,8 @@ function alternating_obs_operator(ens::Array{Float64, 2}, obs_dim::Int64, kwargs
     γ = kwargs["gamma"]
     if γ > 1.0
         for i in 1:N_ens
-            x = @view obs[:, i]
-            x = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
+            x = obs[:, i]
+            obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
         end
     end
     return obs
@@ -374,22 +374,28 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 1b: pre-compute the observation error covariance square root
         obs_sqrt_inv = square_root_inv(obs_cov)
 
-        # step 1c: define the conditioning 
+        # step 1c: define the conditioning and parameters for finite size formalism if needed
         if analysis[end-5:end] == "bundle"
             T = inv(conditioning) 
             T_inv = conditioning
         elseif analysis[end-8:end] == "transform"
-            T = 1.0*I
-            T_inv = 1.0*I
+            T = Symmetric(Matrix(1.0*I, N_ens, N_ens))
+            T_inv = Symmetric(Matrix(1.0*I, N_ens, N_ens))
+        end
+
+        if analysis[8:9] == "-n"
+            # define the epsilon scaling and the effective ensemble size if finite size form
+            ϵ_N = 1.0 + (1.0 / N_ens)
+            N_effective = N_ens + 1.0
         end
 
         # step 1d: define the storage of the gradient and Hessian as global to the functions
         grad_w = Vector{Float64}(undef, N_ens)
         hess_w = Array{Float64}(undef, N_ens, N_ens)
+        cost_w = 0.0
 
-        # step 2: define the linesearch
-        function newton_ls!(T::T1, T_inv::T1, w::Vector{Float64}, 
-                          linesearch) where {T1 <: ConM}
+        # step 2: define the cost / gradient / hessian function to avoid repeated computations
+        function fgh!(G, H, C, T::T1, T_inv::T1, w::Vector{Float64}) where {T1 <: ConM}
             # step 2a: define the linearization of the observation operator 
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * T 
@@ -404,42 +410,60 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             δ = obs_sqrt_inv * (obs - y_mean)
         
             # step 2d: gradient, hessian and cost function definitions
-            function g!(grad_w::Vector{Float64}, w::Vector{Float64})
-                grad_w[:] = (N_ens - 1.0)  * w - transpose(S) * δ
+            if G != nothing
+                if analysis[8:9] == "-n"
+                    ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+                    G[:] = N_effective * ζ * w - transpose(S) * δ
+                else
+                    G[:] = (N_ens - 1.0)  * w - transpose(S) * δ
+                end
             end
-            function h!(hess_w::Array{Float64}, w::Vector{Float64})
-                hess_w .= Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            if H != nothing
+                if analysis[8:9] == "-n"
+                    H .= Symmetric((N_effective - 1.0)*I + transpose(S) * S)
+                else
+                    H .= Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+                end
             end
-            function f(w::Vector{Float64})
-                return (N_ens - 1.0) * sum(w.^2.0) + sum( (δ - S * w).^2.0)
+            if C != nothing
+                if analysis[8:9] == "-n"
+                    y_mean_iter = alternating_obs_operator(ens_mean_iter, obs_dim, kwargs)
+                    δ = obs_sqrt_inv * (obs - y_mean_iter)
+                    return N_effective * log(ϵ_N + sum(w.^2.0)) + sum(δ.^2.0)
+                else
+                    y_mean_iter = alternating_obs_operator(ens_mean_iter, obs_dim, kwargs)
+                    δ = obs_sqrt_inv * (obs - y_mean_iter)
+                    return (N_ens - 1.0) * sum(w.^2.0) + sum(δ.^2.0)
+                end
             end
-            
+            nothing
+        end
+        function newton_ls!(grad_w, hess_w, T::T1, T_inv::T1, w::Vector{Float64}, 
+                          linesearch) where {T1 <: ConM}
             # step 2e: find the Newton direction and the transform update if needed
-            @bp
-            g!(grad_w, w)
-            h!(hess_w, w)
-            fx = f(w)
+            fx = fgh!(grad_w, hess_w, cost_w, T, T_inv, w)
             p = -hess_w \ grad_w
             if analysis[end-8:end] == "transform"
-                T, T_inv = square_root_inv(Symmetric(hess_w), sq_rt=true)
+                T_tmp, T_inv_tmp = square_root_inv(Symmetric(hess_w), sq_rt=true)
+                T .= T_tmp
+                T_inv .= T_inv_tmp
             end
             
             # step 2f: univariate line search functions
-            ϕ(α) = f(w .+ α.*p)
+            ϕ(α) = fgh!(nothing, nothing, cost_w, T, T_inv, w .+ α.*p)
             function dϕ(α)
-                g!(grad_w, w .+ α.*p)
+                fgh!(grad_w, nothing, nothing, T, T_inv, w .+ α.*p)
                 return dot(grad_w, p)
             end
             function ϕdϕ(α)
-                phi = f(gvec, w .+ α.*p)
-                g!(gvec, w .+ α.*p)
-                dphi = dot(gvec, p)
+                phi = fgh!(grad_w, nothing, cost_w, T, T_inv, w .+ α.*p)
+                dphi = dot(grad_w, p)
                 return (phi, dphi)
             end
 
             # step 2g: define the linesearch
             dϕ_0 = dot(p, grad_w)
-            α, fx = linesearch(ϕ, dϕ, ϕdϕ, 1.0, fx, dϕ_0)
+            α, fx = linesearch(ϕ, dϕ, ϕdϕ,  1.0, fx, dϕ_0)
             Δw = α * p
             w .= w + Δw
             
@@ -447,21 +471,25 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         end
         
         # step 3: optimize
-        
         # step 3a: perform the optimization by Newton with linesearch
         # we use StrongWolfe for RMSE performance as the default linesearch
-        # ln_search = HagerZhang()
+        #ln_search = HagerZhang()
         ln_search = StrongWolfe()
-
         j = 0
         Δw = ones(N_ens)
 
         while j < j_max && norm(Δw) > tol
-            @bp
-            Δw = newton_ls!(T, T_inv, w, ln_search)
+            Δw = newton_ls!(grad_w, hess_w, T, T_inv, w, ln_search)
         end
         
-        if analysis[end-5:end] == "bundle"
+        if analysis[8:9] == "-n"
+            # peform a final inflation with the finite size cost function
+            ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess_w = Symmetric(transpose(S) * S + (N_ens + 1.0) * hess_w)
+            T = square_root_inv(hess_w)
+        
+        elseif analysis[end-5:end] == "bundle"
             T = square_root_inv(hess_w)
         end
 
@@ -471,7 +499,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 4: package the transform output tuple
         T, w, U
     
-    elseif analysis[1:6]=="mlef-n" || analysis[1:6]=="mles-n"
+    elseif analysis[1:4]=="mlef" || analysis[1:4]=="mles"
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -501,7 +529,11 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         
         # step 2: perform the optimization by simple Newton
         j = 0
-        ϵ_N = 1.0 + (1.0 / N_ens)
+        if analysis[5:6] == "-n"
+            # define the epsilon scaling and the effective ensemble size if finite size form
+            ϵ_N = 1.0 + (1.0 / N_ens)
+            N_effective = N_ens + 1.0
+        end
         
         while j < j_max
             # step 2a: compute the observed ensemble and ensemble mean 
@@ -518,9 +550,17 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             δ = obs_sqrt_inv * (obs - y_mean)
         
             # step 2d: compute the gradient and hessian
-            ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            grad_w = (N_ens + 1.0) * ζ * w - transpose(S) * δ
-            hess_w = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            if analysis[5:6] == "-n" 
+                # for finite formalism, we follow the IEnKS-N convention where
+                # the gradient is computed with the finite-size cost function but we use the
+                # usual hessian, with the effective ensemble size
+                ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+                grad_w = N_effective * ζ * w - transpose(S) * δ
+                hess_w = Symmetric((N_effective - 1.0)*I + transpose(S) * S)
+            else
+                grad_w = (N_ens - 1.0)  * w - transpose(S) * δ
+                hess_w = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
+            end
             
             # step 2e: perform Newton approximation, simultaneously computing
             # the update transform T with the SVD based inverse at once
@@ -542,99 +582,21 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             end
         end
 
-        # peform a final inflation with the finite size cost function
-        ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-        hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
-        hess_w = Symmetric(transpose(S) * S + (N_ens + 1.0) * hess_w)
-        T = square_root_inv(hess_w)
+        if analysis[5:6] == "-n"
+            # peform a final inflation with the finite size cost function
+            ζ = 1.0 / (ϵ_N + sum(w.^2.0))
+            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess_w = Symmetric(transpose(S) * S + (N_ens + 1.0) * hess_w)
+            T = square_root_inv(hess_w)
+        
+        elseif analysis[end-5:end] == "bundle"
+            T = square_root_inv(hess_w)
+        end
 
         # step 7:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
 
         # step 8: package the transform output tuple
-        T, w, U
-    
-    elseif analysis[1:4]=="mlef" || analysis[1:4]=="mles"
-        ## This computes the tuned form of the iterative ETKF cost function in the MLEF
-        ## formalism, pg. 180 Asch, Bocquet, Nodet.
-        ## This uses the standard Gauss-Newton-based minimization of the cost function for the
-        ## nonlinear least-squares with nonlinear observation operator 
-        
-        # step 0: infer the system, observation and ensemble dimensions 
-        sys_dim, N_ens = size(ens)
-        obs_dim = length(obs)
-        
-        # step 1: set up the optimization, inial choice is no change to the mean state
-        ens_mean_0 = mean(ens, dims=2)
-        anom_0 = ens .- ens_mean_0
-        w = zeros(N_ens)
-
-        # pre-compute the observation error covariance square root
-        obs_sqrt_inv = square_root_inv(obs_cov)
-
-        # define these variables as global compared to the while loop
-        hess_w = Array{Float64}(undef, N_ens, N_ens)
-        ens_mean_iter = copy(ens_mean_0)
-
-        # define the conditioning 
-        if analysis[end-5:end] == "bundle"
-            T = inv(conditioning) 
-            T_inv = conditioning
-        elseif analysis[end-8:end] == "transform"
-            T = 1.0*I
-            T_inv = 1.0*I
-        end
-        
-        # step 2: perform the optimization by simple Newton
-        j = 0
-
-        while j < j_max
-            # step 2a: compute the observed ensemble and ensemble mean 
-            ens_mean_iter = ens_mean_0 + anom_0 * w
-            ens = ens_mean_iter .+ anom_0 * T
-            Y = alternating_obs_operator(ens, obs_dim, kwargs)
-            y_mean = mean(Y, dims=2)
-
-            # step 2b: compute the weighted anomalies in observation space, conditioned
-            # with T inverse
-            S = obs_sqrt_inv * (Y .- y_mean) * T_inv 
-
-            # step 2c: compute the weighted innovation
-            δ = obs_sqrt_inv * (obs - y_mean)
-        
-            # step 2d: compute the gradient and hessian
-            grad_w = (N_ens - 1.0)  * w - transpose(S) * δ
-            hess_w = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
-            
-            # step 2e: perform Newton approximation, simultaneously computing
-            # the update transform T with the SVD based inverse at once
-            if analysis[end-8:end] == "transform"
-                T, T_inv, hessian_inv = square_root_inv(Symmetric(hess_w), full=true)
-                Δw = hessian_inv * grad_w 
-            else
-                Δw = hess_w \ grad_w
-            end
-
-            # 2f: update the weights
-            w -= Δw 
-            
-            if norm(Δw) < tol
-                break
-            else
-                # step 2g: update the iterative mean state
-                j+=1
-            end
-        end
-
-        # 2h: if bundle, update the transform
-        if analysis[end-5:end] == "bundle"
-            T = square_root_inv(hess_w)
-        end
-
-        # step 3:  generate mean preserving random orthogonal matrix as in sakov oke 08
-        U = rand_orth(N_ens)
-
-        # step 4: package the transform output tuple
         T, w, U
     
     elseif analysis=="etkf_sqrt_core" || analysis=="etks_sqrt_core"
@@ -940,6 +902,8 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
     
     elseif analysis=="enkf-n-primal" || analysis=="enks-n-primal"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
+        ## This differs from the MLEF/S-N in that there is no linearization of the observation
+        ## operator, this only handles this with respect to the adaptive inflation.
         ## This uses the standard Gauss-Newton-based minimization of the cost function for the adaptive
         ## inflation, whereas enkf-n-ls / enks-n-ls uses the optimized linesearch
         # step 0: infer the system, observation and ensemble dimensions 
@@ -961,8 +925,9 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 3: compute the weighted innovation
         δ = obs_sqrt_inv * (obs - y_mean)
         
-        # step 4: 
+        # step 4: define the epsilon scaling and the effective ensemble size
         ϵ_N = 1.0 + (1.0 / N_ens)
+        N_effective = N_ens + 1.0
         
         # step 5: set up the optimization
         
@@ -972,21 +937,21 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 5b: define the primal cost function
         function P(w::Vector{Float64})
             cost = (δ - S * w)
-            cost = sum(cost.^2.0) + (N_ens + 1.0) * log(ϵ_N + sum(w.^2.0))
+            cost = sum(cost.^2.0) + N_effective * log(ϵ_N + sum(w.^2.0))
             0.5 * cost
         end
 
         # step 5c: define the primal gradient
         function ∇P!(grad::Vector{Float64}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            grad[:] = (N_ens + 1.0) * ζ * w - transpose(S) * (δ - S * w) 
+            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w) 
         end
 
         # step 5d: define the primal hessian
         function H_P!(hess::Array{Float64,2}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
-            hess .= transpose(S) * S + (N_ens + 1.0) * hess
+            hess .= transpose(S) * S + N_effective * hess
         end
         
         # step 6: perform the optimization by simple Newton
@@ -1022,6 +987,8 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
     
     elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
+        ## This differs from the MLEF/S-N in that there is no linearization of the observation
+        ## operator, this only handles this with respect to the adaptive inflation.
         ## This uses linesearch with the strong Wolfe condition as the basis for the Newton-based
         ## minimization of the cost function for the adaptive inflation by default. May also use
         ## other line-search methods, with HagerZhang the next best option by initial tests
@@ -1044,8 +1011,9 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 3: compute the weighted innovation
         δ = obs_sqrt_inv * (obs - y_mean)
         
-        # step 4: 
+        # step 4: define the epsilon scaling and the effective ensemble size
         ϵ_N = 1.0 + (1.0 / N_ens)
+        N_effective = N_ens + 1.0
         
         # step 5: set up the optimization
         
@@ -1055,21 +1023,21 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 5b: define the primal cost function
         function J(w::Vector{Float64})
             cost = (δ - S * w)
-            cost = sum(cost.^2.0) + (N_ens + 1.0) * log(ϵ_N + sum(w.^2.0))
+            cost = sum(cost.^2.0) + N_effective * log(ϵ_N + sum(w.^2.0))
             0.5 * cost
         end
 
         # step 5c: define the primal gradient
         function ∇J!(grad::Vector{Float64}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            grad[:] = (N_ens + 1.0) * ζ * w - transpose(S) * (δ - S * w) 
+            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w) 
         end
 
         # step 5d: define the primal hessian
         function H_J!(hess::Array{Float64,2}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
-            hess .= transpose(S) * S + (N_ens + 1.0) * hess
+            hess .= transpose(S) * S + N_effective * hess
         end
         
         # step 6: find the argmin for the update weights
@@ -1471,7 +1439,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
 
     # step 3: propagate the posterior initial condition forward to the shift-forward time
     # step 3a: inflate the posterior covariance
-    ens = inflate_state!(ens, state_infl, sys_dim, state_dim)
+    inflate_state!(ens, state_infl, sys_dim, state_dim)
     
     # if including an extended state of parameter values,
     # compute multiplicative inflation of parameter values

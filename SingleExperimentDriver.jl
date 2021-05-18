@@ -33,7 +33,7 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ## [time_series, scheme, seed, obs_un, obs_dim, γ, N_ens, infl] = args
 
 function filter_state_exp()
-    args = (time_series, "etkf", 0, 1.0, 40, 5.0, 25, 1.04)
+    args = (time_series, "etkf", 0, 1.0, 40, 5.0, 25, 1.05)
     filter_state(args)
 end
 
@@ -57,7 +57,7 @@ end
 # time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, infl = args
 
 function classic_smoother_state_exp()
-    args = (time_series, "etks", 0, 10, 1, 1.0, 40, 1.0, 25, 1.03)
+    args = (time_series, "mles-transform", 0, 10, 1, 1.0, 40, 1.0, 25, 1.03)
     classic_state(args)
 end
 
@@ -82,7 +82,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "etks", 0, 10, 1, false, 1.0, 40, 1.0, 25, 1.01)
+    args = (time_series, "mles-ls-n-transform", 0, 10, 1, false, 1.0, 40, 10.0, 25, 1.00)
     single_iteration_state(args)
 end
 
@@ -104,7 +104,7 @@ end
 ## iterative_state single run for degbugging, arguments are
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 function iterative_smoother_state_exp()
-    args = (time_series, "ienks-transform", 0, 1, 1, false, 1.0, 40, 1.0, 25, 1.03)
+    args = (time_series, "ienks-n-transform", 0, 10, 1, false, 1.0, 40, 1.0, 25, 1.00)
     iterative_state(args)
 end
 
