@@ -12,6 +12,13 @@ export classic_state, classic_param, single_iteration_state, single_iteration_pa
 
 ########################################################################################################################
 ########################################################################################################################
+# Type union declarations for multiple dispatch
+
+# vectors and ensemble members of sample
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+########################################################################################################################
+########################################################################################################################
 # Main smoothing experiments, debugged and validated for use with schemes in methods directory
 ########################################################################################################################
 # All experiments are funcitonalized so that they can be called from an array of parameter values which will typically
@@ -19,12 +26,12 @@ export classic_state, classic_param, single_iteration_state, single_iteration_pa
 # dictionary in a JLD.  Returns runtime in minutes.
 ########################################################################################################################
 
-function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Int64,Float64})
+function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Int64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # define static mda parameter, not used for classic scheme
     mda=false
@@ -36,13 +43,13 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -55,35 +62,37 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    @bp
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
     # for negative and first time indices
@@ -96,7 +105,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
-        analysis = ls_smoother_classic(method, ens, H, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -145,26 +154,27 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
-            "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "mda" => mda,
-            "state_infl"=> round(state_infl, digits=2)
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
+            "seed"  => seed, 
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
+            "h" => h,
+            "N_ens" => N_ens, 
+            "mda"  => mda,
+            "state_infl" => round(state_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
@@ -173,6 +183,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -192,12 +203,13 @@ end
 
 #########################################################################################################################
 
-function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Float64,Int64,Float64,Float64})
+function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64,Float64,Float64,Float64,
+                                   Int64,Float64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # define static mda parameter, not used for classic scheme
     mda=false
@@ -209,13 +221,13 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -246,9 +258,10 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "state_dim" => state_dim,
                 "param_wlk" => param_wlk,
                 "param_infl" => param_infl,
@@ -258,26 +271,23 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
-    H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), size(obs))
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
-    # define the observation operator on the extended state, used for the ensemble
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
-
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
     # for negative and first time indices
@@ -290,7 +300,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = posterior
         # observations indexed in absolute time
-        analysis = ls_smoother_classic(method, ens, H, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
+        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -348,32 +358,33 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "param_rmse"=> para_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "param_spread"=> para_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "param_rmse" => para_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "param_spread" => para_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
             "state_dim" => state_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
             "param_err" => param_err,
             "param_wlk" => param_wlk,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
-            "mda"=> mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2),
-            "param_infl" => round(param_infl, digits=2)
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
+            "mda" => mda,
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2),
+            "param_infl"  => round(param_infl, digits=2)
            )
     
     path = "./data/" * method * "_classic/" 
@@ -382,6 +393,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -403,13 +415,13 @@ end
 
 #########################################################################################################################
 
-function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
+function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -418,7 +430,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -437,35 +449,36 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!,
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -504,7 +517,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
         end
 
         # peform the analysis
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -558,26 +571,27 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
     path = "./data/" * method * "_single_iteration/" 
@@ -586,6 +600,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -605,14 +620,14 @@ end
 
 #########################################################################################################################
 
-function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64}, 
-                                         tail::Int64=3)
+function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
+                                                     Float64,Int64,Float64};tail::Int64=3)
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -621,13 +636,13 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -640,17 +655,18 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
@@ -663,19 +679,19 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     end
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -714,7 +730,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
         end
 
         # peform the analysis
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -784,26 +800,27 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     post_spread = post_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
     if method == "etks_adaptive"
@@ -816,6 +833,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -835,14 +853,15 @@ end
 
 #########################################################################################################################
 
-function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
+function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,
                                   Float64,Float64,Int64,Float64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, lag, 
+    shift, mda, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -851,7 +870,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -869,7 +888,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
     
     # define the initial state ensemble
@@ -894,10 +913,11 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "state_dim" => state_dim,
                 "shift" => shift,
                 "param_wlk" => param_wlk,
@@ -907,24 +927,21 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), size(obs))
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
-    # define the observation operator on the extended state, used for the ensemble
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
-    
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    para_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    para_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -962,7 +979,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             end
         end
 
-        analysis = ls_smoother_single_iteration(method, ens, H, obs[:, i: i + lag - 1], 
+        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -1037,31 +1054,32 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     para_spread = para_spread[2: nanl + 1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "param_rmse"=> para_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
-            "param_spread"=> para_spread,
-            "method"=> method,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "param_rmse" => para_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
+            "param_spread" => para_spread,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
             "param_wlk" => param_wlk,
             "param_infl" => param_infl,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2),
-            "param_infl"=> round(param_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2),
+            "param_infl" => round(param_infl, digits=2)
            )
     
 
@@ -1071,6 +1089,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -1093,13 +1112,13 @@ end
 
 #########################################################################################################################
 
-function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Int64,Float64})
+function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,Float64,Int64,Float64})
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1108,7 +1127,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     ls_smoother_iterative = ls_smoother_gauss_newton
 
     # number of discrete forecast steps
@@ -1128,41 +1147,42 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
 
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
-    obs = obs[:, 1:nanl + 2 * lag + 1]
+    obs = obs[:, 1:nanl + 3 * lag + 1]
     truth = copy(obs)
 
     # define kwargs
     kwargs = Dict{String,Any}(
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
-                "step_model" => step_model, 
+                "step_model" => step_model!, 
                 "dx_params" => [f],
                 "h" => h,
                 "diffusion" => diffusion,
+                "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), size(obs))
     
     # create storage for the forecast and analysis statistics, indexed in relative time
-    # the first index corresponds to time 1, last index corresponds to index nanl + 2 * lag + 1
-    fore_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1) 
-    filt_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_rmse = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
+    fore_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1) 
+    filt_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_rmse = Vector{Float64}(undef, nanl + 3 * lag + 1)
     
-    fore_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    filt_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
-    post_spread = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    fore_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # create storage for the iteration sequence
-    iteration_sequence = Vector{Float64}(undef, nanl + 2 * lag + 1)
+    iteration_sequence = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
     # create counter for the analyses
-    k = 1
+    m = 1
 
     # perform an initial spin for the smoothed re-analyzed first prior estimate while handling 
     # new observations with a filtering step to prevent divergence of the forecast for long lags
@@ -1199,25 +1219,26 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
                 kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
             end
         end
-        @bp
         if method[1:4] == "lin-"
             if spin
-                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                # on the spin cycle, there are the standard number of iterations allowed to warm up
+                analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs)
             else
-                analysis = ls_smoother_iterative(method[5:end], ens, H, obs[:, i: i + lag - 1],
+                # after this, the number of iterations allowed is set to one
+                analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
                                                  obs_cov, state_infl, kwargs, max_iter=1)
             end
         else
-            analysis = ls_smoother_iterative(method, ens, H, obs[:, i: i + lag - 1], 
+            analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
                                              obs_cov, state_infl, kwargs)
         end
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
         post = analysis["post"]
-        iteration_sequence[k] = analysis["iterations"][1]
-        k+=1
+        iteration_sequence[m] = analysis["iterations"][1]
+        m+=1
 
         if spin
             for j in 1:lag 
@@ -1270,27 +1291,28 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     iteration_sequence = iteration_sequence[2:nanl+1]
 
     data = Dict{String,Any}(
-            "fore_rmse"=> fore_rmse,
-            "filt_rmse"=> filt_rmse,
-            "post_rmse"=> post_rmse,
-            "fore_spread"=> fore_spread,
-            "filt_spread"=> filt_spread,
-            "post_spread"=> post_spread,
+            "fore_rmse" => fore_rmse,
+            "filt_rmse" => filt_rmse,
+            "post_rmse" => post_rmse,
+            "fore_spread" => fore_spread,
+            "filt_spread" => filt_spread,
+            "post_spread" => post_spread,
             "iteration_sequence" => iteration_sequence,
-            "method"=> method,
+            "method" => method,
             "seed" => seed, 
-            "diffusion"=> diffusion,
-            "sys_dim"=> sys_dim,
-            "obs_dim"=> obs_dim, 
-            "obs_un"=> obs_un,
-            "nanl"=> nanl,
-            "tanl"=> tanl,
-            "lag"=> lag,
-            "shift"=> shift,
+            "diffusion" => diffusion,
+            "sys_dim" => sys_dim,
+            "obs_dim" => obs_dim, 
+            "obs_un" => obs_un,
+            "gamma" => γ,
+            "nanl" => nanl,
+            "tanl" => tanl,
+            "lag" => lag,
+            "shift" => shift,
             "mda" => mda,
-            "h"=> h,
-            "N_ens"=> N_ens, 
-            "state_infl"=> round(state_infl, digits=2)
+            "h" => h,
+            "N_ens" => N_ens, 
+            "state_infl" => round(state_infl, digits=2)
            )
     
 
@@ -1300,6 +1322,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *

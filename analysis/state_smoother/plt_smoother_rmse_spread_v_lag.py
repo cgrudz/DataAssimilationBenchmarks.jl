@@ -10,30 +10,39 @@ import ipdb
 import math
 import h5py as h5
 
-tanl = 0.05
 obs_un = 1.0
-method_list = ["etks_classic", "etks_single_iteration", "ienks-bundle", "ienks-transform"]
-#method_list = ["enks-n-dual_classic", "enks-n-dual_single_iteration", "ienks-n-bundle", "ienks-n-transform"]
-stats = ['post', 'filt', 'fore']
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "enks-n-primal-ls_classic", "enks-n-primal-ls_single_iteration"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+stats = ["post", "filt", "fore"]
+tanl = 0.05
+tanl = 0.10
+mda = "false"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
-color_list = ['#1b9e77', '#d95f02', '#7570b3']
-ensemble = 5
+color_list = ['#d95f02', '#7570b3', '#1b9e77']
+ensemble = 2
 total_lag = 53
+shift = 1
+shift = 2
 plot_range = len(range(1,total_lag,3))
-mda = 'false'
 
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
 ax0 = fig.add_axes([.050, .10, .43, .72])
 
-f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0") +'_nanl_20000_burn_05000_mda_' + mda + '.h5', 'r')
+f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0") +'_nanl_20000_burn_05000_mda_' + mda + \
+        '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
     tuning_stat = 'post'
     tuned_rmse = np.array(data[method + '_' + tuning_stat + '_rmse'])
+    tuned_rmse_nan = np.isnan(tuned_rmse)
+    tuned_rmse[tuned_rmse_nan] = np.inf
     tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
+
     lag, ens = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(data[method +'_' + stat + '_rmse'])
@@ -68,7 +77,8 @@ k = 0
 for meth in method_list:
     for stat in stats:
         if meth[:6] == "enks-n" or \
-           meth[:7] == "ienks-n":
+           meth[:7] == "ienks-n" or \
+           meth[:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[meth +"_" + stat + "_rmse"]))
             spread = np.transpose(np.array(f[meth +"_" + stat + "_spread"]))
             rmse = rmse[::-1,ensemble]
@@ -93,21 +103,25 @@ for meth in method_list:
             stat_name = 'forecast'
 
         if meth == "etks_classic":
-            meth_name = "ETKS classic"
+            meth_name = "ETKS"
         elif meth == "etks_single_iteration":
             meth_name = "SIETKS"
-        elif meth == "enks-n-dual_classic":
-            meth_name = "EnKS-N-dual classic"
-        elif meth == "enks-n-dual_single_iteration":
-            meth_name = "SIETKS-N-dual"
-        elif meth == "ienks-bundle":
-            meth_name = "IEnKS bundle"
-        elif meth == "ienks-n-bundle":
-            meth_name = "IEnKS-N bundle"
+        elif meth == "enks-n-primal_classic":
+            meth_name = "EnKS-N"
+        elif meth == "enks-n-primal-ls_classic":
+            meth_name = "EnKS-N-ls"
+        elif meth == "enks-n-primal_single_iteration":
+            meth_name = "SIETKS-N"
+        elif meth == "enks-n-primal-ls_single_iteration":
+            meth_name = "SIETKS-N-ls"
         elif meth == "ienks-transform":
-            meth_name = "IEnKS transform"
+            meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
-            meth_name = "IEnKS-N transform"
+            meth_name = "IEnKS-N"
+        elif meth == "lin-ienks-transform":
+            meth_name = "LIEnKS"
+        elif meth == "lin-ienks-n-transform":
+            meth_name = "LIEnKS-N"
         
         line_labs.append(meth_name + ' ' + stat_name)
         k+=1 
@@ -143,6 +157,6 @@ ax0.set_xticks(range(1, total_lag ,3))
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .04, 'Spread versus lag', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=1, mda=' + mda + ', ensemble size='+ str(range(15,44,2)[ensemble]), horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=' + str(shift) + ', mda=' + mda + ', ensemble size='+ str(range(15,44,2)[ensemble]), horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

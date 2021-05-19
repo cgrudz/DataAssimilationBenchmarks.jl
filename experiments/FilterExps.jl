@@ -14,12 +14,12 @@ export filter_state, filter_param
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ########################################################################################################################
 
-function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float64})
+function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, obs_un, obs_dim, N_ens, infl = args
+    time_series, method, seed, obs_un, obs_dim, γ, N_ens, infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -28,7 +28,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
@@ -54,16 +54,17 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
-              "step_model" => step_model, 
+              "step_model" => step_model!, 
               "dx_params" => [f],
               "h" => h,
               "diffusion" => diffusion,
+              "gamma" => γ,
              )
 
     # define the observation operator, observation error covariance and observations with error 
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs) 
+    obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
-    obs = H * obs + obs_un * rand(Normal(), obs_dim, nanl)
     
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
@@ -77,8 +78,8 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
         # for each ensemble member
         for j in 1:N_ens
             # loop over the integration steps between observations
-            for k in 1:f_steps
-                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+            @views for k in 1:f_steps
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
 
@@ -86,7 +87,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens, truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, infl, kwargs)
         ens = analysis["ens"]
 
         # compute the analysis statistics
@@ -104,6 +105,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
             "sys_dim" => sys_dim,
             "obs_dim" => obs_dim, 
             "obs_un" => obs_un,
+            "gamma" => γ,
             "nanl" => nanl,
             "tanl" => tanl,
             "h" =>  h,
@@ -118,6 +120,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Int64,Float6
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_gamma_" * rpad(γ, 4, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -133,12 +136,12 @@ end
 ########################################################################################################################
 
 
-function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Float64,Int64,Float64,Float64})
+function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Float64,Float64,Int64,Float64,Float64})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
+    time_series, method, seed, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -147,13 +150,13 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     tanl = ts["tanl"]::Float64
     h = 0.01
     dx_dt = L96.dx_dt
-    step_model = rk4_step!
+    step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 45
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -169,15 +172,21 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
+    obs = alternating_obs_operator(obs, obs_dim, kwargs) 
+    obs += obs_un * rand(Normal(), size(obs))
+    
+    # define the associated time invariant observation error covariance
+    obs_cov = obs_un^2.0 * I
     
     # define kwargs, note the possible exclusion of dx_params if this is the only parameter for
     # dx_dt and this is the parameter to be estimated
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
-              "step_model" => step_model,
+              "step_model" => step_model!,
               "h" => h,
               "diffusion" => diffusion,
+              "gamma" => γ,
               "state_dim" => state_dim,
               "param_infl" => param_infl
              )
@@ -196,17 +205,6 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # defined the extended state ensemble
     ens = [ens; param_ens]
 
-    # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
-    # truth state vector below, this is stored separately
-    H = alternating_obs_operator(state_dim, obs_dim, kwargs) 
-    obs =  H * obs + obs_un * rand(Normal(), obs_dim, nanl)
-    
-    # define the observation operator on the extended state, used for the ensemble
-    H = alternating_obs_operator(sys_dim, obs_dim, kwargs) 
-
-    # define the associated time invariant observation error covariance
-    obs_cov = obs_un^2.0 * I
-
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
     filt_rmse = Vector{Float64}(undef, nanl)
@@ -220,9 +218,9 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     for i in 1:nanl
         # for each ensemble member
         for j in 1:N_ens
-            for k in 1:f_steps
+            @views for k in 1:f_steps
                 # loop over the integration steps between observations
-                ens[:, j] = step_model(ens[:, j], kwargs, 0.0)
+                step_model!(ens[:, j], 0.0, kwargs)
             end
         end
     
@@ -230,20 +228,18 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        @bp
         analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage
-        param_ens = ens[state_dim+1:end, :]
+        param_ens = @view ens[state_dim+1:end, :]
 
         # compute the analysis statistics
         filt_rmse[i], filt_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
         para_rmse[i], para_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
-        param_ens = param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
-        ens[state_dim+1:end, :] = param_ens
+        param_ens .= param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
     end
 
     data = Dict{String,Any}(
@@ -260,6 +256,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "state_dim" => state_dim,
             "obs_dim" => obs_dim, 
             "obs_un" => obs_un,
+            "gamma" => γ,
             "param_err" => param_err,
             "param_wlk" => param_wlk,
             "nanl" => nanl,
@@ -278,6 +275,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "_state_dim_" * lpad(state_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") * 
+            "_gamma_" * rpad(γ, 4, "0") * 
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 

@@ -2,7 +2,7 @@
 module GenerateTimeseries 
 ########################################################################################################################
 # imports and exports
-using Debuggerm JLD, Distributed
+using Debugger, JLD, Distributed
 using Random, Distributions, LinearAlgebra
 using DeSolvers, L96 
 export l96_timeseries
@@ -18,14 +18,14 @@ function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion:
     # define the integration scheme
     if diffusion == 0.0
         # generate the observations with the runge-kutta scheme
-        forward_step = DeSolvers.rk4_step!
+        forward_step! = DeSolvers.rk4_step!
 
         # parameters for the runge-kutta scheme
         h = 0.01
 
     else
         # generate the observations with the strong taylor scheme
-        forward_step = L96.l96s_tay2_step!
+        forward_step! = L96.l96s_tay2_step!
         
         # parameters for the order 2.0 strong taylor scheme
         h = 0.005
@@ -67,14 +67,14 @@ function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion:
     # spin the model onto the attractor
     for j in 1:spin
         for k in 1:f_steps
-            x_t = forward_step(x_t, kwargs, 0.0)
+            forward_step!(x_t, 0.0, kwargs)
         end
     end
 
     # save the model state at timesteps of tanl
     for j in 1:nanl
         for k in 1:f_steps
-            x_t = forward_step(x_t, kwargs, 0.0)
+            forward_step!(x_t, 0.0, kwargs)
         end
         obs[:, j] = x_t
     end
