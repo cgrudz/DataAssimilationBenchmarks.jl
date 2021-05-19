@@ -871,7 +871,7 @@ function process_all_smoother_state()
     sys_dim = 40
     nanl = 20000
     burn = 5000
-    shift = 2
+    shift = 1
     mda = false
     diffusion = 0.00
     method_list = [
