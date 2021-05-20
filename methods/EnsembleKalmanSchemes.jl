@@ -84,11 +84,24 @@ function alternating_obs_operator(ens::Array{Float64, 2}, obs_dim::Int64, kwargs
         obs = obs[1:obs_dim, :]
     end
         
-    γ = kwargs["gamma"]
+    γ = kwargs["gamma"]::Float64
     if γ > 1.0
+        # sets a parameter for a nonlinear observation as given on page 181, Asch, Bocquet, Nodet
         for i in 1:N_ens
             x = obs[:, i]
             obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
+        end
+    elseif γ == 0.0
+        @bp
+        # sets a parameter for a nonlinear, quadratic observation operator as given by Hoteit, Luo, Pham
+        obs .= 0.05*obs.^2.0
+    elseif γ < 0.0
+        # sets a parameter for a nonlinear, exponential mapping observation operator as given by 
+        # Wu et al. Nonlin. Processes Geophys., 21, 955–970, 2014
+        @bp
+        for i in 1:N_ens
+            x = obs[:, i]
+            obs[:, i] = x .* exp.(-γ * x)
         end
     end
     return obs

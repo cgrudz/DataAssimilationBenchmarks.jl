@@ -75,8 +75,8 @@ label_v_positions = [0.351, 0.641, 0.931 ]
 
 
 color_map = sns.color_palette("icefire", as_cmap=True) 
-max_scale = 0.01
-min_scale = -0.01
+max_scale = 1.00
+min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b]
 spread_ax_list = [ax2a, ax2b]
@@ -84,18 +84,10 @@ spread_ax_list = [ax2a, ax2b]
 for i in range(2):
     stat = stats[i]
     if method == "mlef-n-transform":
-        rmse1 = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
-        spread1 = np.transpose(np.array(f[method +'_' + stat + '_spread']))
-        rmse2 = np.transpose(np.array(f['mlef-ls-n-transform_' + stat + '_rmse']))
-        spread2 = np.transpose(np.array(f['mlef-ls-n-transform_' + stat + '_spread']))
-        rmse = rmse1 - rmse2
-        spread = spread1 - spread2
+        rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
+        spread = np.transpose(np.array(f[method +'_' + stat + '_spread']))
     elif method == "mlef-transform":
-        rmse1, spread1 = find_optimal_values(method, stat, f)
-        rmse2, spread2 = find_optimal_values("mlef-ls-transform", stat, f)
-        #ipdb.set_trace()
-        rmse = rmse1 - rmse2
-        spread = spread1 - spread2
+        rmse, spread = find_optimal_values(method, stat, f)
 
 
     sns.heatmap(rmse, linewidth=0.5, ax=rmse_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
