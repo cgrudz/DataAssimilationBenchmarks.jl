@@ -96,7 +96,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # Classic smoothers
 ########################################################################################################################
 ## classic_state parallel run, arguments are
-## time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
+## time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 #
 schemes = ["mles-transform"]
 seed = 0
@@ -118,7 +118,7 @@ for ts in time_series
             for l in lag
                 for N in N_ens
                     for s_infl in state_infl
-                        tmp = (ts, scheme, seed, l, shift, obs_un, γ, obs_dim, N, s_infl)
+                        tmp = (ts, scheme, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
                         push!(args, tmp)
                     end
                 end
