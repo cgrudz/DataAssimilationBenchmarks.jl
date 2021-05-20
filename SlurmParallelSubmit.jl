@@ -255,10 +255,10 @@ for mda in mdas
                             #    f = load(fpath*name)
                             #    
                             #catch
-                            #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, γ, obs_dim, N, s_infl)
+                            #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                             #    push!(args, tmp)
                             #end
-                            tmp = (ts, scheme, seed, l, shift, mda, obs_un, γ, obs_dim, N, s_infl)
+                            tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                             push!(args, tmp)
                         end
                     end
