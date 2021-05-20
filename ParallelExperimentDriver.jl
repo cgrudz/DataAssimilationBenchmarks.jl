@@ -98,32 +98,38 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 ## classic_state parallel run, arguments are
 ## time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
 #
-#schemes = ["enks", "etks"]
-#seed = 0
-#lag = 1:5:51
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-#N_ens = 14:41
-#state_infl = LinRange(1.0, 1.20, 21)
-#param_infl = LinRange(1.0, 1.00, 1)
-#
-## load the experiments
-#args = Tuple[]
-#for scheme in schemes
-#    for l in lag
-#        for N in N_ens
-#            for s_infl in state_infl
-#                tmp = (time_series, scheme, seed, l, shift, obs_un, obs_dim, N, s_infl)
-#                push!(args, tmp)
-#            end
-#        end
-#    end
-#end
-#
-#experiment = SmootherExps.classic_state
-#
-#
+schemes = ["mles-transform"]
+seed = 0
+lag = 1:3:51
+gammas = Array{Float64}(1:11)
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+#N_ens = 15:2:41
+N_ens = [21]
+state_infl = LinRange(1.0, 1.10, 11)
+time_series = [time_series_1]
+
+# load the experiments
+args = Tuple[]
+for ts in time_series
+    for scheme in schemes
+        for γ in gammas
+            for l in lag
+                for N in N_ens
+                    for s_infl in state_infl
+                        tmp = (ts, scheme, seed, l, shift, obs_un, γ, obs_dim, N, s_infl)
+                        push!(args, tmp)
+                    end
+                end
+            end
+        end
+    end
+end
+
+experiment = SmootherExps.classic_state
+
+
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
 ##  [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
@@ -167,37 +173,37 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 ########################################################################################################################
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
-
-schemes = ["enks-n-primal", "enks-n-primal-ls"]
-seed = 0
-lag = 1:3:52
-shift = 1
-obs_un = 1.0
-obs_dim = 40
-N_ens = 15:2:43
-state_infl = [1.0]#LinRange(1.0, 1.10, 11)
-mdas = [false]
-time_series = [time_series_1, time_series_2]
-
-# load the experiments
-args = Tuple[]
-for ts in time_series
-    for scheme in schemes
-        for l in lag
-            for N in N_ens
-                for s_infl in state_infl
-                    for m in mdas
-                        tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, N, s_infl)
-                        push!(args, tmp)
-                    end
-                end
-            end
-        end
-    end
-end
-
-experiment = SmootherExps.single_iteration_state
-
+#
+#schemes = ["enks-n-primal", "enks-n-primal-ls"]
+#seed = 0
+#lag = 1:3:52
+#shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+#N_ens = 15:2:43
+#state_infl = [1.0]#LinRange(1.0, 1.10, 11)
+#mdas = [false]
+#time_series = [time_series_1, time_series_2]
+#
+## load the experiments
+#args = Tuple[]
+#for ts in time_series
+#    for scheme in schemes
+#        for l in lag
+#            for N in N_ens
+#                for s_infl in state_infl
+#                    for m in mdas
+#                        tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, N, s_infl)
+#                        push!(args, tmp)
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+#
+#experiment = SmootherExps.single_iteration_state
+#
 ########################################################################################################################
 # hybrid_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
