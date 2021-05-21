@@ -76,27 +76,32 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # Classic smoothers
 ########################################################################################################################
 # submit the experiments given the parameters and write to text files over the initializations
-# time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl = args
+# time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 #
-#schemes = ["enks-n"]
+#schemes = ["mles-transform"]
 #seed = 0
 #lag = 1:3:52
 #shift = 1
 #obs_un = 1.0
 #obs_dim = 40
-#N_ens = 15:2:43
-#state_infl = [1.0]#LinRange(1.0, 1.10, 11)
-#time_series = [time_series_1, time_series_2]
+#gammas = Array{Float64}(9:11)
+##N_ens = 15:2:43
+#N_ens = [21]
+##state_infl = [1.0]
+#state_infl = LinRange(1.0, 1.10, 11)
+#time_series = [time_series_1]
 #
 ## load the experiments
 #args = Tuple[]
 #for ts in time_series
-#    for scheme in schemes
-#        for l in lag
-#            for N in N_ens
-#                for s_infl in state_infl
-#                    tmp = (ts, scheme, seed, l, shift, obs_un, obs_dim, N, s_infl)
-#                    push!(args, tmp)
+#    for γ in gammas
+#        for scheme in schemes
+#            for l in lag
+#                for N in N_ens
+#                    for s_infl in state_infl
+#                        tmp = (ts, scheme, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
+#                        push!(args, tmp)
+#                    end
 #                end
 #            end
 #        end
@@ -110,6 +115,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #    f = open("./submit_job.sl", "w")
 #    write(f,"#!/bin/bash\n")
 #    write(f,"#SBATCH -n 1\n")
+#    write(f,"#SBATCH -p slow\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
 #    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"classic_smoother_state\"")
@@ -128,7 +134,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #obs_dim = 40
 #nanl = 25000
 #h = 0.01
-#schemes = ["mles-n-transform"]
+#schemes = ["mles-transform"]
 #seed = 0
 #lag = 1:3:52
 ##lag = [2;lag]
@@ -138,10 +144,10 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #obs_dim = 40
 #N_ens = [21]
 ##N_ens = 15:2:43
-#state_infl = [1.0]
-##state_infl = LinRange(1.00, 1.10, 11)
+##state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 #time_series = [time_series_1]
-#mda = false
+#mda = true 
 #
 #
 ## load the experiments
@@ -192,6 +198,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #    f = open("./submit_job.sl", "w")
 #    write(f,"#!/bin/bash\n")
 #    write(f,"#SBATCH -n 1\n")
+#    write(f,"#SBATCH -p slow\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
 #    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
@@ -210,7 +217,7 @@ sys_dim = 40
 obs_dim = 40
 nanl = 25000
 h = 0.01
-schemes = ["lin-ienks-n-transform", "ienks-n-transform"]
+schemes = ["lin-ienks-transform"]
 seed = 0
 lag = 1:3:52
 gammas = Array{Float64}(1:11)
@@ -219,9 +226,9 @@ obs_un = 1.0
 obs_dim = 40
 #N_ens = 15:2:43
 N_ens = [21]
-#state_infl = LinRange(1.00, 1.10, 11)
-state_infl = [1.0]
-mdas = [false]
+state_infl = LinRange(1.00, 1.10, 11)
+#state_infl = [1.0]
+mdas = [true]
 time_series = [time_series_1]
 
 # load the experiments
@@ -255,10 +262,10 @@ for mda in mdas
                             #    f = load(fpath*name)
                             #    
                             #catch
-                            #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, γ, obs_dim, N, s_infl)
+                            #    tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                             #    push!(args, tmp)
                             #end
-                            tmp = (ts, scheme, seed, l, shift, mda, obs_un, γ, obs_dim, N, s_infl)
+                            tmp = (ts, scheme, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                             push!(args, tmp)
                         end
                     end
@@ -276,6 +283,7 @@ for j in 1:length(args)
     f = open("./submit_job.sl", "w")
     write(f,"#!/bin/bash\n")
     write(f,"#SBATCH -n 1\n")
+    #write(f,"#SBATCH -p slow\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
     write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
