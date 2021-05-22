@@ -180,6 +180,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     path = "./data/" * method * "_classic/" 
     name = method * 
             "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -390,6 +391,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     path = "./data/" * method * "_classic/" 
     name = method * 
             "_classic_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -436,7 +438,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 250
 
     # set seed 
     Random.seed!(seed)
@@ -597,6 +599,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     path = "./data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -830,6 +833,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     path = "./data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -1086,6 +1090,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     path = "./data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -1319,6 +1324,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     path = "./data/" * method * "/"
     name = method * 
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 4, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
