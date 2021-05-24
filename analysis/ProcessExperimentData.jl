@@ -12,7 +12,7 @@ using HDF5
 using Glob
 export process_filter_state_glob, process_filter_state_strings, process_filter_param, process_classic_smoother_state, 
        process_classic_smoother_param, process_single_iteration_smoother_state, process_all_smoother_state, 
-       reprocess_all_smoother_state, process_filter_nonlinear_obs
+       reprocess_all_smoother_state, process_filter_nonlinear_obs, process_smoother_nonlinear_obs 
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1391,6 +1391,238 @@ end
 
 ########################################################################################################################
 
+function process_smoother_nonlinear_obs()
+    
+    # parameters for the file names and separating out experiments
+    t1 = time()
+    tanl = 0.05
+    seed = 0
+    h = 0.01
+    obs_un = 1.0
+    obs_dim = 40
+    sys_dim = 40
+    N_ens = 21
+    nanl = 20000
+    burn = 5000
+    diffusion = 0.00
+    method_list = [
+                   "mles-transform_classic",
+                   "mles-n-transform_classic",
+                   "mles-transform_single_iteration",
+                   "mles-n-transform_single_iteration",
+                   "ienks-transform",
+                   "ienks-n-transform",
+                   "lin-ienks-transform",
+                   "lin-ienks-n-transform",
+                  ]
+    
+    analysis_list = [
+                     "fore",
+                     "filt",
+                     "post"
+                    ]
+
+    stat_list = [
+                 "rmse",
+                 "spread"
+                ]
+                 
+
+    gammas = Array{Float64}(1:9)
+    total_gammas = length(gammas)
+    lags = 1:3:52 
+    total_lags = length(lags)
+    inflations = LinRange(1.00, 1.10, 11)
+    total_inflations = length(inflations)
+    
+    # define the storage dictionary here
+    @bp
+    data = Dict{String, Array{Float64}}()
+    for method in method_list
+        if method[1:6] == "mles-n" || 
+            method[1:7] == "ienks-n" ||
+            method[1:11] == "lin-ienks-n"
+                for analysis in analysis_list
+                    for stat in stat_list
+                        data[method * "_" * analysis * "_" * stat] = Array{Float64}(undef, total_gammas, total_lags)
+                    end
+                end
+        else
+            for analysis in analysis_list
+                for stat in stat_list
+                    data[method * "_" * analysis * "_" * stat ] = Array{Float64}(undef, total_gammas, total_lags, total_inflations)
+                end
+            end
+        end
+    end
+
+    # auxilliary function to process data
+    function process_data(fnames::Vector{String}, method::String)
+        # loop gammas 
+        for k in 0:total_gammas - 1
+            @bp
+            # loop ensemble size 
+            for j in 0:total_lags - 1
+                if method[1:6] == "mles-n" || 
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
+                    try
+                        # attempt to load the file
+                        name = fnames[1+j+k*total_lags] 
+                        tmp = load(name)
+                        
+                        # if succesfull, compute the stats over the interaval
+                        for analysis in analysis_list
+                            for stat in stat_list
+                                try
+                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_gammas - k, 
+                                                                               j + 1
+                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                catch
+                                    print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                end
+                            end
+                        end
+                    catch
+                        # if unsuccessful, load dummy values
+                        for analysis in analysis_list
+                            for stat in stat_list
+                                data[method * "_" * analysis * "_" * stat][
+                                                                           total_gammas - k, 
+                                                                           j + 1
+                                                                          ] = Inf 
+                            end
+                        end
+                    end
+                else
+                    #loop inflation
+                    for i in 1:total_inflations
+                        @bp
+                        try
+                            # attempt to load the file
+                            name = fnames[i + j*total_inflations + k*total_lags*total_inflations] 
+                            tmp = load(name)
+                            
+                            # if succesfull, compute the stats over the interaval
+                            for analysis in analysis_list
+                                for stat in stat_list
+                                    try 
+                                        analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                        data[method * "_" * analysis * "_" * stat][
+                                                                                   total_gammas - k, 
+                                                                                   j+1,
+                                                                                   total_inflations + 1 - i
+                                                                                  ] = mean(analysis_stat[burn+1: nanl+burn])
+                                    catch
+                                        print("error with loading " * analysis * "_" * stat * " on " * name * "\n")
+                                    end
+                                end
+                            end
+                        catch
+                            for analysis in analysis_list
+                                for stat in stat_list
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_gammas - k, 
+                                                                               j + 1,
+                                                                               total_inflations + 1 - i
+                                                                              ] = Inf 
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    # for each DA method in the experiment, process the data, loading into the dictionary
+    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_operator/"
+    for method in method_list
+        fnames = []
+        for γ in gammas
+            @bp
+            for lag in lags
+                if method[1:6] == "mles-n" || 
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
+                        name = method * 
+                            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                            #"_diffusion_" * rpad(diffusion, 4, "0") *
+                            "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                            "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                            "_obs_un_" * rpad(obs_un, 4, "0") *
+                            "_gamma_" * rpad(γ, 4, "0") *
+                            "_nanl_" * lpad(nanl + burn, 5, "0") *
+                            "_tanl_" * rpad(tanl, 4, "0") *
+                            "_h_" * rpad(h, 4, "0") *
+                            "_lag_" * lpad(lag, 3, "0") *
+                            "_shift_001" *
+                            "_mda_false" *
+                            "_N_ens_" * lpad(N_ens, 3,"0") *
+                            "_state_inflation_1.00" *
+                            ".jld"
+                    push!(fnames, fpath * method * "/" * name)
+                else
+                    for infl in inflations
+                        name = method * 
+                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                #"_diffusion_" * rpad(diffusion, 4, "0") *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_gamma_" * rpad(γ, 4, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") *
+                                "_tanl_" * rpad(tanl, 4, "0") *
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") *
+                                "_shift_001" *
+                                "_mda_false" *
+                                "_N_ens_" * lpad(N_ens, 3,"0") *
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") *
+                                ".jld"
+ 
+                        push!(fnames, fpath * method * "/" * name)
+                    end
+                end
+            end
+        end
+        fnames = Array{String}(fnames)
+        process_data(fnames, method)
+    end
+
+    # create jld file name with relevant parameters
+    jlname = "processed_smoother_nonlinear_obs_state" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".jld"
+
+    # create hdf5 file name with relevant parameters
+    h5name = "processed_smoother_nonlinear_obs_state" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             ".h5"
+
+    # write out file in jld
+    save(jlname, data)
+
+    # write out file in hdf5
+    h5open(h5name, "w") do file
+        for key in keys(data)
+            h5write(h5name, key, data[key])
+        end
+    end
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+end
+
+
+########################################################################################################################
+
 function reprocess_all_smoother_state()
     # will create an array of the average RMSE and spread for each experiment, sorted by analysis filter or 
     # forecast step ensemble size is increasing from the origin on the horizontal axis
@@ -1536,5 +1768,6 @@ end
 
 
 ########################################################################################################################
+process_smoother_nonlinear_obs()
 
 end
