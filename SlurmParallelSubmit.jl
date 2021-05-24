@@ -217,7 +217,7 @@ sys_dim = 40
 obs_dim = 40
 nanl = 25000
 h = 0.01
-schemes = ["lin-ienks-transform"]
+schemes = ["lin-ienks-transform", "ienks-transform"]
 seed = 0
 lag = 1:3:52
 gammas = Array{Float64}(1:11)
@@ -228,7 +228,7 @@ obs_dim = 40
 N_ens = [21]
 state_infl = LinRange(1.00, 1.10, 11)
 #state_infl = [1.0]
-mdas = [true]
+mdas = [false]
 time_series = [time_series_1]
 
 # load the experiments
