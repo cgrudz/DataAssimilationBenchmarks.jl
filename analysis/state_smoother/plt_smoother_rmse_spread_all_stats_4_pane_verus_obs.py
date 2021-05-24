@@ -38,15 +38,16 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
+#mda = "true"
 total_lag = 53
-total_gamma = 9
+total_gamma = 11
 shift = 1
 
-f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000.h5', 'r')
+f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' + mda + '.h5', 'r')
 
 rmse_label_h_positions = [0.115, 0.220, 0.325, 0.430]
 spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
@@ -156,8 +157,8 @@ for i in range(len(x_vals)):
         x_labs.append(str(x_vals[i]))
         x_tics.append(x_tic_vals[i])
 
-x_labs.append(str(x_vals[-1]))
-x_tics.append(x_tic_vals[-1])
+#x_labs.append(str(x_vals[-1]))
+#x_tics.append(x_tic_vals[-1])
 
 y_labs = []
 y_tics =  []
@@ -277,6 +278,30 @@ ax8a.set_yticks(y_tics)
 ax8b.set_yticks(y_tics)
 ax8c.set_yticks(y_tics)
 
+ax1a.set_xlim([0, total_gamma])
+ax1b.set_xlim([0, total_gamma])
+ax1c.set_xlim([0, total_gamma])
+ax2a.set_xlim([0, total_gamma])
+ax2b.set_xlim([0, total_gamma])
+ax2c.set_xlim([0, total_gamma])
+ax3a.set_xlim([0, total_gamma])
+ax3b.set_xlim([0, total_gamma])
+ax3c.set_xlim([0, total_gamma])
+ax4a.set_xlim([0, total_gamma])
+ax4b.set_xlim([0, total_gamma])
+ax4c.set_xlim([0, total_gamma])
+ax5a.set_xlim([0, total_gamma])
+ax5b.set_xlim([0, total_gamma])
+ax5c.set_xlim([0, total_gamma])
+ax6a.set_xlim([0, total_gamma])
+ax6b.set_xlim([0, total_gamma])
+ax6c.set_xlim([0, total_gamma])
+ax7a.set_xlim([0, total_gamma])
+ax7b.set_xlim([0, total_gamma])
+ax7c.set_xlim([0, total_gamma])
+ax8a.set_xlim([0, total_gamma])
+ax8b.set_xlim([0, total_gamma])
+ax8c.set_xlim([0, total_gamma])
 ax1a.set_xticks(x_tics)
 ax1b.set_xticks(x_tics)
 ax1c.set_xticks(x_tics)

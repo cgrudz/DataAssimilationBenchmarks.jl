@@ -79,7 +79,6 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                              )
 
     # define the observation operator, observation error covariance and observations with error 
-    @bp
     obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
@@ -94,16 +93,17 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
     post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
-    # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
-    # for negative and first time indices
-    posterior = Array{Float64}(undef, sys_dim, N_ens, lag)
+    # posterior array of length lag + shift will be loaded with filtered states as they arrive
+    # in the DAW, with the shifting time index
+    post = Array{Float64}(undef, sys_dim, N_ens, lag + shift)
 
     # we will run through nanl total analyses, i ranges in the absolute analysis-time index, 
     # we perform assimilation of the observation window from time 2 to time nanl + 1 + lag at increments of shift 
     # starting at time 2 because of no observations at time 1 
     # only the interval 2 : nanl + 1 is stored later for all statistics
     for i in 2: shift : nanl + 1 + lag
-        kwargs["posterior"] = posterior
+        @bp
+        kwargs["posterior"] = post
         # observations indexed in absolute time
         analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
@@ -121,29 +121,21 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
             # we analyze the posterior states that will be discarded in the non-overlapping DAWs
             if shift == lag
+                @bp
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
                 post_rmse[i + j - 2], post_spread[i + j - 2] = analyze_ensemble(post[:, :, j],
                                                                                 truth[:, i + j - 2])
 
             elseif i > lag 
+                @bp
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
                 # the first posterior starts with the first prior at time 1, later discarded to align stats
                 post_rmse[i - lag + j - 1], post_spread[i - lag + j - 1] = analyze_ensemble(post[:, :, j], 
                                                                                     truth[:, i - lag + j - 1])
             end
         end
-        
-        # reset the posterior
-        if lag == shift
-            # the assimilation windows are disjoint and therefore we reset completely
-            posterior = Array{Float64}(undef, sys_dim, N_ens, lag)
-        else
-            # the assimilation windows overlap and therefore we update the posterior by removing the first-shift 
-            # values from the DAW and including the filter states in the last-shift values of the DAW
-            posterior = cat(post[:, :, 1 + shift: end],  filt, dims=3)
-        end
-    end
+    end        
 
     # cut the statistics so that they align on the same absolute time points 
     fore_rmse = fore_rmse[2: nanl + 1]
@@ -290,16 +282,16 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
     para_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
-    # make a place-holder first posterior of zeros length lag, this will become the "re-analyzed" posterior
-    # for negative and first time indices
-    posterior = Array{Float64}(undef, sys_dim, N_ens, lag)
+    # posterior array of length lag + shift will be loaded with filtered states as they arrive
+    # in the DAW, with the shifting time index
+    post = Array{Float64}(undef, sys_dim, N_ens, lag + shift)
 
     # we will run through nanl total analyses, i ranges in the absolute analysis-time index, 
     # we perform assimilation of the observation window from time 2 to time nanl + 1 + lag at increments of shift 
     # starting at time 2 because of no observations at time 1 
     # only the interval 2 : nanl + 1 is stored later for all statistics
     for i in 2: shift : nanl + 1 + lag
-        kwargs["posterior"] = posterior
+        kwargs["posterior"] = post
         # observations indexed in absolute time
         analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]
@@ -336,17 +328,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                                                                                 param_truth)
             end
         end
-        
-        # reset the posterior
-        if lag == shift
-            # the assimilation windows are disjoint and therefore we reset completely
-            posterior = Array{Float64}(undef, sys_dim, N_ens, lag)
-        else
-            # the assimilation windows overlap and therefore we update the posterior by removing the first-shift 
-            # values from the DAW and including the filter states in the last-shift values of the DAW
-            posterior = cat(post[:, :, 1 + shift: end],  filt, dims=3)
-        end
-    end
+    end        
 
     # cut the statistics so that they align on the same absolute time points 
     fore_rmse = fore_rmse[2: nanl + 1]
@@ -438,7 +420,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 250
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)

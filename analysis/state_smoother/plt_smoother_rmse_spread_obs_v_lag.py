@@ -11,15 +11,16 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
+mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 3
+gamma = 7
 total_lag = 53
 shift = 1
 plot_range = len(range(1,total_lag,3))
@@ -29,7 +30,8 @@ fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
 ax0 = fig.add_axes([.050, .10, .43, .72])
 
-f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000.h5', 'r')
+f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' 
+        + mda + '_shift_' + str(shift).ljust("0",3) + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
     tuning_stat = 'post'

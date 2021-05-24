@@ -44,7 +44,6 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     end
 
     # infer the (possibly) extended state dimension
-    @bp
     sys_dim = length(x)
 
     # check if extended state vector

@@ -57,7 +57,7 @@ end
 # time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, infl = args
 
 function classic_smoother_state_exp()
-    args = (time_series, "mles-transform", 0, 10, 1, 1.0, 40, 1.0, 25, 1.03)
+    args = (time_series, "etks", 0, 4, 4, 1.0, 40, 1.0, 25, 1.03)
     classic_state(args)
 end
 
@@ -82,7 +82,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "mles-n-transform", 0, 10, 1, false, 1.0, 40, 5.0, 21, 1.00)
+    args = (time_series, "etks", 0, 4, 1, false, 1.0, 40, 1.0, 21, 1.03)
     single_iteration_state(args)
 end
 
