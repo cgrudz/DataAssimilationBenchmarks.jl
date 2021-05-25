@@ -92,13 +92,11 @@ function alternating_obs_operator(ens::Array{Float64, 2}, obs_dim::Int64, kwargs
             obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
         end
     elseif γ == 0.0
-        @bp
         # sets a parameter for a nonlinear, quadratic observation operator as given by Hoteit, Luo, Pham
         obs .= 0.05*obs.^2.0
     elseif γ < 0.0
         # sets a parameter for a nonlinear, exponential mapping observation operator as given by 
         # Wu et al. Nonlin. Processes Geophys., 21, 955–970, 2014
-        @bp
         for i in 1:N_ens
             x = obs[:, i]
             obs[:, i] = x .* exp.(-γ * x)
@@ -180,6 +178,9 @@ function rand_orth(N_ens::Int64)
     # and B is a full rank orthogonal matrix
     B, R = qr!(B)
     B * U_p * transpose(B)
+    #B_tmp = B[:, 2:end] * Q
+    #B_tmp = hcat(-b_1, B_tmp)
+    #B_tmp * transpose(B)
 end
 
 
@@ -1195,14 +1196,24 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
     inflation."""
     
-    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
+    # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]
     posterior = kwargs["posterior"]::Array{Float64,3}
     
-    # infer the ensemble, obs, and system dimensions, observation sequence includes shift forward times
+    
+    # infer the ensemble, obs, and system dimensions, observation sequence includes shift forward times,
+    # posterior is size lag + shift
     obs_dim, shift = size(obs)
     sys_dim, N_ens, lag = size(posterior)
+    lag = lag - shift
+
+    if shift < lag
+        # posterior contains length lag + shift past states, we discard the oldest shift states and load the new
+        # filtered states in the routine
+        posterior = cat(posterior[:, :, 1 + shift: end], 
+                        Array{Float64}(undef, sys_dim, N_ens, shift), dims=3)
+    end
 
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
@@ -1248,11 +1259,12 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
             inflate_param!(ens, param_infl, sys_dim, state_dim)
         end
 
-        # store the filtered states
+        # store the filtered states and posterior states
         filtered[:, :, s] = ens
+        posterior[:, :, end - shift + s] = ens
         
-        # step 2e: re-analyze the posterior in the lag window of states
-        @views for l in 1:lag
+        # step 2e: re-analyze the posterior in the lag window of states, not including current time
+        @views for l in 1:lag + s - 1 
             ens_update!(posterior[:, :, l], trans)
         end
     end
