@@ -1,16 +1,17 @@
 ########################################################################################################################
-module SingleExperimentDriver 
+module SingleExperimentDriver
 ########################################################################################################################
 ########################################################################################################################
 # imports and exports
-using Debugger 
-using FilterExps, SmootherExps
-export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp, 
-        single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, iterative_smoother_state_exp
+using Debugger
+using FilterExps, SmootherExps, GenerateTimeseries
+export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp,
+        single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, iterative_smoother_state_exp,
+        l96_timeseries_exp
 
 ########################################################################################################################
 ########################################################################################################################
-## Timeseries data 
+## Timeseries data
 ########################################################################################################################
 # observation timeseries to load into the experiment as truth twin
 # timeseries are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
@@ -23,9 +24,13 @@ time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_
 ########################################################################################################################
 
 ########################################################################################################################
-## Experiments to run as a single function call
+## Experiments to run as a single function call, arguments are
+##[seed, states_dim, tanl, diffusion] = args
 ########################################################################################################################
-
+function l96_timeseries_exp()
+    args = ( 0, 40, 0.05, 0.00)
+    l96_timeseries(args)
+end
 ########################################################################################################################
 # Filters
 ########################################################################################################################
@@ -64,11 +69,11 @@ end
 
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
-# time_series, method, seed, lag, shift, obs_un, obs_dim, γ, 
+# time_series, method, seed, lag, shift, obs_un, obs_dim, γ,
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function classic_smoother_param_exp()
-    args = (time_series, "etks", 0, 10, 1, 1.0, 40, 1.0, 0.03, 0.001, 25, 1.03, 1.0) 
+    args = (time_series, "etks", 0, 10, 1, 1.0, 40, 1.0, 0.03, 0.001, 25, 1.03, 1.0)
     classic_param(args)
 end
 
@@ -89,7 +94,7 @@ end
 
 ########################################################################################################################
 ## single_iteration_param single run for debugging, arguments are
-# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, 
+# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ,
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function single_iteration_smoother_param_exp()
