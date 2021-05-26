@@ -37,20 +37,18 @@ ax8a = fig.add_axes([.839, .085, .090, .25])
 ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
-method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#tanl = 0.10
 mda = "false"
 #mda = "true"
 total_lag = 53
-total_ens = 44
+total_gamma = 11
 shift = 1
-shift = 2
 
-f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
-        '_nanl_20000_burn_05000_mda_' + mda + '_shift_' + str(shift).rjust(3,"0")+ '.h5', 'r')
+f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' + mda + '.h5', 'r')
+
 rmse_label_h_positions = [0.115, 0.220, 0.325, 0.430]
 spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
 label_v_positions = [0.336, 0.626, 0.916]
@@ -63,21 +61,21 @@ def find_optimal_values(method, stat, data):
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
-    tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
-    lag, ens = np.shape(tuned_rmse_min_vals)
+    tuned_rmse_min_vals = np.min(tuned_rmse, axis=0)
+    lag, gamma = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(f[method +'_' + stat + '_rmse'])
     stat_spread = np.array(f[method + '_' + stat + '_spread'])
 
-    rmse_vals = np.zeros([lag, ens])
-    spread_vals = np.zeros([lag, ens])
+    rmse_vals = np.zeros([lag, gamma])
+    spread_vals = np.zeros([lag, gamma])
 
     for i in range(lag):
-        for j in range(ens):
+        for j in range(gamma):
             min_val = tuned_rmse_min_vals[i,j]
-            indx = tuned_rmse[i,:,j] == min_val
-            tmp_rmse = stat_rmse[i, indx, j]
-            tmp_spread = stat_spread[i, indx, j]
+            indx = tuned_rmse[:,i,j] == min_val
+            tmp_rmse = stat_rmse[indx, i, j]
+            tmp_spread = stat_spread[indx, i, j]
             if len(tmp_rmse) > 1:
                 tmp_rmse = tmp_rmse[0]
                 tmp_spread = tmp_spread[0]
@@ -85,8 +83,8 @@ def find_optimal_values(method, stat, data):
             rmse_vals[i,j] = tmp_rmse
             spread_vals[i,j] = tmp_spread
    
-    rmse_vals = np.transpose(rmse_vals)
-    spread_vals = np.transpose(spread_vals)
+    rmse_vals = np.flip(rmse_vals, axis=(0,1))
+    spread_vals = np.flip(spread_vals, axis=(0,1))
 
     return [rmse_vals, spread_vals]
 
@@ -106,40 +104,27 @@ j = 0
 
 for method in method_list:
     for stat in stats:
-        #ipdb.set_trace()
-        if method[0:6] == "enks-n" or \
+        if method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
-            rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
-            spread = np.transpose(np.array(f[method +'_' + stat + '_spread']))
+            rmse = np.flip(np.array(f[method +'_' + stat + '_rmse']), axis=(0,1))
+            spread = np.flip(np.array(f[method +'_' + stat + '_spread']), axis=(0,1))
         else:
             rmse, spread = find_optimal_values(method, stat, f)
 
         sns.heatmap(rmse, linewidth=0.5, ax=rmse_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
         sns.heatmap(spread, linewidth=0.5, ax=spread_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
 
-        if method == "etks_classic":
-            scheme = "ETKS"
+        if method == "mles-transform_classic":
+            scheme = "MLES"
 
-        elif method == "etks_single_iteration":
+        elif method == "mles-transform_single_iteration":
             scheme = "SIETKS"
 
-        elif method == "enks-n-dual_classic":
-            scheme = "EnKS-N"
+        elif method == "mles-n-transform_classic":
+            scheme = "MLES-N"
 
-        elif method == "enks-n-primal_classic":
-            scheme = "EnKS-N"
-
-        elif method == "enks-n-primal-ls_classic":
-            scheme = "EnKS-N"
-
-        elif method == "enks-n-dual_single_iteration":
-            scheme = "SIETKS-N"
-
-        elif method == "enks-n-primal_single_iteration":
-            scheme = "SIETKS-N"
-
-        elif method == "enks-n-primal-ls_single_iteration":
+        elif method == "mles-n-transform_single_iteration":
             scheme = "SIETKS-N"
 
         elif method == "ienks-transform":
@@ -163,13 +148,12 @@ for method in method_list:
     j += 1
 
 
-
 x_labs = []
-x_tics =  []
-x_vals = np.arange(15, total_ens, 2)
+x_tics = []
+x_vals = np.arange(1,total_gamma + 1)
 x_tic_vals = range(len(x_vals))
 for i in range(len(x_vals)):
-    if i % 4 == 0:
+    if i % 3 == 0:
         x_labs.append(str(x_vals[i]))
         x_tics.append(x_tic_vals[i])
 
@@ -177,16 +161,16 @@ for i in range(len(x_vals)):
 #x_tics.append(x_tic_vals[-1])
 
 y_labs = []
-y_tics = []
-y_vals = np.arange(1,total_lag, 3)
+y_tics =  []
+y_vals = np.arange(1, total_lag, 3)
 y_tic_vals = range(len(y_vals), 0, -1)
 for i in range(len(y_vals)):
-    if i % 3 == 0:
+    if i % 6 == 0:
         y_labs.append(str(y_vals[i]))
         y_tics.append(y_tic_vals[i])
 
-#y_labs.append(str(y_vals[-1]))
-#y_tics.append(y_tic_vals[-1])
+y_labs.append(str(y_vals[-1]))
+y_tics.append(y_tic_vals[-1])
 
 ax0.tick_params(
         labelsize=20)
@@ -294,6 +278,30 @@ ax8a.set_yticks(y_tics)
 ax8b.set_yticks(y_tics)
 ax8c.set_yticks(y_tics)
 
+ax1a.set_xlim([0, total_gamma])
+ax1b.set_xlim([0, total_gamma])
+ax1c.set_xlim([0, total_gamma])
+ax2a.set_xlim([0, total_gamma])
+ax2b.set_xlim([0, total_gamma])
+ax2c.set_xlim([0, total_gamma])
+ax3a.set_xlim([0, total_gamma])
+ax3b.set_xlim([0, total_gamma])
+ax3c.set_xlim([0, total_gamma])
+ax4a.set_xlim([0, total_gamma])
+ax4b.set_xlim([0, total_gamma])
+ax4c.set_xlim([0, total_gamma])
+ax5a.set_xlim([0, total_gamma])
+ax5b.set_xlim([0, total_gamma])
+ax5c.set_xlim([0, total_gamma])
+ax6a.set_xlim([0, total_gamma])
+ax6b.set_xlim([0, total_gamma])
+ax6c.set_xlim([0, total_gamma])
+ax7a.set_xlim([0, total_gamma])
+ax7b.set_xlim([0, total_gamma])
+ax7c.set_xlim([0, total_gamma])
+ax8a.set_xlim([0, total_gamma])
+ax8b.set_xlim([0, total_gamma])
+ax8c.set_xlim([0, total_gamma])
 ax1a.set_xticks(x_tics)
 ax1b.set_xticks(x_tics)
 ax1c.set_xticks(x_tics)
@@ -343,7 +351,7 @@ plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalig
 plt.figtext(.500, .225, r'Posterior', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$\gamma$ parameter', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)
