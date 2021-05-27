@@ -3,6 +3,7 @@ module ProcessExperimentData
 ########################################################################################################################
 ########################################################################################################################
 # imports and exports
+using Debugger
 using Statistics
 using JLD, HDF5
 export process_filter_state, process_smoother_state, process_filter_nonlinear_obs, process_smoother_nonlinear_obs,
@@ -776,7 +777,7 @@ function process_smoother_nonlinear_obs()
     t1 = time()
     seed = 0
     diffusion = 0.0
-    tanl = 0.05
+    tanl = 0.10
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -786,6 +787,7 @@ function process_smoother_nonlinear_obs()
     burn = 5000
     diffusion = 0.00
     mda = false
+    shift = 1
     
     # parameters in ranges that will be used in loops
     method_list = [
@@ -845,7 +847,7 @@ function process_smoother_nonlinear_obs()
         else
             for analysis in analysis_list
                 for stat in stat_list
-                    data[method * "_" * analysis * "_" * stat ] = Array{Float64}(undef, total_gammas, total_lags, total_inflations)
+                    data[method * "_" * analysis * "_" * stat ] = Array{Float64}(undef, total_gammas, total_inflations, total_lags)
                 end
                 if method[1:5] == "ienks"
                     # for iterative schemes, additionally store statistics of iterations
@@ -888,7 +890,7 @@ function process_smoother_nonlinear_obs()
                                                                      total_gammas - k, 
                                                                      j + 1
                                                                     ] = mean(iter_seq[burn+1: nanl+burn]) 
-                                    data[method * "_iteration_std"][total_lags - k, j+1] = std(iter_seq[burn+1: nanl+burn]) 
+                                    data[method * "_iteration_std"][total_gammas - k, j+1] = std(iter_seq[burn+1: nanl+burn]) 
                                 end
                             end
                         end
@@ -981,7 +983,7 @@ function process_smoother_nonlinear_obs()
                         "_tanl_" * rpad(tanl, 4, "0") *
                         "_h_" * rpad(h, 4, "0") *
                         "_lag_" * lpad(lag, 3, "0") *
-                        "_shift_001" *
+                        "_shift_" * lpad(shift, 3, "0") * 
                         "_mda_" * string(mda) *
                         "_N_ens_" * lpad(N_ens, 3,"0") *
                         "_state_inflation_1.00" *
@@ -1005,7 +1007,7 @@ function process_smoother_nonlinear_obs()
                                 "_tanl_" * rpad(tanl, 4, "0") *
                                 "_h_" * rpad(h, 4, "0") *
                                 "_lag_" * lpad(lag, 3, "0") *
-                                "_shift_001" *
+                                "_shift_" * lpad(shift, 3, "0") * 
                                 "_mda_false" *
                                 "_N_ens_" * lpad(N_ens, 3,"0") *
                                 "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") *
@@ -1027,7 +1029,7 @@ function process_smoother_nonlinear_obs()
                                 "_tanl_" * rpad(tanl, 4, "0") *
                                 "_h_" * rpad(h, 4, "0") *
                                 "_lag_" * lpad(lag, 3, "0") *
-                                "_shift_001" *
+                                "_shift_" * lpad(shift, 3, "0") * 
                                 "_mda_" * string(mda) *
                                 "_N_ens_" * lpad(N_ens, 3,"0") *
                                 "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") *
@@ -1212,6 +1214,6 @@ end
 
 
 ########################################################################################################################
-process_smoother_state()
+process_smoother_nonlinear_obs()
 
 end
