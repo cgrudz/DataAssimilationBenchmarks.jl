@@ -3,14 +3,9 @@ module ProcessExperimentData
 ########################################################################################################################
 ########################################################################################################################
 # imports and exports
-using Revise
-using Debugger
-using Random, Distributions, Statistics
-using JLD
-using LinearAlgebra
-using HDF5
-export process_filter_state, process_smoother_state, 
-       process_filter_nonlinear_obs, process_smoother_nonlinear_obs,
+using Statistics
+using JLD, HDF5
+export process_filter_state, process_smoother_state, process_filter_nonlinear_obs, process_smoother_nonlinear_obs,
        rename_smoother_state
 
 ########################################################################################################################
