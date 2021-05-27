@@ -33,7 +33,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 
-    # define static mda parameter, not used for classic scheme
+    # define static mda parameter, not used for classic smoother 
     mda=false
 
     # load the timeseries and associated parameters
@@ -204,7 +204,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
-    # define static mda parameter, not used for classic scheme
+    # define static mda parameter, not used for classic smoother 
     mda=false
 
     # load the timeseries and associated parameters
@@ -420,7 +420,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)

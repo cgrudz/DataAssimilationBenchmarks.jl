@@ -89,7 +89,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "etks", 0, 4, 1, false, 1.0, 40, 1.0, 21, 1.03)
+    args = (time_series, "etks", 0, 16, 4, false, 1.0, 40, 1.0, 21, 1.03)
     single_iteration_state(args)
 end
 
