@@ -420,7 +420,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
