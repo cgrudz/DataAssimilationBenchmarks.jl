@@ -164,7 +164,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #                        #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
 #                        #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
 #                        #            "_obs_un_" * rpad(obs_un, 4, "0") *
-#                        #            "_gamma_" * rpad(γ, 4, "0") *
+#                        #            "_gamma_" * lpad(γ, 5, "0") *
 #                        #            "_nanl_" * lpad(nanl, 5, "0") *
 #                        #            "_tanl_" * rpad(tanl, 4, "0") *
 #                        #            "_h_" * rpad(h, 4, "0") *
@@ -217,7 +217,7 @@ sys_dim = 40
 obs_dim = 40
 nanl = 25000
 h = 0.01
-schemes = ["lin-ienks-transform", "ienks-transform"]
+schemes = ["ienks-transform"]
 seed = 0
 lag = 1:3:52
 gammas = Array{Float64}(1:11)
@@ -228,8 +228,8 @@ obs_dim = 40
 N_ens = [21]
 state_infl = LinRange(1.00, 1.10, 11)
 #state_infl = [1.0]
-mdas = [false]
-time_series = [time_series_1]
+mdas = [true]
+time_series = [time_series_2]
 
 # load the experiments
 args = Tuple[]
@@ -246,7 +246,7 @@ for mda in mdas
                             #            "_sys_dim_" * lpad(sys_dim, 2, "0") *
                             #            "_obs_dim_" * lpad(obs_dim, 2, "0") *
                             #            "_obs_un_" * rpad(obs_un, 4, "0") *
-                            #            "_gamma_" * rpad(γ, 4, "0") *
+                            #            "_gamma_" * lpad(γ, 5, "0") *
                             #            "_nanl_" * lpad(nanl, 5, "0") *
                             #            "_tanl_" * rpad(tanl, 4, "0") *
                             #            "_h_" * rpad(h, 4, "0") *
