@@ -1905,6 +1905,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     ens_mean_iter = ens_mean_0 + anom_0 * w
                     
                     if norm(Δw) < tol
+                        i+=1
                         break
                     end
                 end
@@ -2216,6 +2217,8 @@ end
 
 end
 
+#########################################################################################################################
+# Methods below taken from old python code, yet to completely convert, debug and benchmark
 #########################################################################################################################
 ## IEnKF-T-LM
 #

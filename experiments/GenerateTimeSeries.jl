@@ -1,16 +1,16 @@
 ########################################################################################################################
-module GenerateTimeseries 
+module GenerateTimeSeries 
 ########################################################################################################################
 # imports and exports
 using Debugger, JLD, Distributed
 using Random, Distributions, LinearAlgebra
 using DeSolvers, L96 
-export l96_timeseries
+export l96_time_series
 
 ########################################################################################################################
 # generate timeseries based on the model, solver and parameters
 
-function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion::Float64)
+function l96_time_series(seed::Int64, state_dim::Int64, tanl::Float64, diffusion::Float64)
     
     # define the model
     dx_dt = L96.dx_dt
@@ -90,14 +90,19 @@ function l96_timeseries(seed::Int64, state_dim::Int64, tanl::Float64, diffusion:
                 "obs" => obs
                )
 
-    name = "l96_timeseries_seed_" * lpad(seed, 4, "0") * "_dim_" * lpad(state_dim, 2, "0") * "_diff_" * rpad(diffusion, 4, "0") * 
-           "_tanl_" * rpad(tanl, 4, "0") * "_nanl_" * lpad(nanl, 5, "0") * "_spin_" * lpad(spin, 4, "0") * "_h_" * rpad(h, 5, "0") * ".jld"
-    path = "../data/timeseries/"
+    name = "l96_time_series_seed_" * lpad(seed, 4, "0") * 
+           "_dim_" * lpad(state_dim, 2, "0") * 
+           "_diff_" * rpad(diffusion, 4, "0") * 
+           "_tanl_" * rpad(tanl, 4, "0") * 
+           "_nanl_" * lpad(nanl, 5, "0") * 
+           "_spin_" * lpad(spin, 4, "0") * 
+           "_h_" * rpad(h, 5, "0") * 
+           ".jld"
+    path = "../data/time_series/"
     save(path * name, data)
 
 end
 
 ########################################################################################################################
-# end module
 
 end

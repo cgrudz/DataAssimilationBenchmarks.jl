@@ -30,8 +30,8 @@ fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
 ax0 = fig.add_axes([.050, .10, .43, .72])
 
-f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' 
-        + mda + '_shift_' + str(shift).ljust("0",3) + '.h5', 'r')
+f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' +\
+        mda + '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
     tuning_stat = 'post'

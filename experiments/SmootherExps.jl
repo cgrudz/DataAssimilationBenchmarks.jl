@@ -33,7 +33,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 
-    # define static mda parameter, not used for classic scheme
+    # define static mda parameter, not used for classic smoother 
     mda=false
 
     # load the timeseries and associated parameters
@@ -176,7 +176,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -204,7 +204,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # Define experiment parameters
     time_series, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
-    # define static mda parameter, not used for classic scheme
+    # define static mda parameter, not used for classic smoother 
     mda=false
 
     # load the timeseries and associated parameters
@@ -377,7 +377,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -585,7 +585,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -819,7 +819,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -1076,7 +1076,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_param_err_" * rpad(param_err, 4, "0") * 
             "_param_wlk_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
@@ -1310,7 +1310,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
-            "_gamma_" * rpad(γ, 4, "0") *
+            "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
