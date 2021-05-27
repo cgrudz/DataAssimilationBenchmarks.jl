@@ -128,7 +128,7 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 #end
 #
 ########################################################################################################################
-# Hybrid smoothers
+# Single-iteration smoothers 
 ########################################################################################################################
 # arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
@@ -204,7 +204,7 @@ for ts in time_series
                                             "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
                                             ".jld"
 
-                                fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/" * method * "_single_iteration/"
+                                fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_operator/" * method * "_single_iteration/"
                                 try
                                     f = load(fpath*name)
                                 catch
@@ -227,21 +227,21 @@ end
 name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
-# the loop will sequentially write and submit different experiments based on the parameter combinations
-# in the input data
-#for j in 1:length(args) 
-#    f = open("./submit_job.sl", "w")
-#    write(f,"#!/bin/bash\n")
-#    write(f,"#SBATCH -n 1\n")
-#    # slow partition is for Okapi, uncomment when necessary
-#    #write(f,"#SBATCH -p slow\n")
-#    write(f,"#SBATCH -o ensemble_run.out\n")
-#    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
-#    close(f)
-#    my_command = `sbatch  submit_job.sl`
-#    run(my_command)
-#end
+ the loop will sequentially write and submit different experiments based on the parameter combinations
+ in the input data
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    # slow partition is for Okapi, uncomment when necessary
+    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
 
 
 ########################################################################################################################
