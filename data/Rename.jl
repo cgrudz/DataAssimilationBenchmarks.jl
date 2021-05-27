@@ -11,7 +11,7 @@ export rename_files
 ########################################################################################################################
 
 function rename_files()
-    fnames = Glob.glob("./mlef-transform/*")
+    fnames = Glob.glob("./mlef-ls-transform/*")
     for name in fnames
         split_name = split(name, "_")
         @bp

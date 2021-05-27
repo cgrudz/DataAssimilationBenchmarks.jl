@@ -227,8 +227,8 @@ end
 name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
- the loop will sequentially write and submit different experiments based on the parameter combinations
- in the input data
+# the loop will sequentially write and submit different experiments based on the parameter combinations
+# in the input data
 for j in 1:length(args) 
     f = open("./submit_job.sl", "w")
     write(f,"#!/bin/bash\n")
