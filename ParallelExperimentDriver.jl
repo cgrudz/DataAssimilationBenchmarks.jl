@@ -187,7 +187,7 @@ N_ens = [21]
 #state_infl = [1.0]
 state_infl = LinRange(1.0, 1.10, 11)
 mdas = [true]
-time_series = [time_series_1]
+time_series = [time_series_2]
 
 # load the experiments
 args = Tuple[]
