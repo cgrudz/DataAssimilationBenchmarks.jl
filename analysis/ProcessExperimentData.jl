@@ -230,7 +230,7 @@ function process_smoother_state()
     # static parameters that are not varied 
     t1 = time()
     seed = 0
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -321,7 +321,6 @@ function process_smoother_state()
                 if method[1:6] == "enks-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
-                    @bp
                     try
                         # attempt to load the file
                         name = fnames[1+j+k*total_ensembles] 
@@ -344,10 +343,10 @@ function process_smoother_state()
                             
                             # compute the mean and standard deviation of the number of iterations given the configuration
                             data[method * "_iteration_mean"][
-                                                             total_lag - k, 
+                                                             total_lags - k, 
                                                              j + 1
                                                             ] = mean(iter_seq[burn+1: nanl+burn]) 
-                            data[method * "_iteration_std"][total_lag - k, j + 1] = std(iter_seq[burn+1: nanl+burn]) 
+                            data[method * "_iteration_std"][total_lags - k, j + 1] = std(iter_seq[burn+1: nanl+burn]) 
                         end
                     catch
                         # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -440,7 +439,6 @@ function process_smoother_state()
     fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/"
     
     # generate the range of experiments, storing file names as a list
-    @bp
     for method in method_list
         fnames = []
         for lag in lags
@@ -522,7 +520,6 @@ function process_smoother_state()
         
         # turn fnames into a string array, use this as the argument in process_data
         fnames = Array{String}(fnames)
-        @bp
         process_data(fnames, method)
 
     end
@@ -972,7 +969,6 @@ function process_smoother_nonlinear_obs()
     for method in method_list
         fnames = []
         for γ in gammas
-            @bp
             for lag in lags
                 if method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
