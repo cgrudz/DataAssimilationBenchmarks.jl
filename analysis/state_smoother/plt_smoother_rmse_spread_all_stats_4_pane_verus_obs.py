@@ -44,7 +44,7 @@ tanl = 0.05
 mda = "false"
 mda = "true"
 total_lag = 53
-total_gamma = 11
+total_gamma = 10
 shift = 1
 
 f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' +\
@@ -62,7 +62,7 @@ def find_optimal_values(method, stat, data):
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
-    tuned_rmse_min_vals = np.min(tuned_rmse, axis=0)
+    tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
     lag, gamma = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(f[method +'_' + stat + '_rmse'])
@@ -74,9 +74,9 @@ def find_optimal_values(method, stat, data):
     for i in range(lag):
         for j in range(gamma):
             min_val = tuned_rmse_min_vals[i,j]
-            indx = tuned_rmse[:,i,j] == min_val
-            tmp_rmse = stat_rmse[indx, i, j]
-            tmp_spread = stat_spread[indx, i, j]
+            indx = tuned_rmse[i,:,j] == min_val
+            tmp_rmse = stat_rmse[i, indx, j]
+            tmp_spread = stat_spread[i, indx, j]
             if len(tmp_rmse) > 1:
                 tmp_rmse = tmp_rmse[0]
                 tmp_spread = tmp_spread[0]
