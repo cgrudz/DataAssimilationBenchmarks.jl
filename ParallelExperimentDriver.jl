@@ -8,7 +8,7 @@ using Debugger
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
-@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96
+@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD
 
 ########################################################################################################################
 ########################################################################################################################
@@ -128,7 +128,9 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 #    end
 #end
 #
-#experiment = SmootherExps.classic_state
+f = load("./data/input_data/classic_state_smoother_input_args.jld")
+args = f["experiments"]
+experiment = SmootherExps.classic_state
 #
 #
 ########################################################################################################################
@@ -175,41 +177,41 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
 #
-schemes = ["mles-transform"]
-seed = 0
-lag = 1:3:52
-gammas = Array{Float64}(1:11)
-shift = 1
-obs_un = 1.0
-obs_dim = 40
-#N_ens = 15:2:43
-N_ens = [21]
-#state_infl = [1.0]
-state_infl = LinRange(1.0, 1.10, 11)
-mdas = [true]
-time_series = [time_series_2]
-
-# load the experiments
-args = Tuple[]
-for ts in time_series
-    for γ in gammas
-        for scheme in schemes
-            for l in lag
-                for N in N_ens
-                    for s_infl in state_infl
-                        for m in mdas
-                            tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, γ, N, s_infl)
-                            push!(args, tmp)
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-experiment = SmootherExps.single_iteration_state
-
+#schemes = ["mles-transform"]
+#seed = 0
+#lag = 1:3:52
+#gammas = Array{Float64}(1:11)
+#shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+##N_ens = 15:2:43
+#N_ens = [21]
+##state_infl = [1.0]
+#state_infl = LinRange(1.0, 1.10, 11)
+#mdas = [true]
+#time_series = [time_series_2]
+#
+## load the experiments
+#args = Tuple[]
+#for ts in time_series
+#    for γ in gammas
+#        for scheme in schemes
+#            for l in lag
+#                for N in N_ens
+#                    for s_infl in state_infl
+#                        for m in mdas
+#                            tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, γ, N, s_infl)
+#                            push!(args, tmp)
+#                        end
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+#
+#experiment = SmootherExps.single_iteration_state
+#
 ########################################################################################################################
 # hybrid_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
