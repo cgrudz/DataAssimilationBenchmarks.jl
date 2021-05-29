@@ -37,7 +37,7 @@ end
 
 
 ########################################################################################################################
-# Hybrid smoothers
+# Single-iteration smoothers
 ########################################################################################################################
 function single_iteration_smoother_state_exp(j)
     f = load("/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld")
