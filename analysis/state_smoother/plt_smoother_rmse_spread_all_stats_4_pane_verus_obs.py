@@ -41,13 +41,14 @@ method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", 
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
+#tanl = 0.10
 mda = "false"
 mda = "true"
 total_lag = 53
 total_gamma = 10
 shift = 1
 
-f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_0.05_nanl_20000_burn_05000_mda_' +\
+f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_' + str(tanl).ljust(4, "0") + '_nanl_20000_burn_05000_mda_' +\
         mda + '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 rmse_label_h_positions = [0.115, 0.220, 0.325, 0.430]
