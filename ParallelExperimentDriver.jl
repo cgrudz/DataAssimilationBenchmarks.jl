@@ -8,7 +8,7 @@ using Debugger
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
-@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96
+@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD
 
 ########################################################################################################################
 ########################################################################################################################
@@ -175,7 +175,7 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
 #
-schemes = ["mles-transform"]
+schemes = ["mles-n-transform"]
 seed = 0
 lag = 1:3:52
 gammas = Array{Float64}(1:11)
@@ -184,9 +184,9 @@ obs_un = 1.0
 obs_dim = 40
 #N_ens = 15:2:43
 N_ens = [21]
-#state_infl = [1.0]
-state_infl = LinRange(1.0, 1.10, 11)
-mdas = [true]
+state_infl = [1.0]
+#state_infl = LinRange(1.0, 1.10, 11)
+mdas = [false]
 time_series = [time_series_2]
 
 # load the experiments
