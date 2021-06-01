@@ -11,16 +11,16 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
-#mda = "true"
+mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 7
+gamma = 4
 total_lag = 53
 shift = 1
 plot_range = len(range(1,total_lag,3))
@@ -38,7 +38,7 @@ def find_optimal_values(method, stat, data):
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
-    ipdb.set_trace()
+    #ipdb.set_trace()
     tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
     lag, gamma = np.shape(tuned_rmse_min_vals)
     

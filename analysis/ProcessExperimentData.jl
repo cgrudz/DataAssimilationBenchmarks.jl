@@ -777,7 +777,7 @@ function process_smoother_nonlinear_obs()
     t1 = time()
     seed = 0
     diffusion = 0.0
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -786,7 +786,7 @@ function process_smoother_nonlinear_obs()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = false
+    mda = true
     shift = 1
     
     # parameters in ranges that will be used in loops
@@ -933,8 +933,9 @@ function process_smoother_nonlinear_obs()
                                                                          total_inflations + 1 - i, 
                                                                          j + 1
                                                                         ] = mean(iter_seq[burn+1: nanl+burn]) 
+
                                         data[method * "_iteration_std"][
-                                                                        total_total_gammas - k, 
+                                                                        total_gammas - k, 
                                                                         total_inflations + 1 - i, 
                                                                         j + 1
                                                                        ] = std(iter_seq[burn+1: nanl+burn]) 
