@@ -8,7 +8,8 @@ using Debugger
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
-@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD
+@everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, ParallelExperimentDriver
+@everywhere export wrap_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -18,8 +19,8 @@ using Debugger
 # timeseries are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 #
-time_series_1 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+time_series_1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
@@ -98,39 +99,49 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 ## classic_state parallel run, arguments are
 ## time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 #
-#schemes = ["mles-transform"]
-#seed = 0
-#lag = [52] #1:3:52
-#gammas = Array{Float64}(1:11)
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-##N_ens = 15:2:41
-#N_ens = [21]
-##state_infl = [1.0]
+schemes = ["mles-n-transform"]
+seed = 0
+lag = 1:3:52
+gammas = Array{Float64}(1:11)
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+#N_ens = 15:2:41
+N_ens = [21]
+state_infl = [1.0]
 #state_infl = LinRange(1.0, 1.10, 11)
-#time_series = [time_series_1]
-#
-## load the experiments
-#args = Tuple[]
-#for ts in time_series
-#    for scheme in schemes
-#        for γ in gammas
-#            for l in lag
-#                for N in N_ens
-#                    for s_infl in state_infl
-#                        tmp = (ts, scheme, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
-#                        push!(args, tmp)
-#                    end
-#                end
-#            end
-#        end
-#    end
-#end
-#
-#experiment = SmootherExps.classic_state
-#
-#
+time_series = [time_series_2]
+
+# load the experiments
+args = Tuple[]
+for ts in time_series
+    for scheme in schemes
+        for γ in gammas
+            for l in lag
+                for N in N_ens
+                    for s_infl in state_infl
+                        tmp = (ts, scheme, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
+                        push!(args, tmp)
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+# define the robust to failure wrapper
+function wrap_exp(arguments)
+    try
+        classic_state(arguments)
+    catch
+        print("Error on " * string(args) * "\n")
+    end
+end
+
+experiment = wrap_exp
+
+
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
 ##  [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
@@ -170,46 +181,46 @@ time_series_2 = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.00_tan
 ########################################################################################################################
 
 ########################################################################################################################
-# Hybrid smoothers
+# Single iteration smoothers
 ########################################################################################################################
-# hybrid_state single run for degbugging, arguments are
+# single iteration single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
 #
-schemes = ["mles-n-transform"]
-seed = 0
-lag = 1:3:52
-gammas = Array{Float64}(1:11)
-shift = 1
-obs_un = 1.0
-obs_dim = 40
-#N_ens = 15:2:43
-N_ens = [21]
-state_infl = [1.0]
-#state_infl = LinRange(1.0, 1.10, 11)
-mdas = [false]
-time_series = [time_series_2]
-
-# load the experiments
-args = Tuple[]
-for ts in time_series
-    for γ in gammas
-        for scheme in schemes
-            for l in lag
-                for N in N_ens
-                    for s_infl in state_infl
-                        for m in mdas
-                            tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, γ, N, s_infl)
-                            push!(args, tmp)
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-experiment = SmootherExps.single_iteration_state
-
+#schemes = ["mles-n-transform"]
+#seed = 0
+#lag = 1:3:52
+#gammas = Array{Float64}(1:11)
+#shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+##N_ens = 15:2:43
+#N_ens = [21]
+#state_infl = [1.0]
+##state_infl = LinRange(1.0, 1.10, 11)
+#mdas = [false]
+#time_series = [time_series_2]
+#
+## load the experiments
+#args = Tuple[]
+#for ts in time_series
+#    for γ in gammas
+#        for scheme in schemes
+#            for l in lag
+#                for N in N_ens
+#                    for s_infl in state_infl
+#                        for m in mdas
+#                            tmp = (ts, scheme, seed, l, shift, m, obs_un, obs_dim, γ, N, s_infl)
+#                            push!(args, tmp)
+#                        end
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+#
+#experiment = SmootherExps.single_iteration_state
+#
 ########################################################################################################################
 # hybrid_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
