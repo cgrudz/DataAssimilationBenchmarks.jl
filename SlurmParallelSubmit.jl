@@ -307,7 +307,7 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 # [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
 #
 # incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = true
+incomplete = false
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
@@ -318,18 +318,17 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["ienks-transform"]
+methods = ["ienks-n-transform"]
 seed = 0
-mdas = [false, true]
+mdas = [false]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
-shift = 1
-# if shift is 2, we must reset the range of lags
-if shift == 1
-    lags = 1:3:52
-elseif shift == 4
-    lags = 4:4:52
-end
+# this defines the ranged lag and shift parameters
+lags = 4:4:56
+
+# this defines static, standard lag and shift parameters
+#lags = 1:3:52
+#shift = [1]
 
 # observation parameters, gamma controls nonlinearity
 gammas = Array{Float64}(1:11)
@@ -355,40 +354,44 @@ for mda in mdas
         for γ in gammas
             for method in methods
                 for l in lags
-                    for N in N_ens
-                        for s_infl in state_infl
-                            if incomplete == true
-                                tanl = parse(Float64,ts[68:71])
-                                diffusion = parse(Float64,ts[58:61])
-                                name = method *
-                                            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-                                            "_diffusion_" * rpad(diffusion, 4, "0") *
-                                            "_sys_dim_" * lpad(sys_dim, 2, "0") *
-                                            "_obs_dim_" * lpad(obs_dim, 2, "0") *
-                                            "_obs_un_" * rpad(obs_un, 4, "0") *
-                                            "_gamma_" * lpad(γ, 5, "0") *
-                                            "_nanl_" * lpad(nanl, 5, "0") *
-                                            "_tanl_" * rpad(tanl, 4, "0") *
-                                            "_h_" * rpad(h, 4, "0") *
-                                            "_lag_" * lpad(l, 3, "0") *
-                                            "_shift_" * lpad(shift, 3, "0") *
-                                            "_mda_" * string(mda) *
-                                            "_N_ens_" * lpad(N, 3,"0") *
-                                            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-                                            ".jld"
+                    # optional definition of shifts in terms of the current lag parameter for a
+                    # range of shift values
+                    shifts = 4:4:l
+                    for shift in shifts
+                        for N in N_ens
+                            for s_infl in state_infl
+                                if incomplete == true
+                                    tanl = parse(Float64,ts[68:71])
+                                    diffusion = parse(Float64,ts[58:61])
+                                    name = method *
+                                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+                                                "_diffusion_" * rpad(diffusion, 4, "0") *
+                                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                                "_gamma_" * lpad(γ, 5, "0") *
+                                                "_nanl_" * lpad(nanl, 5, "0") *
+                                                "_tanl_" * rpad(tanl, 4, "0") *
+                                                "_h_" * rpad(h, 4, "0") *
+                                                "_lag_" * lpad(l, 3, "0") *
+                                                "_shift_" * lpad(shift, 3, "0") *
+                                                "_mda_" * string(mda) *
+                                                "_N_ens_" * lpad(N, 3,"0") *
+                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
+                                                ".jld"
 
-                                @bp
-                                fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_operator/" * method * "/"
-                                try
-                                    f = load(fpath*name)
-                                    
-                                catch
+                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_operator/" * method * "/"
+                                    try
+                                        f = load(fpath*name)
+                                        
+                                    catch
+                                        tmp = (ts, method, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
+                                        push!(args, tmp)
+                                    end
+                                else
                                     tmp = (ts, method, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                                     push!(args, tmp)
                                 end
-                            else
-                                tmp = (ts, method, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
-                                push!(args, tmp)
                             end
                         end
                     end
