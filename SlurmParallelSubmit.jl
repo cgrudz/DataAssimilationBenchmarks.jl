@@ -324,15 +324,15 @@ mdas = [false]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 # this defines the ranged lag and shift parameters
-lags = 4:4:56
+lags = [1, 2, 4, 8, 16, 32, 64] 
 
 # this defines static, standard lag and shift parameters
 #lags = 1:3:52
 #shift = [1]
 
 # observation parameters, gamma controls nonlinearity
-gammas = Array{Float64}(1:11)
-#gammas = [1.0]
+#gammas = Array{Float64}(1:11)
+gammas = [1.0]
 obs_un = 1.0
 obs_dim = 40
 
@@ -341,8 +341,8 @@ N_ens = [21]
 #N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
-#state_infl = [1.0]
-state_infl = LinRange(1.00, 1.10, 11)
+state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 
 # set the time series of observations for the truth-twin
 time_series = [time_series_1, time_series_2]
@@ -353,10 +353,11 @@ for mda in mdas
     for ts in time_series
         for γ in gammas
             for method in methods
-                for l in lags
+                for l in 1:length(lags)
                     # optional definition of shifts in terms of the current lag parameter for a
                     # range of shift values
-                    shifts = 4:4:l
+                    lag = lags[l]
+                    shifts = lags[1:l]
                     for shift in shifts
                         for N in N_ens
                             for s_infl in state_infl
@@ -373,7 +374,7 @@ for mda in mdas
                                                 "_nanl_" * lpad(nanl, 5, "0") *
                                                 "_tanl_" * rpad(tanl, 4, "0") *
                                                 "_h_" * rpad(h, 4, "0") *
-                                                "_lag_" * lpad(l, 3, "0") *
+                                                "_lag_" * lpad(lag, 3, "0") *
                                                 "_shift_" * lpad(shift, 3, "0") *
                                                 "_mda_" * string(mda) *
                                                 "_N_ens_" * lpad(N, 3,"0") *
@@ -385,11 +386,11 @@ for mda in mdas
                                         f = load(fpath*name)
                                         
                                     catch
-                                        tmp = (ts, method, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
+                                        tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                                         push!(args, tmp)
                                     end
                                 else
-                                    tmp = (ts, method, seed, l, shift, mda, obs_un, obs_dim, γ, N, s_infl)
+                                    tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
                                     push!(args, tmp)
                                 end
                             end
