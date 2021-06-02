@@ -784,7 +784,7 @@ function process_smoother_nonlinear_obs()
     t1 = time()
     seed = 0
     diffusion = 0.0
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -793,7 +793,7 @@ function process_smoother_nonlinear_obs()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true 
+    mda = true
     shift = 1
     
     # parameters in ranges that will be used in loops
