@@ -289,7 +289,7 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 #    write(f,"#!/bin/bash\n")
 #    write(f,"#SBATCH -n 1\n")
 #    # slow partition is for Okapi, uncomment when necessary
-#    write(f,"#SBATCH -p slow\n")
+#    #write(f,"#SBATCH -p slow\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
 #    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
@@ -418,7 +418,8 @@ for j in 1:length(args)
     my_command = `sbatch  submit_job.sl`
     run(my_command)
 end
-########################################################################################################################
+
+#########################################################################################################################
 
 end
 

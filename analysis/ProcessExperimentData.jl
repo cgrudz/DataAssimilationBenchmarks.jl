@@ -793,7 +793,7 @@ function process_smoother_nonlinear_obs()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true 
+    mda = true
     shift = 1
     
     # parameters in ranges that will be used in loops
@@ -820,7 +820,7 @@ function process_smoother_nonlinear_obs()
                 ]
                  
 
-    gammas = Array{Float64}(1:10)
+    gammas = Array{Float64}(1:11)
     total_gammas = length(gammas)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
@@ -881,18 +881,22 @@ function process_smoother_nonlinear_obs()
                                                                            total_lags - j,
                                                                            k + 1, 
                                                                           ] = mean(analysis_stat[burn+1: nanl+burn])
-                                if method[1:5] == "ienks"
-                                    # for iterative methods, load the iteration counts for each analysis
-                                    iter_seq = tmp["iteration_sequence"]::Vector{Float64}
-                                    
-                                    # compute the mean and standard deviation of the number of iterations given the configuration
-                                    data[method * "_iteration_mean"][
-                                                                     total_lags - j,
-                                                                     k + 1, 
-                                                                    ] = mean(iter_seq[burn+1: nanl+burn]) 
-                                    data[method * "_iteration_std"][total_gammas - k, j+1] = std(iter_seq[burn+1: nanl+burn]) 
-                                end
                             end
+                        end
+                        if method[1:5] == "ienks"
+                            # for iterative methods, load the iteration counts for each analysis
+                            iter_seq = tmp["iteration_sequence"]::Vector{Float64}
+                            
+                            # compute the mean and standard deviation of the number of iterations given the configuration
+                            data[method * "_iteration_mean"][
+                                                             total_lags - j,
+                                                             k + 1, 
+                                                            ] = mean(iter_seq[burn+1: nanl+burn]) 
+                            data[method * "_iteration_std"][
+                                                            total_lags - j, 
+                                                            k + 1
+                                                           ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
                         end
                     catch
                         # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -903,6 +907,16 @@ function process_smoother_nonlinear_obs()
                                                                            k + 1, 
                                                                           ] = Inf 
                             end
+                        end
+                        if method[1:5] == "ienks"
+                            data[method * "_iteration_mean"][
+                                                             total_lags - j,
+                                                             k + 1, 
+                                                            ] = Inf
+                            data[method * "_iteration_std"][
+                                                            total_lags - j, 
+                                                            k + 1
+                                                           ] = Inf 
                         end
                     end
                 else
@@ -923,24 +937,24 @@ function process_smoother_nonlinear_obs()
                                                                                total_inflations + 1 - i,
                                                                                k + 1, 
                                                                               ] = mean(analysis_stat[burn+1: nanl+burn])
-                                    if method[1:5] == "ienks"
-                                        # for iterative methods, load the iteration counts for each analysis
-                                        iter_seq = tmp["iteration_sequence"]::Vector{Float64}
-                                        
-                                        # compute the mean and standard deviation of the number of iterations given the configuration
-                                        data[method * "_iteration_mean"][
-                                                                         total_lags - j,
-                                                                         total_inflations + 1 - i, 
-                                                                         k + 1, 
-                                                                        ] = mean(iter_seq[burn+1: nanl+burn]) 
-
-                                        data[method * "_iteration_std"][
-                                                                        total_lags - j,
-                                                                        total_inflations + 1 - i, 
-                                                                        k + 1, 
-                                                                       ] = std(iter_seq[burn+1: nanl+burn]) 
-                                    end
                                 end
+                            end
+                            if method[1:5] == "ienks"
+                                # for iterative methods, load the iteration counts for each analysis
+                                iter_seq = tmp["iteration_sequence"]::Vector{Float64}
+                                
+                                # compute the mean and standard deviation of the number of iterations given the configuration
+                                data[method * "_iteration_mean"][
+                                                                 total_lags - j,
+                                                                 total_inflations + 1 - i, 
+                                                                 k + 1, 
+                                                                ] = mean(iter_seq[burn+1: nanl+burn]) 
+
+                                data[method * "_iteration_std"][
+                                                                total_lags - j,
+                                                                total_inflations + 1 - i, 
+                                                                k + 1, 
+                                                               ] = std(iter_seq[burn+1: nanl+burn]) 
                             end
                         catch
                             # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -1194,13 +1208,18 @@ function process_smoother_versus_shift()
                                 if method[1:5] == "ienks"
                                     # for iterative methods, load the iteration counts for each analysis
                                     iter_seq = tmp["iteration_sequence"]::Vector{Float64}
+
+                                    # for shift > 1, calculate a different burn value for the missmatch between the number of observations
+                                    # and the number of analyses
+                                    @bp
+                                    iter_burn = convert(Int64, burn / shift)
                                     
                                     # compute the mean and standard deviation of the number of iterations given the configuration
                                     data[method * "_iteration_mean"][
                                                                      total_lags - j,
                                                                      k + 1, 
-                                                                    ] = mean(iter_seq[burn+1: nanl+burn]) 
-                                    data[method * "_iteration_std"][total_shifts - k, j+1] = std(iter_seq[burn+1: nanl+burn]) 
+                                                                    ] = mean(iter_seq[iter_burn+1: end]) 
+                                    data[method * "_iteration_std"][total_shifts - k, j+1] = std(iter_seq[iter_burn+1: end]) 
                                 end
                             end
                         end
@@ -1237,18 +1256,22 @@ function process_smoother_versus_shift()
                                         # for iterative methods, load the iteration counts for each analysis
                                         iter_seq = tmp["iteration_sequence"]::Vector{Float64}
                                         
+                                        # for shift > 1, calculate a different burn value for the missmatch between the number of observations
+                                        # and the number of analyses
+                                        iter_burn = convert(Int64, burn / shift)
+
                                         # compute the mean and standard deviation of the number of iterations given the configuration
                                         data[method * "_iteration_mean"][
                                                                          total_lags - j,
                                                                          total_inflations + 1 - i, 
                                                                          k + 1,
-                                                                        ] = mean(iter_seq[burn+1: nanl+burn]) 
+                                                                        ] = mean(iter_seq[iter_burn+1: end]) 
 
                                         data[method * "_iteration_std"][
                                                                         total_lags - j,
                                                                         total_inflations + 1 - i, 
                                                                         k + 1, 
-                                                                       ] = std(iter_seq[burn+1: nanl+burn]) 
+                                                                       ] = std(iter_seq[iter_burn+1: end]) 
                                     end
                                 end
                             end
