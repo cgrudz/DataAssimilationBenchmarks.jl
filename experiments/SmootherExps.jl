@@ -407,7 +407,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     # Define experiment parameters
     time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
-    # load the timeseries and associated parameters
+    # load the time series and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
     f = ts["F"]::Float64
@@ -418,6 +418,9 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
+
+    # number of discrete shift windows within the lag window
+    n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
     nanl = 25000
@@ -477,26 +480,56 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
-            # NOTE: mda spin weights are only designed for shift=1
+            # NOTE: mda spin weights are only designed for lag equal to an integer multiple of shift 
             if spin
                 # for the first rebalancing step, all observations are new and get fully assimilated
                 # observation weights are given with respect to a special window in terms of the
                 # number of times the observation will be assimilated
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
+                obs_weights = []
+                for n in 1:n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 kwargs["reb_weights"] = ones(lag) 
 
             elseif i <= lag
                 # if still processing observations from the spin cycle, deal with special weights
                 # given by the number of times the observation is assimilated
-                obs_weights = [i-1:lag-1; ones(i-1) * lag]
-                kwargs["obs_weights"] = obs_weights
-                one_minus_α_k = (Vector{Float64}(1:lag)) ./ obs_weights
-                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
+                n_complete =  (i - 2) / shift
+                n_incomplete = n_shifts - n_complete
+
+                # the leading terms have weights that are based upon the number of times
+                # that the observation will be assimilated < n_shifts total times as in
+                # the stable algorithm
+                obs_weights = []
+                for n in n_shifts - n_incomplete + 1 : n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                for n in 1 : n_complete
+                    obs_weights = [obs_weights; ones(shift) * n_shifts]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
+                reb_weights = []
+
+                # the rebalancing weights are specially constructed as above
+                for n in 1:n_incomplete
+                    reb_weights = [reb_weights; ones(shift) * n / (n + n_complete)] 
+                end
+                for n in n_incomplete + 1 : n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end 
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
 
             else
-                # otherwise equal weights
-                kwargs["obs_weights"] = ones(lag) * lag
-                kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
+                # otherwise equal weights as all observations are assimilated n_shifts total times
+                kwargs["obs_weights"] = ones(lag) * n_shifts 
+                
+                # rebalancing weights are constructed in steady state
+                reb_weights = []
+                for n in 1:n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
             end
         end
 
