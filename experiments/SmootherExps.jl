@@ -423,7 +423,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -489,7 +489,6 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                 for n in 1:n_shifts
                     obs_weights = [obs_weights; ones(shift) * n]
                 end
-                #kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
                 kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 kwargs["reb_weights"] = ones(lag) 
 
@@ -498,6 +497,10 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                 # given by the number of times the observation is assimilated
                 n_complete =  (i - 2) / shift
                 n_incomplete = n_shifts - n_complete
+
+                # the leading terms have weights that are based upon the number of times
+                # that the observation will be assimilated < n_shifts total times as in
+                # the stable algorithm
                 obs_weights = []
                 for n in n_shifts - n_incomplete + 1 : n_shifts
                     obs_weights = [obs_weights; ones(shift) * n]
@@ -507,6 +510,8 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                 end
                 kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 reb_weights = []
+
+                # the rebalancing weights are specially constructed as above
                 for n in 1:n_incomplete
                     reb_weights = [reb_weights; ones(shift) * n / (n + n_complete)] 
                 end
@@ -516,8 +521,10 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
                 kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
 
             else
-                # otherwise equal weights
+                # otherwise equal weights as all observations are assimilated n_shifts total times
                 kwargs["obs_weights"] = ones(lag) * n_shifts 
+                
+                # rebalancing weights are constructed in steady state
                 reb_weights = []
                 for n in 1:n_shifts
                     reb_weights = [reb_weights; ones(shift) * n / n_shifts] 

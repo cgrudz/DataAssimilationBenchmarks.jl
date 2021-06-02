@@ -1392,7 +1392,6 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                         # store the filtered states for previously unobserved times, not mda values
                         filtered[:, :, l - (lag - shift)] = ens
                     end
-                    @bp
                     # store the most recent filtered state in the posterior statistics, for
                     # shift > 1
                     if l < shift
