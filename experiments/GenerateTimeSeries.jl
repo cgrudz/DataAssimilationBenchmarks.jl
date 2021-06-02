@@ -35,8 +35,8 @@ function l96_time_series(seed::Int64, state_dim::Int64, tanl::Float64, diffusion
     end
 
     # define model run parameters
-    nanl = 50000
-    spin = 5000
+    nanl = 50
+    spin = 5
     F = 8.0
 
     # generate some initial ensemble including parameter values

@@ -22,7 +22,7 @@ export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_s
 # Lorenz-96(-s) truth twin data generated as a single function call, arguments are
 # seed, states_dim, tanl, diffusion = args
 
-function l96_timeseries_exp()
+function l96_time_series_exp()
     args = (0, 40, 0.05, 0.00)
     l96_time_series(args)
 end
@@ -96,7 +96,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "etks", 0, 16, 4, false, 1.0, 40, 1.0, 21, 1.03)
+    args = (time_series, "etks", 0, 16, 1, true, 1.0, 40, 1.0, 21, 1.01)
     single_iteration_state(args)
 end
 
