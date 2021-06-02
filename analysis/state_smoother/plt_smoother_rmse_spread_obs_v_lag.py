@@ -11,7 +11,7 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
@@ -20,7 +20,7 @@ mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 4
+gamma = 5
 total_lag = 53
 shift = 1
 plot_range = len(range(1,total_lag,3))
@@ -38,18 +38,17 @@ def find_optimal_values(method, stat, data):
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
-    #ipdb.set_trace()
     tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
-    lag, gamma = np.shape(tuned_rmse_min_vals)
+    gamma, lag = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(f[method +'_' + stat + '_rmse'])
     stat_spread = np.array(f[method + '_' + stat + '_spread'])
 
-    rmse_vals = np.zeros([lag, gamma])
-    spread_vals = np.zeros([lag, gamma])
+    rmse_vals = np.zeros([gamma, lag])
+    spread_vals = np.zeros([gamma, lag])
 
-    for i in range(lag):
-        for j in range(gamma):
+    for i in range(gamma):
+        for j in range(lag):
             min_val = tuned_rmse_min_vals[i,j]
             indx = tuned_rmse[i,:,j] == min_val
             tmp_rmse = stat_rmse[i, indx, j]
@@ -61,8 +60,8 @@ def find_optimal_values(method, stat, data):
             rmse_vals[i,j] = tmp_rmse
             spread_vals[i,j] = tmp_spread
    
-    rmse_vals = np.flip(rmse_vals, axis=(0,1))
-    spread_vals = np.flip(spread_vals, axis=(0,1))
+    rmse_vals = np.transpose(rmse_vals)
+    spread_vals = np.transpose(spread_vals)
 
     return [rmse_vals, spread_vals]
 
@@ -78,14 +77,13 @@ for meth in method_list:
            meth[:11] == "lin-ienks-n":
             rmse = np.array(f[meth +"_" + stat + "_rmse"])
             spread = np.array(f[meth +"_" + stat + "_spread"])
-            #ipdb.set_trace()
-            rmse = np.flip(rmse, axis=(1))[:, gamma]
-            spread = np.flip(spread, axis=(1))[:, gamma]
+            rmse = rmse[gamma, ::-1]
+            spread = spread[gamma, ::-1]
 
         else:
             rmse, spread = find_optimal_values(meth, stat, f)
-            rmse = rmse[::-1,gamma]
-            spread = spread[::-1,gamma]
+            rmse = rmse[::-1, gamma]
+            spread = spread[::-1, gamma]
         
         l, = ax0.plot(range(1, total_lag, 3), rmse[:plot_range], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
         ax1.plot(range(1, total_lag, 3), spread[:plot_range], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])

@@ -12,12 +12,12 @@ import h5py as h5
 
 obs_un = 1.0
 method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
 mda = "false"
-mda = "true"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
@@ -44,18 +44,18 @@ def find_optimal_values(method, stat, data):
     dims = np.shape(tuned_rmse)
 
     if len(dims) == 2:
-        tuned_rmse_min_vals = np.min(tuned_rmse, axis=0)
+        tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
         gamma = len(tuned_rmse_min_vals)
         rmse_vals = np.zeros([gamma])
         spread_vals = np.zeros([gamma])
 
         for j in range(gamma):
             min_val = tuned_rmse_min_vals[j]
-            indx = tuned_rmse[:,j]
+            indx = tuned_rmse[j,:]
             indx = indx == min_val
-            tmp_rmse = stat_rmse[:,j]
+            tmp_rmse = stat_rmse[j,:]
             tmp_rmse = tmp_rmse[indx]
-            tmp_spread = stat_spread[:, j]
+            tmp_spread = stat_spread[j,:]
             tmp_spread = tmp_spread[indx]
             if len(tmp_rmse) > 1:
                 tmp_rmse = tmp_rmse[0]
@@ -64,18 +64,18 @@ def find_optimal_values(method, stat, data):
             spread_vals[j] = tmp_spread
 
     else:
-        tuned_rmse_min_vals = np.min(tuned_rmse, axis=(0,1))
+        tuned_rmse_min_vals = np.min(tuned_rmse, axis=(1,2))
         gamma = len(tuned_rmse_min_vals)
         rmse_vals = np.zeros([gamma])
         spread_vals = np.zeros([gamma])
 
         for j in range(gamma):
             min_val = tuned_rmse_min_vals[j]
-            indx = tuned_rmse[:,:,j]
+            indx = tuned_rmse[j,:,:]
             indx = indx == min_val
-            tmp_rmse = stat_rmse[:, :, j]
+            tmp_rmse = stat_rmse[j, :, :]
             tmp_rmse = tmp_rmse[indx]
-            tmp_spread = stat_spread[:, :, j]
+            tmp_spread = stat_spread[j, :, :]
             tmp_spread = tmp_spread[indx]
             if len(tmp_rmse) > 1:
                 tmp_rmse = tmp_rmse[0]
@@ -84,9 +84,6 @@ def find_optimal_values(method, stat, data):
             rmse_vals[j] = tmp_rmse
             spread_vals[j] = tmp_spread
    
-    rmse_vals = rmse_vals[::-1]
-    spread_vals = spread_vals[::-1]
-
     return [rmse_vals, spread_vals]
 
 
