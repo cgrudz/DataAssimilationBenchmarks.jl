@@ -102,7 +102,6 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # starting at time 2 because of no observations at time 1 
     # only the interval 2 : nanl + 1 is stored later for all statistics
     for i in 2: shift : nanl + 1 + lag
-        @bp
         kwargs["posterior"] = post
         # observations indexed in absolute time
         analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov, state_infl, kwargs)
@@ -474,8 +473,9 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     posterior = Array{Float64}(undef, sys_dim, N_ens, shift)
     kwargs["posterior"] = posterior
     
-    # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
-    # first-lag posterior values so that the statistics align on the same time points after the spin
+    # we will run through nanl + 2 * lag total observations but discard the last-lag 
+    # forecast values and first-lag posterior values so that the statistics align on
+    # the same time points after the spin
     for i in 2: shift : nanl + lag + 1
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
@@ -659,6 +659,9 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
+    # number of discrete shift windows within the lag window
+    n_shifts = convert(Int64, lag / shift)
+
     # number of analyses
     nanl = 2500
 
@@ -718,32 +721,63 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
     posterior = Array{Float64}(undef, sys_dim, N_ens, shift)
     kwargs["posterior"] = posterior
     
-    # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
-    # first-lag posterior values so that the statistics align on the same time points after the spin
+    # we will run through nanl + 2 * lag total observations but discard the last-lag
+    # forecast values and first-lag posterior values so that the statistics align on
+    # the same time points after the spin
     for i in 2: shift : nanl + lag + 1
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
-            # NOTE: mda spin weights are only designed for shift=1
+            # NOTE: mda spin weights are only designed for lag equal to an integer multiple of shift 
             if spin
                 # for the first rebalancing step, all observations are new and get fully assimilated
                 # observation weights are given with respect to a special window in terms of the
                 # number of times the observation will be assimilated
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
+                obs_weights = []
+                for n in 1:n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 kwargs["reb_weights"] = ones(lag) 
 
             elseif i <= lag
                 # if still processing observations from the spin cycle, deal with special weights
                 # given by the number of times the observation is assimilated
-                obs_weights = [i-1:lag-1; ones(i-1) * lag]
-                kwargs["obs_weights"] = obs_weights
-                one_minus_α_k = (Vector{Float64}(1:lag)) ./ obs_weights
-                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
+                n_complete =  (i - 2) / shift
+                n_incomplete = n_shifts - n_complete
+
+                # the leading terms have weights that are based upon the number of times
+                # that the observation will be assimilated < n_shifts total times as in
+                # the stable algorithm
+                obs_weights = []
+                for n in n_shifts - n_incomplete + 1 : n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                for n in 1 : n_complete
+                    obs_weights = [obs_weights; ones(shift) * n_shifts]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
+                reb_weights = []
+
+                # the rebalancing weights are specially constructed as above
+                for n in 1:n_incomplete
+                    reb_weights = [reb_weights; ones(shift) * n / (n + n_complete)] 
+                end
+                for n in n_incomplete + 1 : n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end 
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
 
             else
-                # otherwise equal weights
-                kwargs["obs_weights"] = ones(lag) * lag
-                kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
+                # otherwise equal weights as all observations are assimilated n_shifts total times
+                kwargs["obs_weights"] = ones(lag) * n_shifts 
+                
+                # rebalancing weights are constructed in steady state
+                reb_weights = []
+                for n in 1:n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
             end
         end
 
@@ -894,6 +928,9 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
+    # number of discrete shift windows within the lag window
+    n_shifts = convert(Int64, lag / shift)
+
     # number of analyses
     nanl = 2500
 
@@ -975,26 +1012,56 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
-            # NOTE: mda spin weights are only designed for shift=1
+            # NOTE: mda spin weights are only designed for lag equal to an integer multiple of shift 
             if spin
                 # for the first rebalancing step, all observations are new and get fully assimilated
                 # observation weights are given with respect to a special window in terms of the
                 # number of times the observation will be assimilated
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
+                obs_weights = []
+                for n in 1:n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 kwargs["reb_weights"] = ones(lag) 
 
             elseif i <= lag
                 # if still processing observations from the spin cycle, deal with special weights
                 # given by the number of times the observation is assimilated
-                obs_weights = [i-1:lag-1; ones(i-1) * lag]
-                kwargs["obs_weights"] = obs_weights
-                one_minus_α_k = (Vector{Float64}(1:lag)) ./ obs_weights
-                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
+                n_complete =  (i - 2) / shift
+                n_incomplete = n_shifts - n_complete
+
+                # the leading terms have weights that are based upon the number of times
+                # that the observation will be assimilated < n_shifts total times as in
+                # the stable algorithm
+                obs_weights = []
+                for n in n_shifts - n_incomplete + 1 : n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                for n in 1 : n_complete
+                    obs_weights = [obs_weights; ones(shift) * n_shifts]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
+                reb_weights = []
+
+                # the rebalancing weights are specially constructed as above
+                for n in 1:n_incomplete
+                    reb_weights = [reb_weights; ones(shift) * n / (n + n_complete)] 
+                end
+                for n in n_incomplete + 1 : n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end 
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
 
             else
-                # otherwise equal weights
-                kwargs["obs_weights"] = ones(lag) * lag
-                kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
+                # otherwise equal weights as all observations are assimilated n_shifts total times
+                kwargs["obs_weights"] = ones(lag) * n_shifts 
+                
+                # rebalancing weights are constructed in steady state
+                reb_weights = []
+                for n in 1:n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
             end
         end
 
@@ -1153,6 +1220,9 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
+    # number of discrete shift windows within the lag window
+    n_shifts = convert(Int64, lag / shift)
+
     # number of analyses
     nanl = 25000
 
@@ -1198,8 +1268,10 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     filt_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
     post_spread = Vector{Float64}(undef, nanl + 3 * lag + 1)
 
-    # create storage for the iteration sequence
-    iteration_sequence = Vector{Float64}(undef, nanl + 3 * lag + 1)
+    # create storage for the iteration sequence, where we will append the number of iterations
+    # on the fly, due to the miss-match between the number of observations and the number of
+    # analyses with shift > 1
+    iteration_sequence = Vector{Float64}[]
 
     # create counter for the analyses
     m = 1
@@ -1211,34 +1283,66 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     posterior = zeros(sys_dim, N_ens, shift)
     kwargs["posterior"] = posterior
     
-    # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
-    # first-lag posterior values so that the statistics align on the same time points after the spin
+    # we will run through nanl + 2 * lag total observations but discard the 
+    # last-lag forecast values and first-lag posterior values so that the statistics 
+    # align on the same observation time points after the spin
     for i in 2: shift : nanl + lag + 1
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
         if mda
-            # NOTE: mda spin weights are only designed for shift=1
+            # NOTE: mda spin weights are only designed for lag equal to an integer multiple of shift 
             if spin
                 # for the first rebalancing step, all observations are new and get fully assimilated
                 # observation weights are given with respect to a special window in terms of the
                 # number of times the observation will be assimilated
-                kwargs["obs_weights"] = [i-1:lag-1; ones(i-1) * lag] 
+                obs_weights = []
+                for n in 1:n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
                 kwargs["reb_weights"] = ones(lag) 
 
             elseif i <= lag
                 # if still processing observations from the spin cycle, deal with special weights
                 # given by the number of times the observation is assimilated
-                obs_weights = [i-1:lag-1; ones(i-1) * lag]
-                kwargs["obs_weights"] = obs_weights
-                one_minus_α_k = (Vector{Float64}(1:lag)) ./ obs_weights
-                kwargs["reb_weights"] = 1 ./ one_minus_α_k 
+                n_complete =  (i - 2) / shift
+                n_incomplete = n_shifts - n_complete
+
+                # the leading terms have weights that are based upon the number of times
+                # that the observation will be assimilated < n_shifts total times as in
+                # the stable algorithm
+                obs_weights = []
+                for n in n_shifts - n_incomplete + 1 : n_shifts
+                    obs_weights = [obs_weights; ones(shift) * n]
+                end
+                for n in 1 : n_complete
+                    obs_weights = [obs_weights; ones(shift) * n_shifts]
+                end
+                kwargs["obs_weights"] = Array{Float64}(obs_weights)
+                reb_weights = []
+
+                # the rebalancing weights are specially constructed as above
+                for n in 1:n_incomplete
+                    reb_weights = [reb_weights; ones(shift) * n / (n + n_complete)] 
+                end
+                for n in n_incomplete + 1 : n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end 
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
 
             else
-                # otherwise equal weights
-                kwargs["obs_weights"] = ones(lag) * lag
-                kwargs["reb_weights"] = 1 ./ (Vector{Float64}(1:lag) ./ lag)
+                # otherwise equal weights as all observations are assimilated n_shifts total times
+                kwargs["obs_weights"] = ones(lag) * n_shifts 
+                
+                # rebalancing weights are constructed in steady state
+                reb_weights = []
+                for n in 1:n_shifts
+                    reb_weights = [reb_weights; ones(shift) * n / n_shifts] 
+                end
+                kwargs["reb_weights"] = 1.0 ./ Array{Float64}(reb_weights)
             end
         end
+        
         if method[1:4] == "lin-"
             if spin
                 # on the spin cycle, there are the standard number of iterations allowed to warm up
@@ -1257,7 +1361,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
         fore = analysis["fore"]
         filt = analysis["filt"]
         post = analysis["post"]
-        iteration_sequence[m] = analysis["iterations"][1]
+        iteration_sequence = [iteration_sequence; analysis["iterations"]]
         m+=1
 
         if spin
@@ -1308,7 +1412,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     filt_spread = filt_spread[2: nanl + 1]
     post_rmse = post_rmse[2: nanl + 1]
     post_spread = post_spread[2: nanl + 1]
-    iteration_sequence = iteration_sequence[2:nanl+1]
+    iteration_sequence = Array{Float64}(iteration_sequence)
 
     data = Dict{String,Any}(
             "fore_rmse" => fore_rmse,

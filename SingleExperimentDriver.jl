@@ -119,7 +119,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function iterative_smoother_state_exp()
-    args = (time_series, "lin-ienks-transform", 0, 32, 16, false, 1.0, 40, 1.0, 21, 1.03)
+    args = (time_series, "ienks-transform", 0, 32, 16, true, 1.0, 40, 1.0, 21, 1.03)
     iterative_state(args)
 end
 
