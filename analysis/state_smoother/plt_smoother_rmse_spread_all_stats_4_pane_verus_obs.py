@@ -37,13 +37,13 @@ ax8a = fig.add_axes([.839, .085, .090, .25])
 ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
-#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
 mda = "false"
-mda = "true"
+#mda = "true"
 total_lag = 53
 total_gamma = 10
 shift = 1
@@ -64,16 +64,16 @@ def find_optimal_values(method, stat, data):
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
     tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
-    lag, gamma = np.shape(tuned_rmse_min_vals)
+    gamma, lag = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(f[method +'_' + stat + '_rmse'])
     stat_spread = np.array(f[method + '_' + stat + '_spread'])
 
-    rmse_vals = np.zeros([lag, gamma])
-    spread_vals = np.zeros([lag, gamma])
+    rmse_vals = np.zeros([gamma, lag])
+    spread_vals = np.zeros([gamma, lag])
 
-    for i in range(lag):
-        for j in range(gamma):
+    for i in range(gamma):
+        for j in range(lag):
             min_val = tuned_rmse_min_vals[i,j]
             indx = tuned_rmse[i,:,j] == min_val
             tmp_rmse = stat_rmse[i, indx, j]
@@ -85,14 +85,10 @@ def find_optimal_values(method, stat, data):
             rmse_vals[i,j] = tmp_rmse
             spread_vals[i,j] = tmp_spread
    
-    rmse_vals = np.flip(rmse_vals, axis=(0,1))
-    spread_vals = np.flip(spread_vals, axis=(0,1))
+    rmse_vals = np.transpose(rmse_vals) 
+    spread_vals = np.transpose(spread_vals)
 
     return [rmse_vals, spread_vals]
-
-
-
-
 
 color_map = sns.color_palette("husl", 101)
 max_scale = 0.30
@@ -109,8 +105,8 @@ for method in method_list:
         if method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
-            rmse = np.flip(np.array(f[method +'_' + stat + '_rmse']), axis=(0,1))
-            spread = np.flip(np.array(f[method +'_' + stat + '_spread']), axis=(0,1))
+            rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
+            spread = np.transpose(np.array(f[method +'_' + stat + '_spread']))
         else:
             rmse, spread = find_optimal_values(method, stat, f)
 
