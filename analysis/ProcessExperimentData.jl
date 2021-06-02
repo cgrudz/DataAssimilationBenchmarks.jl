@@ -912,11 +912,11 @@ function process_smoother_nonlinear_obs()
                             data[method * "_iteration_mean"][
                                                              total_lags - j,
                                                              k + 1, 
-                                                            ] = inf
+                                                            ] = Inf
                             data[method * "_iteration_std"][
                                                             total_lags - j, 
                                                             k + 1
-                                                           ] = inf 
+                                                           ] = Inf 
                         end
                     end
                 else
