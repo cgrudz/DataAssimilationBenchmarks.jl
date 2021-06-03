@@ -30,7 +30,7 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 # Filters
 ########################################################################################################################
 # arguments are 
-# time_series, method, seed, obs_un, obs_dim, N_ens, infl = args
+# time_series, method, seed, obs_un, obs_dim, γ, N_ens, infl = args
 #
 #methods = ["mlef-transform", "mlef-ls-transform"]
 #seed = 0
@@ -187,10 +187,10 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 # Single-iteration smoothers 
 ########################################################################################################################
 ## arguments are
-## time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+## time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 #
 ## incomplete will determine if the script checks for exisiting data before submitting experiments
-#incomplete = true 
+#incomplete = false
 #
 ## note, nanl is hard coded in the experiment, and h is inferred from the time series
 ## data, this is only used for checking versus existing data with the incomplete parameter as above
@@ -201,19 +201,17 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 ## be tested versus existing data
 #sys_dim = 40
 #obs_dim = 40
-#methods = ["mles-n-transform"]
+#methods = ["etks"]
 #seed = 0
-#mdas = [false]
+#mdas = [false, true]
 #
 ## note MDA is only defined for shifts / lags where the lag is a multiple of shift
-##lags = [1, 2, 4, 8, 16, 32, 64]
+##lags = 1:3:52
+#lags = [1, 2, 4, 8, 16, 32, 64]
 #
-## this defines static, standard lag and shift parameters
-#lags = 1:3:52
-#shifts = [1]
 ## observation parameters, gamma controls nonlinearity
-#gammas = Array{Float64}(1:11)
-##gammas = [1.0]
+##gammas = Array{Float64}(1:11)
+#gammas = [1.0]
 #obs_un = 1.0
 #obs_dim = 40
 #
@@ -222,8 +220,8 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 ##N_ens = 15:2:43
 #
 ## inflation values, finite size versions should only be 1.0 generally 
-#state_infl = [1.0]
-##state_infl = LinRange(1.00, 1.10, 11)
+##state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 #
 ## set the time series of observations for the truth-twin
 #time_series = [time_series_1, time_series_2]
@@ -236,7 +234,7 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 #            for γ in gammas
 #                for l in 1:length(lags)
 #                    lag = lags[l]
-#                    #shifts = lags[1:l]
+#                    shifts = lags[1:l]
 #                    for shift in shifts
 #                        for N in N_ens
 #                            for s_infl in state_infl
@@ -305,10 +303,10 @@ time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_t
 # Iterative smoothers
 ########################################################################################################################
 # arguments are
-# [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, N_ens, infl] = args
+# [time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl] = args
 #
 # incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = true 
+incomplete = false
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
@@ -319,21 +317,21 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["ienks-n-transform"]
+methods = ["ienks-transform"]
 seed = 0
-mdas = [false]
+mdas = [false, true]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 # this defines the ranged lag and shift parameters
-#lags = [1, 2, 4, 8, 16, 32, 64] 
+lags = [1, 2, 4, 8, 16, 32, 64] 
 
 # this defines static, standard lag and shift parameters
-lags = 1:3:52
-shifts = [1]
+#lags = 1:3:52
+#shift = [1]
 
 # observation parameters, gamma controls nonlinearity
-gammas = Array{Float64}(1:11)
-#gammas = [1.0]
+#gammas = Array{Float64}(1:11)
+gammas = [1.0]
 obs_un = 1.0
 obs_dim = 40
 
@@ -342,11 +340,11 @@ N_ens = [21]
 #N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
-state_infl = [1.0]
-#state_infl = LinRange(1.00, 1.10, 11)
+#state_infl = [1.0]
+state_infl = LinRange(1.00, 1.10, 11)
 
 # set the time series of observations for the truth-twin
-time_series = [time_series_1]
+time_series = [time_series_1, time_series_2]
 
 # load the experiments
 args = Tuple[]
@@ -358,7 +356,7 @@ for mda in mdas
                     # optional definition of shifts in terms of the current lag parameter for a
                     # range of shift values
                     lag = lags[l]
-                    #shifts = lags[1:l]
+                    shifts = lags[1:l]
                     for shift in shifts
                         for N in N_ens
                             for s_infl in state_infl
@@ -407,20 +405,20 @@ end
 name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
-#for j in 1:length(args) 
-#    f = open("./submit_job.sl", "w")
-#    write(f,"#!/bin/bash\n")
-#    write(f,"#SBATCH -n 1\n")
-#    # slow partition is for Okapi, uncomment when necessary
-#    #write(f,"#SBATCH -p slow\n")
-#    write(f,"#SBATCH -o ensemble_run.out\n")
-#    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
-#    close(f)
-#    my_command = `sbatch  submit_job.sl`
-#    run(my_command)
-#end
-#
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    # slow partition is for Okapi, uncomment when necessary
+    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
+
 #########################################################################################################################
 
 end
