@@ -1392,17 +1392,19 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                         # store the filtered states for previously unobserved times, not mda values
                         filtered[:, :, l - (lag - shift)] = ens
                     end
-                    # store the most recent filtered state in the posterior statistics, for
-                    # shift > 1
-                    if l < shift
-                        posterior[:, :, l + 1] = ens
-                    end
                     
                     # step 2d: compute the re-analyzed posterior statistics within rebalancing
                     # step, using the MDA rebalancing analysis transform for all available
                     # times on all states that will be discarded on the next shift
-                    @views for s in 1:shift 
+                    reanalysis_index = min(shift, l)
+                    @views for s in 1:reanalysis_index
                         ens_update!(posterior[:, :, s], trans)
+                    end
+                    
+                    # store the most recent filtered state in the posterior statistics, for all
+                    # states to be discarded on the next shift > 1
+                    if l < shift
+                        posterior[:, :, l + 1] = ens
                     end
                 else
                     # step 2c: perform the filtering step with mda weights
