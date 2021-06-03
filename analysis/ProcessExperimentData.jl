@@ -1108,7 +1108,7 @@ function process_smoother_versus_shift()
     t1 = time()
     seed = 0
     diffusion = 0.0
-    tanl = 0.05
+    tanl = 0.10
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -1117,7 +1117,7 @@ function process_smoother_versus_shift()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = false 
+    mda = true
     γ = 1.0
     
     # parameters in ranges that will be used in loops
@@ -1148,7 +1148,8 @@ function process_smoother_versus_shift()
     total_inflations = length(inflations)
     lags = [1, 2, 4, 8, 16, 32, 64]
     total_lags = length(lags)
-    shifts = copy(lags)
+    #shifts = copy(lags)
+    shifts = [1, 2, 4, 8, 16, 32, 64]
     total_shifts = length(shifts)
 
     # define the storage dictionary here, looping over the method list
@@ -1213,7 +1214,7 @@ function process_smoother_versus_shift()
 
                             # for shift > 1, calculate a different burn value for the missmatch between the number of observations
                             # and the number of analyses
-                            iter_burn = convert(Int64, burn / (k + 1) )
+                            iter_burn = convert(Int64, round(burn / (shifts[k + 1])) )
                             
                             # compute the mean and standard deviation of the number of iterations given the configuration
                             data[method * "_iteration_mean"][
@@ -1272,7 +1273,7 @@ function process_smoother_versus_shift()
                                 
                                 # for shift > 1, calculate a different burn value for the missmatch between the number of observations
                                 # and the number of analyses
-                                iter_burn = convert(Int64, burn / (k + 1) )
+                                iter_burn = convert(Int64, round(burn / (shifts[k + 1])) )
 
                                 # compute the mean and standard deviation of the number of iterations given the configuration
                                 data[method * "_iteration_mean"][
@@ -1572,6 +1573,6 @@ end
 
 ########################################################################################################################
 #process_smoother_nonlinear_obs()
-#process_smoother_versus_shift()
+process_smoother_versus_shift()
 
 end
