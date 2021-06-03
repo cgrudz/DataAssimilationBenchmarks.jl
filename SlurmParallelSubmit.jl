@@ -319,7 +319,7 @@ sys_dim = 40
 obs_dim = 40
 methods = ["ienks-transform"]
 seed = 0
-mdas = [false]
+mdas = [false, true]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 # this defines the ranged lag and shift parameters
