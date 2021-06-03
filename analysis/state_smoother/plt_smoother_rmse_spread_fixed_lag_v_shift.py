@@ -9,29 +9,31 @@ import glob
 import ipdb
 import math
 import h5py as h5
+import copy
 
 obs_un = 1.0
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-mda = "false"
+#mda = "false"
 mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 5
-total_lag = 53
-shift = 1
-plot_range = len(range(1,total_lag,3))
 
+total_shifts = 6
+lag = 7 - total_shifts
+lags = [1, 2, 4, 8, 16, 32, 64]
+lags = lags[:total_shifts]
+shifts = copy.copy(lags)
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
 ax0 = fig.add_axes([.050, .10, .43, .72])
 
-f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_' + str(tanl).ljust(4, "0") +'_nanl_20000_burn_05000_mda_' +\
-        mda + '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
+f = h5.File('processed_smoother_state_v_shift_diffusion_0.00_tanl_' + str(tanl).ljust(4, "0") + '_nanl_20000_burn_05000_mda_' +\
+        mda + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
     tuning_stat = 'post'
@@ -39,15 +41,15 @@ def find_optimal_values(method, stat, data):
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
     tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
-    gamma, lag = np.shape(tuned_rmse_min_vals)
+    shift, lag = np.shape(tuned_rmse_min_vals)
     
     stat_rmse = np.array(f[method +'_' + stat + '_rmse'])
     stat_spread = np.array(f[method + '_' + stat + '_spread'])
 
-    rmse_vals = np.zeros([gamma, lag])
-    spread_vals = np.zeros([gamma, lag])
+    rmse_vals = np.zeros([shift, lag])
+    spread_vals = np.zeros([shift, lag])
 
-    for i in range(gamma):
+    for i in range(shift):
         for j in range(lag):
             min_val = tuned_rmse_min_vals[i,j]
             indx = tuned_rmse[i,:,j] == min_val
@@ -72,21 +74,21 @@ j = 0
 k = 0
 for meth in method_list:
     for stat in stats:
-        if meth[:6] == "mles-n" or \
+        if meth[:6] == "enks-n" or \
            meth[:7] == "ienks-n" or \
            meth[:11] == "lin-ienks-n":
-            rmse = np.array(f[meth +"_" + stat + "_rmse"])
-            spread = np.array(f[meth +"_" + stat + "_spread"])
-            rmse = rmse[gamma, ::-1]
-            spread = spread[gamma, ::-1]
+            rmse = np.transpose(np.array(f[meth +"_" + stat + "_rmse"]))
+            spread = np.transpose(np.array(f[meth +"_" + stat + "_spread"]))
+            rmse = rmse[lag, :total_shifts]
+            spread = spread[lag, :total_shifts]
 
         else:
             rmse, spread = find_optimal_values(meth, stat, f)
-            rmse = rmse[::-1, gamma]
-            spread = spread[::-1, gamma]
+            rmse = rmse[lag, :total_shifts]
+            spread = spread[lag, :total_shifts]
         
-        l, = ax0.plot(range(1, total_lag, 3), rmse[:plot_range], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
-        ax1.plot(range(1, total_lag, 3), spread[:plot_range], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        l, = ax0.plot(shifts, rmse, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        ax1.plot(shifts, spread, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
         line_list.append(l)
 
         if stat == 'post':
@@ -98,13 +100,13 @@ for meth in method_list:
         elif stat == 'fore':
             stat_name = 'forecast'
 
-        if meth == "mles-transform_classic":
-            meth_name = "MLES"
-        elif meth == "mles-transform_single_iteration":
+        if meth == "etks_classic":
+            meth_name = "ETKS"
+        elif meth == "etks_single_iteration":
             meth_name = "SIETKS"
-        elif meth == "mles-n-transform_classic":
-            meth_name = "MLES-N"
-        elif meth == "mles-n-transform_single_iteration":
+        elif meth == "enks-n-primal_classic":
+            meth_name = "ETKS-N"
+        elif meth == "etks-n-primal_single_iteration":
             meth_name = "SIETKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
@@ -137,18 +139,22 @@ ax0.set_ylim([0.00,0.30])
 ax1.set_yticks(np.arange(0,31,2)*.01)
 ax0.set_yticks(np.arange(0,31,2)*.01)
 
-ax1.set_xlim([0.5, total_lag])
-ax0.set_xlim([0.5, total_lag])
-ax1.set_xticks(range(1, total_lag,3))
-ax0.set_xticks(range(1, total_lag ,3))
+#ax1.set_xlim([1, total_shifts])
+#ax0.set_xlim([1, total_shifts])
+#ax1.set_xticks(range(1, total_lag,3))
+#ax0.set_xticks(range(1, total_lag ,3))
+kwargs = {"base": 2}
+ax0.set_xscale('log', **kwargs)
+ax1.set_xscale('log', **kwargs)
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
-plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
-plt.figtext(.95, .04, 'Spread versus lag', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=' + str(shift) + ', mda=' + mda + r',$\gamma$ ='+ str(range(1,10)[gamma]), horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.05, .04, 'RMSE versus shift', horizontalalignment='left', verticalalignment='top', fontsize=24)
+plt.figtext(.95, .04, 'Spread versus shift', horizontalalignment='right', verticalalignment='top', fontsize=24)
+plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', lag=' + str(shifts[-1]).rjust(2, "0")  + ', mda=' + mda, horizontalalignment='center', verticalalignment='center', fontsize=24)
+
 
 plt.show()
