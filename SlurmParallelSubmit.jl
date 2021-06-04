@@ -17,11 +17,11 @@ using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debu
 # time series are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-time_series_1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-time_series_3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
-time_series_4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
-time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
+ts1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+ts2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+ts3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
+ts4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
+ts5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
@@ -132,6 +132,7 @@ time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F
 #                for N in N_ens
 #                    for s_infl in state_infl
 #                        if incomplete == true
+#                            ### NOTE NEED TO FIX ALL THE PARSE STATEMENTS FOR THE REVISED NAMING
 #                            tanl = parse(Float64,ts[68:71])
 #                            diffusion = parse(Float64,ts[58:61])
 #                            name = method *
@@ -242,6 +243,7 @@ time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F
 #                        for N in N_ens
 #                            for s_infl in state_infl
 #                                if incomplete == true
+#                                    ### NOTE NEED TO FIX ALL THE PARSE STATEMENTS FOR THE REVISED NAMING
 #                                    tanl = parse(Float64,ts[68:71])
 #                                    diffusion = parse(Float64,ts[58:61])
 #                                    name = method *
@@ -320,17 +322,17 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["lin-ienks-transform"]
+methods = ["ienks-n-transform", "lin-ienks-n-transform"]
 seed = 0
-mdas = [false, true]
+mdas = [false]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 # this defines the ranged lag and shift parameters
-lags = [1, 2, 4, 8, 16, 32, 64] 
+#lags = [1, 2, 4, 8, 16, 32, 64] 
 
 # this defines static, standard lag and shift parameters
-#lags = 1:3:52
-#shift = [1]
+lags = 1:3:52
+shift = [1]
 
 # observation parameters, gamma controls nonlinearity
 #gammas = Array{Float64}(1:11)
@@ -343,11 +345,12 @@ N_ens = [21]
 #N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
-#state_infl = [1.0]
-state_infl = LinRange(1.00, 1.10, 11)
+state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 
 # set the time series of observations for the truth-twin
-time_series = [time_series_1, time_series_2]
+#time_series = [ts1, ts2]
+time_series = [ts1, ts2, ts3, ts4, ts5]
 
 # load the experiments
 args = Tuple[]
@@ -356,14 +359,15 @@ for mda in mdas
         for γ in gammas
             for method in methods
                 for l in 1:length(lags)
+                    lag = lags[l]
                     # optional definition of shifts in terms of the current lag parameter for a
                     # range of shift values
-                    lag = lags[l]
-                    shifts = lags[1:l]
+                    #shifts = lags[1:l]
                     for shift in shifts
                         for N in N_ens
                             for s_infl in state_infl
                                 if incomplete == true
+                                    ### NOTE NEED TO FIX ALL THE PARSE STATEMENTS FOR THE REVISED NAMING
                                     tanl = parse(Float64,ts[68:71])
                                     diffusion = parse(Float64,ts[58:61])
                                     name = method *
