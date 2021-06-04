@@ -89,10 +89,10 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     end
 
     # terms of the RK scheme recursively evolve the dynamic state components alone
-    k1 = dx_dt(v, params, t) * h + diffusion * W
-    k2 = dx_dt(v + 0.5 * k1, params, t + 0.5 * h) * h + diffusion * W
-    k3 = dx_dt(v + 0.5 * k2, params, t + 0.5 * h) * h + diffusion * W
-    k4 = dx_dt(v + k3, params, t + h) * h + diffusion * W
+    k1 = dx_dt(v, t, params) * h + diffusion * W
+    k2 = dx_dt(v + 0.5 * k1, t + 0.5 * h, params) * h + diffusion * W
+    k3 = dx_dt(v + 0.5 * k2, t + 0.5 * h, params) * h + diffusion * W
+    k4 = dx_dt(v + k3, t + h, params) * h + diffusion * W
     
     # compute the update to the dynamic variables
     x[begin: state_dim] = v + (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4) 
@@ -122,10 +122,10 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     # calculate the evolution of x one step forward via the second order Taylor expansion
 
     # first derivative
-    dx = dx_dt(x, params, t)
+    dx = dx_dt(x, t, params)
 
     # second order taylor expansion
-    x .= x + dx * h + 0.5 * jacobian(x, params, t) * dx * h^2.0
+    x .= x + dx * h + 0.5 * jacobian(x, t, params) * dx * h^2.0
 end
 
 ########################################################################################################################
@@ -162,7 +162,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     W = ξ * sqrt(h)
 
     # step forward by interval h
-    x .= x +  h * dx_dt(x, params, t) + diffusion * W
+    x .= x +  h * dx_dt(x, t, params) + diffusion * W
 end
 
 ########################################################################################################################

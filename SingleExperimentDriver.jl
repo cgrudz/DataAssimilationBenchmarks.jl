@@ -17,27 +17,46 @@ export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_s
 ########################################################################################################################
 
 ########################################################################################################################
+########################################################################################################################
 ## Generate time series data
 ########################################################################################################################
+########################################################################################################################
+
+########################################################################################################################
+## Lorenz-96 model
+########################################################################################################################
 # Lorenz-96(-s) truth twin data generated as a single function call, arguments are
-# seed, states_dim, tanl, diffusion = args
+# seed, state_dim, tanl, nanl, spin, diffusion, F = args
 
 function l96_time_series_exp()
-    args = (0, 40, 0.05, 0.00)
+    args = (0, 40, 0.05, 50000, 5000, 0.10, 8.0)
     l96_time_series(args)
 end
+
+########################################################################################################################
+########################################################################################################################
+## DA experiments begin here
+########################################################################################################################
+########################################################################################################################
 
 ########################################################################################################################
 ## Time series data
 ########################################################################################################################
 # Observation timeseries to load into DA experiments as a truth twin, without needing to generate the timeseries with
-# the model twin.  Time series are named by the model, seed to initialize, the integration scheme used to produce, 
-# number of analyses, the spinup length, and the time length between observation points
+# the model twin.  
 
-time_series = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-#time_series = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-#time_series = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
-#time_series = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
+# path to time series directory
+path = "./data/time_series/"
+
+# file names
+fname = "l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+#fname = "/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+#fname = "/l96_time_series_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
+#fname = "/l96_time_series_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
+
+# load the file name with the path
+time_series = path * fname 
+
 ########################################################################################################################
 
 ########################################################################################################################

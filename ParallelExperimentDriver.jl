@@ -18,11 +18,14 @@ using Debugger
 # observation timeseries to load into the experiment as truth twin
 # timeseries are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
-#
-time_series_1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
+
+time_series_1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+time_series_3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
+time_series_4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
+time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
+#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
+#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
 
 ########################################################################################################################
