@@ -7,8 +7,8 @@ using Debugger
 using Statistics
 using JLD, HDF5
 export process_filter_state, process_smoother_state, process_filter_nonlinear_obs, 
-       process_smoother_nonlinear_obs, process_smoother_versus_shift,
-       rename_smoother_state
+       process_smoother_nonlinear_obs, process_smoother_versus_shift, 
+       process_smoother_versus_tanl, rename_smoother_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -23,8 +23,10 @@ function process_filter_state()
     # ensemble size is increasing from the origin on the horizontal axis
     # inflation is increasing from the origin on the vertical axis
     
-    # static parameters that are not varied 
+    # time the operation
     t1 = time()
+
+    # static parameters that are not varied 
     seed = 0
     tanl = 0.05
     nanl = 20000
@@ -225,8 +227,10 @@ function process_smoother_state()
     # from the origin on the second axis, ensemble size is increasing from the origin
     # on the third axis.
     
-    # static parameters that are not varied 
+    # time the operation
     t1 = time()
+
+    # static parameters that are not varied 
     seed = 0
     tanl = 0.05
     h = 0.01
@@ -559,8 +563,10 @@ end
 
 function process_filter_nonlinear_obs()
     
-    # static parameters that are not varied 
+    # time the operation
     t1 = time()
+
+    # static parameters that are not varied 
     seed = 0
     tanl = 0.05
     h = 0.01
@@ -780,8 +786,10 @@ function process_smoother_nonlinear_obs()
     # from the origin on the second axis, gamma is increasing from the origin
     # on the third axis.
     
-    # static parameters that are not varied 
+    # time the operation
     t1 = time()
+    
+    # static parameters that are not varied 
     seed = 0
     diffusion = 0.0
     tanl = 0.05
@@ -1097,6 +1105,331 @@ end
 
 ########################################################################################################################
 
+function process_smoother_versus_tanl()
+    # Create an array of the time-average RMSE and spread for each experiment, past
+    # a burn-in period to reach stationary statistics for the experiment.
+    # Lag is increasing form the origin on the first axis, inflation is increasing
+    # from the origin on the second axis, tanl is increasing from the origin
+    # on the third axis.
+    
+    # time the operation
+    t1 = time()
+    
+    # static parameters that are not varied 
+    seed = 0
+    diffusion = 0.0
+    h = 0.01
+    obs_un = 1.0
+    obs_dim = 40
+    sys_dim = 40
+    N_ens = 21
+    nanl = 20000
+    burn = 5000
+    diffusion = 0.00
+    mda = false
+    shift = 1
+    γ = 1.0
+    
+    # parameters in ranges that will be used in loops
+    method_list = [
+                   "etks_classic",
+                   "enks-n-primal_classic",
+                   "etks_single_iteration",
+                   "enks-n-primal_single_iteration",
+                   "ienks-transform",
+                   "ienks-n-transform",
+                   "lin-ienks-transform",
+                   "lin-ienks-n-transform",
+                  ]
+    
+    analysis_list = [
+                     "fore",
+                     "filt",
+                     "post"
+                    ]
+
+    stat_list = [
+                 "rmse",
+                 "spread"
+                ]
+                 
+
+    tanls = [0.05, 0.10, 0.15, 0.20, 0.25]
+    #tanls = [0.05, 0.10]
+    total_tanls = length(tanls)
+    inflations = LinRange(1.00, 1.10, 11)
+    total_inflations = length(inflations)
+    lags = 1:3:52
+    total_lags = length(lags)
+    
+    # define the storage dictionary here, looping over the method list
+    data = Dict{String, Array{Float64}}()
+    for method in method_list
+        if method[1:6] == "enks-n" || 
+            method[1:7] == "ienks-n" ||
+            method[1:11] == "lin-ienks-n"
+                # multiplicative inflation parameter should always be one, there is no dimension for this variable
+                for analysis in analysis_list
+                    for stat in stat_list
+                        data[method * "_" * analysis * "_" * stat] = Array{Float64}(undef, total_lags, total_tanls)
+                    end
+                end
+                if method[1:5] == "ienks"
+                    # for iterative schemes, additionally store statistics of iterations
+                    data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_tanls)
+                    data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_tanls)
+                end
+        else
+            for analysis in analysis_list
+                for stat in stat_list
+                    data[method * "_" * analysis * "_" * stat ] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
+                end
+                if method[1:5] == "ienks"
+                    # for iterative schemes, additionally store statistics of iterations
+                    data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
+                    data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
+                end
+            end
+        end
+    end
+
+    # auxilliary function to process data, producing rmse and spread averages
+    function process_data(fnames::Vector{String}, method::String)
+        # loop tanls, last axis
+        for k in 0:total_tanls - 1
+            # loop lags, first axis
+            for j in 0:total_lags - 1
+                if method[1:6] == "enks-n" || 
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
+                    try
+                        # attempt to load the file
+                        name = fnames[1+j+k*total_lags] 
+                        tmp = load(name)
+                        
+                        # if successful, continue to unpack arrays and store the mean stats over 
+                        # the experiment after the burn period for stationary statistics
+                        for analysis in analysis_list
+                            for stat in stat_list
+                                analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                data[method * "_" * analysis * "_" * stat][
+                                                                           total_lags - j,
+                                                                           k + 1, 
+                                                                          ] = mean(analysis_stat[burn+1: nanl+burn])
+                            end
+                        end
+                        if method[1:5] == "ienks"
+                            # for iterative methods, load the iteration counts for each analysis
+                            iter_seq = tmp["iteration_sequence"]::Vector{Float64}
+                            
+                            # compute the mean and standard deviation of the number of iterations given the configuration
+                            data[method * "_iteration_mean"][
+                                                             total_lags - j,
+                                                             k + 1, 
+                                                            ] = mean(iter_seq[burn+1: nanl+burn]) 
+                            data[method * "_iteration_std"][
+                                                            total_lags - j, 
+                                                            k + 1
+                                                           ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                        end
+                    catch
+                        # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
+                        for analysis in analysis_list
+                            for stat in stat_list
+                                data[method * "_" * analysis * "_" * stat][
+                                                                           total_lags - j, 
+                                                                           k + 1, 
+                                                                          ] = Inf 
+                            end
+                        end
+                        if method[1:5] == "ienks"
+                            data[method * "_iteration_mean"][
+                                                             total_lags - j,
+                                                             k + 1, 
+                                                            ] = Inf
+                            data[method * "_iteration_std"][
+                                                            total_lags - j, 
+                                                            k + 1
+                                                           ] = Inf 
+                        end
+                    end
+                else
+                    #loop inflation, middle axis
+                    for i in 1:total_inflations
+                        try
+                            # attempt to load the file
+                            name = fnames[i + j*total_inflations + k*total_lags*total_inflations] 
+                            tmp = load(name)
+                            
+                            # if successful, continue to unpack arrays and store the mean stats over 
+                            # the experiment after the burn period for stationary statistics
+                            for analysis in analysis_list
+                                for stat in stat_list
+                                    analysis_stat = tmp[analysis * "_" * stat]::Vector{Float64}
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_lags - j,
+                                                                               total_inflations + 1 - i,
+                                                                               k + 1, 
+                                                                              ] = mean(analysis_stat[burn+1: nanl+burn])
+                                end
+                            end
+                            if method[1:5] == "ienks"
+                                # for iterative methods, load the iteration counts for each analysis
+                                iter_seq = tmp["iteration_sequence"]::Vector{Float64}
+                                
+                                # compute the mean and standard deviation of the number of iterations given the configuration
+                                data[method * "_iteration_mean"][
+                                                                 total_lags - j,
+                                                                 total_inflations + 1 - i, 
+                                                                 k + 1, 
+                                                                ] = mean(iter_seq[burn+1: nanl+burn]) 
+
+                                data[method * "_iteration_std"][
+                                                                total_lags - j,
+                                                                total_inflations + 1 - i, 
+                                                                k + 1, 
+                                                               ] = std(iter_seq[burn+1: nanl+burn]) 
+                            end
+                        catch
+                            # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
+                            for analysis in analysis_list
+                                for stat in stat_list
+                                    data[method * "_" * analysis * "_" * stat][
+                                                                               total_lags - j,
+                                                                               total_inflations + 1 - i,
+                                                                               k + 1, 
+                                                                              ] = Inf 
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    # define path to data on server
+    
+    # generate the range of experiments, storing file names as a list
+    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/"
+    for method in method_list
+        fnames = []
+        for tanl in tanls
+            for lag in lags
+                if method[1:6] == "enks-n" || 
+                    method[1:7] == "ienks-n" ||
+                    method[1:11] == "lin-ienks-n"
+                    
+                    # inflation is a static value of 1.0
+                    name = method * 
+                        "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                        "_diffusion_" * rpad(diffusion, 4, "0") *
+                        "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                        "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                        "_obs_un_" * rpad(obs_un, 4, "0") *
+                        "_gamma_" * lpad(γ, 5, "0") *
+                        "_nanl_" * lpad(nanl + burn, 5, "0") *
+                        "_tanl_" * rpad(tanl, 4, "0") *
+                        "_h_" * rpad(h, 4, "0") *
+                        "_lag_" * lpad(lag, 3, "0") *
+                        "_shift_" * lpad(shift, 3, "0") * 
+                        "_mda_" * string(mda) *
+                        "_N_ens_" * lpad(N_ens, 3,"0") *
+                        "_state_inflation_1.00" *
+                        ".jld"
+
+                    push!(fnames, fpath * method * "/" * name)
+
+                elseif method[end-6:end] == "classic" 
+                    # MDA is not defined for the classic smoother, always set this to false
+                    # but keep with the MDA true analysis as a reference value
+                    # also finite size formalism is incompatible with MDA
+                    for infl in inflations
+                        name = method * 
+                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_diffusion_" * rpad(diffusion, 4, "0") *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_gamma_" * lpad(γ, 5, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") *
+                                "_tanl_" * rpad(tanl, 4, "0") *
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") *
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_false" *
+                                "_N_ens_" * lpad(N_ens, 3,"0") *
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") *
+                                ".jld"
+ 
+                        push!(fnames, fpath * method * "/" * name)
+                    end
+                else
+                    # loop inflations
+                    for infl in inflations
+                        name = method * 
+                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_diffusion_" * rpad(diffusion, 4, "0") *
+                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_gamma_" * lpad(γ, 5, "0") *
+                                "_nanl_" * lpad(nanl + burn, 5, "0") *
+                                "_tanl_" * rpad(tanl, 4, "0") *
+                                "_h_" * rpad(h, 4, "0") *
+                                "_lag_" * lpad(lag, 3, "0") *
+                                "_shift_" * lpad(shift, 3, "0") * 
+                                "_mda_" * string(mda) *
+                                "_N_ens_" * lpad(N_ens, 3,"0") *
+                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") *
+                                ".jld"
+ 
+                        push!(fnames, fpath * method * "/" * name)
+                    end
+                end
+            end
+        end
+        
+        # turn fnames into a string array, use this as the argument in process_data
+        fnames = Array{String}(fnames)
+        process_data(fnames, method)
+
+    end
+
+    # create jld file name with relevant parameters
+    jlname = "processed_smoother_state_versus_tanl" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             "_mda_" * string(mda) *
+             "_shift_" * lpad(shift, 3, "0") * 
+             ".jld"
+
+    # create hdf5 file name with relevant parameters
+    h5name = "processed_smoother_state_versus_tanl" * 
+             "_diffusion_" * rpad(diffusion, 4, "0") *
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_burn_" * lpad(burn, 5, "0") * 
+             "_mda_" * string(mda) * 
+             "_shift_" * lpad(shift, 3, "0") * 
+             ".h5"
+
+    # write out file in jld
+    save(jlname, data)
+
+    # write out file in hdf5
+    h5open(h5name, "w") do file
+        for key in keys(data)
+            h5write(h5name, key, data[key])
+        end
+    end
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+end
+
+
+########################################################################################################################
+
 function process_smoother_versus_shift()
     # Create an array of the time-average RMSE and spread for each experiment, past
     # a burn-in period to reach stationary statistics for the experiment.
@@ -1104,11 +1437,13 @@ function process_smoother_versus_shift()
     # from the origin on the second axis, shift is increasing from the origin
     # on the third axis.
     
-    # static parameters that are not varied 
+    # time the operation
     t1 = time()
+
+    # static parameters that are not varied 
     seed = 0
     diffusion = 0.0
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
@@ -1573,6 +1908,6 @@ end
 
 ########################################################################################################################
 #process_smoother_nonlinear_obs()
-process_smoother_versus_shift()
+#process_smoother_versus_shift()
 
 end
