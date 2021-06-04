@@ -1108,7 +1108,7 @@ function process_smoother_versus_shift()
     t1 = time()
     seed = 0
     diffusion = 0.0
-    tanl = 0.10
+    tanl = 0.05
     h = 0.01
     obs_un = 1.0
     obs_dim = 40
