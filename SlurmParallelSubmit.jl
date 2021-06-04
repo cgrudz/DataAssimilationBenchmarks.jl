@@ -211,7 +211,7 @@ mdas = [false, true]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 lags = 1:3:52
-shifts = 1
+shifts = [1]
 #lags = [1, 2, 4, 8, 16, 32, 64]
 
 # observation parameters, gamma controls nonlinearity
@@ -239,7 +239,7 @@ for mda in mdas
             for method in methods
                 for l in 1:length(lags)
                     lag = lags[l]
-                    shifts = lags[1:l]
+                    #shifts = lags[1:l]
                     for shift in shifts
                         for N in N_ens
                             for s_infl in state_infl
