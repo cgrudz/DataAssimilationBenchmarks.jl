@@ -9,6 +9,14 @@ using SparseArrays
 export dx_dt, jacobian, l96s_tay_2_step!, ρ, α
 
 ########################################################################################################################
+########################################################################################################################
+# Type union declarations for multiple dispatch
+
+# vectors and ensemble members of sample
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+########################################################################################################################
+########################################################################################################################
 # auxiliary function to return modular indices for the lorenz model
 
 function mod_indx!(indx::Int64, dim::Int64)
@@ -23,11 +31,11 @@ end
 ########################################################################################################################
 # time derivative
 
-function dx_dt(x, dx_params::Vector{Float64}, t::Float64)
+function dx_dt(x::T, t::Float64, dx_params::Vector{Float64}) where {T <: VecA}
 	"""Time derivative for the Lorenz-96 model, x is a single model state of size state_dim."""
 
     # unpack the (only) derivative parameter for l96
-    f = dx_params[1]
+    F = dx_params[1]
     x_dim = length(x)
     dx = Vector{Float64}(undef, x_dim)
 	
@@ -41,15 +49,38 @@ function dx_dt(x, dx_params::Vector{Float64}, t::Float64)
         # index j plus 1, modulo the system dimension
         j_p_1 = mod_indx!(j + 1, x_dim)
 
-        dx[j] = (x[j_p_1] - x[j_m_2])*x[j_m_1] - x[j] + f
+        dx[j] = (x[j_p_1] - x[j_m_2])*x[j_m_1] - x[j] + F
     end
     return dx
 end
 
+
+########################################################################################################################
+# vectorized time derivative for demonstration purposes only, note this is much less efficient in speed
+# and in memory than the above version
+
+function dx_dt_alt(x::T, t::Float64, dx_params::Vector{Float64}) where {T <: VecA}
+
+
+    # unpack the (only) derivative parameter for l96
+    f = dx_params[1]
+    x_dim = length(x)
+    dx = Vector{Float64}(undef, x_dim)
+
+    # shift minus and plus indices with concatenate, array compute the derivative over arbitrary ensemble sizes
+    x_m_2 = [x[end-1:end]; x[1:end-2]]
+    x_m_1 = [x[end:end]; x[1:end-1]]
+    x_p_1 = [x[2:end]; x[1:1]]
+
+    # compute the vectorized derivative
+    dx .= (x_p_1-x_m_2) .* x_m_1 - x .+ f
+end
+
+
 ########################################################################################################################
 # linearized time derivative
 
-function jacobian(x::Vector{Float64}, dx_params::Vector{Float64}, t::Float64)
+function jacobian(x::Vector{Float64}, t::Float64, dx_params::Vector{Float64})
     """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the state x.
     
     Note that this has been designed to load the entries in a standard zeros array but return a sparse array after
@@ -102,7 +133,7 @@ end
 # This depends on rho and alpha as above
 # NOTE: this still needs to be debugged
 
-function l96s_tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float64)
+function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """One step of integration rule for l96 second order taylor rule
 
     The rho and alpha are to be computed by the auxiliary functions, depending only on p, and supplied for all steps.  
@@ -121,8 +152,8 @@ function l96s_tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float6
     α = kwargs["α"]::Float64
 
     # Compute the deterministic dxdt and the jacobian equations
-    dx = dx_dt(x, dx_params, 0.0)
-    Jac_x = jacobian(x, dx_params)
+    dx = dx_dt(x, 0.0, dx_params)
+    Jac_x = jacobian(x, 0.0, dx_params)
 
     ## random variables
     # Vectors ξ, μ, ϕ are sys_dim X 1 vectors of iid standard normal variables, 
@@ -195,12 +226,20 @@ function l96s_tay2_step!(x::Vector{Float64}, kwargs::Dict{String,Any}, t::Float6
     end
 
     # the final vectorized step forward is given as
-    collect(Iterators.flatten(
-           x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
-           diffusion * sqrt(h) * ξ +                # stochastic euler step
-           diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
-           diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
-          ))
+    #collect(Iterators.flatten(
+    #       x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
+    #       diffusion * sqrt(h) * ξ +                # stochastic euler step
+    #       diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
+    #       diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
+    #      ))
+    
+    @bp
+    x .= collect(Iterators.flatten(
+            x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
+            diffusion * sqrt(h) * ξ +                # stochastic euler step
+            diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
+            diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
+           ))
 end
 
 ########################################################################################################################
