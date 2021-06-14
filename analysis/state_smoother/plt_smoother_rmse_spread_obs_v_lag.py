@@ -11,7 +11,7 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
@@ -20,7 +20,7 @@ mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 5
+gamma = 4
 total_lag = 53
 shift = 1
 plot_range = len(range(1,total_lag,3))
@@ -145,10 +145,15 @@ ax0.set_xticks(range(1, total_lag ,3))
 #ax1.set_yscale('log')
 
 
+if mda == 'true':
+    title = 'MDA, $\gamma$ ='+ str(range(1,10)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21, $\Delta$t=' + str(tanl).ljust(4,"0") 
+
+else:
+    title = 'SDA, $\gamma$ ='+ str(range(1,10)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21 $\Delta$t=' + str(tanl).ljust(4,"0") 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .04, 'Spread versus lag', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=' + str(shift) + ', mda=' + mda + r',$\gamma$ ='+ str(range(1,10)[gamma]), horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .02, title, horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

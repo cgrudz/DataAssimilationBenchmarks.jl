@@ -42,7 +42,7 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
-#mda = "false"
+mda = "false"
 mda = "true"
 
 f = h5.File('processed_smoother_state_v_shift_diffusion_0.00_tanl_' + str(tanl).ljust(4, "0") + '_nanl_20000_burn_05000_mda_' +\
@@ -337,10 +337,10 @@ ax1a.set_xticklabels(x_labs, ha="right", rotation=0)
 
 
 if mda=="true":
-    fig_title = r"MDA, $\Delta$t="+ str(tanl)
+    fig_title = r"MDA, ensemble size=21, $\Delta$t="+ str(tanl)
 
 else:
-    fig_title = r"$\Delta$t="+ str(tanl)
+    fig_title = r"SDA, ensemble size=21, $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

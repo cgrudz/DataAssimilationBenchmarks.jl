@@ -37,13 +37,13 @@ ax8a = fig.add_axes([.839, .085, .090, .25])
 ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
 mda = "false"
-mda = "true"
+#mda = "true"
 total_lag = 53
 total_gamma = 11
 shift = 1
@@ -91,7 +91,7 @@ def find_optimal_values(method, stat, data):
     return [rmse_vals, spread_vals]
 
 color_map = sns.color_palette("husl", 101)
-max_scale = 0.30
+max_scale = 1.00
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]
@@ -339,10 +339,10 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift " + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = "MDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
 
 else:
-    fig_title = "Shift " + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = "SDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

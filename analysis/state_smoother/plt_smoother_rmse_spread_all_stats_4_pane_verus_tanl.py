@@ -338,7 +338,7 @@ if mda=="true":
     fig_title = "MDA, shift " + str(shift) 
 
 else:
-    fig_title = "Shift " + str(shift) 
+    fig_title = "SDA Shift " + str(shift) 
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

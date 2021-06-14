@@ -17,8 +17,8 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
-#mda = "false"
-mda = "true"
+mda = "false"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
@@ -150,12 +150,15 @@ ax1.set_xscale('log', **kwargs)
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-
+if mda=="true":
+    title = 'MDA, lag=' + str(shifts[-1]).rjust(2, "0")  + r', ensemble size=21, $\Delta$t=' + str(tanl).ljust(4,"0")
+else:
+    title = 'SDA, lag=' + str(shifts[-1]).rjust(2, "0")  + r', ensemble size=21, $\Delta$t=' + str(tanl).ljust(4,"0")
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, 'RMSE versus shift', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .04, 'Spread versus shift', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', lag=' + str(shifts[-1]).rjust(2, "0")  + ', mda=' + mda, horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .02, title, horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 
 plt.show()
