@@ -43,8 +43,9 @@ tanl = 0.05
 mda = "false"
 total_lag = 53
 total_ens = 44
+shift = 1
 
-f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ '_nanl_20000_burn_05000_mda_' + mda + '.h5', 'r')
+f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ '_nanl_20000_burn_05000_mda_' + mda + '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 
 def find_optimal_values(method, stat, data):

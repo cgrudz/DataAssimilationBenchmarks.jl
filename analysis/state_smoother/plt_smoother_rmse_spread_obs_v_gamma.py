@@ -11,7 +11,7 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
@@ -151,11 +151,14 @@ ax0.set_xlim([0.5, gamma + 0.5])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-
+if mda == "true":
+    title = 'MDA, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+else:
+    title = 'SDA, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, r'RMSE versus $\gamma$', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .04, r'Spread versus $\gamma$', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=' + str(shift) + ', mda=' + mda, horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .02, title, horizontalalignment="center", verticalalignment='center', fontsize=24)
 
 plt.show()

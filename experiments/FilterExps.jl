@@ -36,7 +36,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
 
     # number of analyses
     @bp
-    nanl = 25000
+    nanl = 25
 
     # set seed 
     Random.seed!(seed)

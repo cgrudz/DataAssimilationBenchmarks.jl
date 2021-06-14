@@ -11,10 +11,9 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "enks-n-primal-ls_classic", "enks-n-primal-ls_single_iteration"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
-method_list = ["etks_classic"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
@@ -26,7 +25,7 @@ color_list = ['#d95f02', '#7570b3', '#1b9e77']
 ensemble = 3
 total_lag = 53
 shift = 1
-shift = 2
+#shift = 2
 plot_range = len(range(1,total_lag,3))
 
 
@@ -153,11 +152,16 @@ ax0.set_xticks(range(1, total_lag ,3))
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
+if mda == 'true':
+    title = 'MDA, shift=' + str(shift) + ', ensemble size=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+
+else:
+    title = 'SDA, shift=' + str(shift) + ', ensemble size=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .04, 'Spread versus lag', horizontalalignment='right', verticalalignment='top', fontsize=24)
-plt.figtext(.50, .02, r'$\Delta$t=' + str(tanl).ljust(4,"0")+', shift=' + str(shift) + ', mda=' + mda + ', ensemble size='+ str(range(15,44,2)[ensemble]), horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .02, title, horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

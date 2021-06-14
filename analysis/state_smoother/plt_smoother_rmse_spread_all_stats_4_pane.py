@@ -41,13 +41,13 @@ method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-i
 #method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-tanl = 0.10
+#tanl = 0.10
 mda = "false"
 #mda = "true"
 total_lag = 53
 total_ens = 44
 shift = 1
-shift = 2
+#shift = 2
 
 f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
         '_nanl_20000_burn_05000_mda_' + mda + '_shift_' + str(shift).rjust(3,"0")+ '.h5', 'r')
@@ -333,10 +333,10 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift " + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = "MDA, shift=" + str(shift) + ", $\Delta$t="+ str(tanl)
 
 else:
-    fig_title = "Shift " + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = "SDA, shift=" + str(shift) + ", $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
