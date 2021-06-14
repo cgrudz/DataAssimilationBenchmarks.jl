@@ -7,8 +7,8 @@ using Debugger
 using Statistics
 using JLD, HDF5
 export process_filter_state, process_smoother_state, process_filter_nonlinear_obs, 
-       process_smoother_nonlinear_obs, process_smoother_versus_shift, 
-       process_smoother_versus_tanl, rename_smoother_state
+       process_smoother_nonlinear_obs, process_smoother_versus_shift, process_smoother_versus_tanl,   
+       rename_smoother_state
 
 ########################################################################################################################
 ########################################################################################################################
@@ -1126,7 +1126,7 @@ function process_smoother_versus_tanl()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true 
+    mda = false 
     shift = 1
     γ = 1.0
     
@@ -1909,5 +1909,6 @@ end
 ########################################################################################################################
 #process_smoother_nonlinear_obs()
 #process_smoother_versus_shift()
+process_smoother_versus_tanl()
 
 end
