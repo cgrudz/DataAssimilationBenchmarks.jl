@@ -1,5 +1,5 @@
 ########################################################################################################################
-module SlurmParallelSubmit 
+module SlurmParallelSubmitPronghorn
 ########################################################################################################################
 # imports and exports
 push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/data")
@@ -66,7 +66,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -79,7 +79,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    write(f,"#SBATCH --partition=cpu-s1-ahn-0\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"filter_state\"")
+#    write(f,"julia SlurmExperimentDriverPronghorn.jl " * "\"" *string(j) * "\"" * " \"filter_state\"")
 #    close(f)
 #    my_command = `sbatch  submit_job.sl`
 #    run(my_command)
@@ -91,14 +91,6 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 ########################################################################################################################
 # arguments are
 # time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
-
-# incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = false
-
-# note, nanl is hard coded in the experiment, and h is inferred from the time series
-# data, this is only used for checking versus existing data with the incomplete parameter as above
-nanl = 25000
-h = 0.01
 
 # these values set parameters for the experiment when running from scratch, or can
 # be tested versus existing data
@@ -144,37 +136,8 @@ for ts in time_series
                 for shift in shifts
                     for N in N_ens
                         for s_infl in state_infl
-                            if incomplete == true
-                                tanl = parse(Float64,ts[75:78])
-                                diffusion = parse(Float64,ts[58:61])
-                                name = method *
-                                            "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
-                                            "_diffusion_" * rpad(diffusion, 4, "0") *
-                                            "_sys_dim_" * lpad(sys_dim, 2, "0") *
-                                            "_obs_dim_" * lpad(obs_dim, 2, "0") *
-                                            "_obs_un_" * rpad(obs_un, 4, "0") *
-                                            "_gamma_" * lpad(γ, 5, "0") *
-                                            "_nanl_" * lpad(nanl, 5, "0") *
-                                            "_tanl_" * rpad(tanl, 4, "0") *
-                                            "_h_" * rpad(h, 4, "0") *
-                                            "_lag_" * lpad(lag, 3, "0") *
-                                            "_shift_" * lpad(shift, 3, "0") *
-                                            "_mda_false" *
-                                            "_N_ens_" * lpad(N, 3,"0") *
-                                            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-                                            ".jld"
-
-                                fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "_classic/"
-                                try
-                                    f = load(fpath*name)
-                                catch
-                                    tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
-                                    push!(args, tmp)
-                                end
-                            else
-                                tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
-                                push!(args, tmp)
-                            end
+                            tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
+                            push!(args, tmp)
                         end
                     end
                 end
@@ -183,7 +146,7 @@ for ts in time_series
     end
 end
 
-name = "/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld"
+name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
 for j in 1:length(args) 
@@ -196,7 +159,7 @@ for j in 1:length(args)
     write(f,"#SBATCH --partition=cpu-s1-ahn-0\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
-    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"classic_smoother_state\"")
+    write(f,"julia SlurmExperimentDriverPronghorn.jl " * "\"" *string(j) * "\"" * " \"classic_smoother_state\"")
     close(f)
     my_command = `sbatch  submit_job.sl`
     run(my_command)
@@ -207,14 +170,6 @@ end
 ########################################################################################################################
 ## arguments are
 ## time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
-#
-## incomplete will determine if the script checks for exisiting data before submitting experiments
-#incomplete = true 
-#
-## note, nanl is hard coded in the experiment, and h is inferred from the time series
-## data, this is only used for checking versus existing data with the incomplete parameter as above
-#nanl = 25000
-#h = 0.01
 #
 ## these values set parameters for the experiment when running from scratch, or can
 ## be tested versus existing data
@@ -259,37 +214,8 @@ end
 #                    for shift in shifts
 #                        for N in N_ens
 #                            for s_infl in state_infl
-#                                if incomplete == true
-#                                    tanl = parse(Float64,ts[75:78])
-#                                    diffusion = parse(Float64,ts[58:61])
-#                                    name = method *
-#                                                "_single_iteration_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
-#                                                "_diffusion_" * rpad(diffusion, 4, "0") *
-#                                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
-#                                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
-#                                                "_obs_un_" * rpad(obs_un, 4, "0") *
-#                                                "_gamma_" * lpad(γ, 5, "0") *
-#                                                "_nanl_" * lpad(nanl, 5, "0") *
-#                                                "_tanl_" * rpad(tanl, 4, "0") *
-#                                                "_h_" * rpad(h, 4, "0") *
-#                                                "_lag_" * lpad(lag, 3, "0") *
-#                                                "_shift_" * lpad(shift, 3, "0") *
-#                                                "_mda_" * string(mda) *
-#                                                "_N_ens_" * lpad(N, 3,"0") *
-#                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                                                ".jld"
-#
-#                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "_single_iteration/"
-#                                    try
-#                                        f = load(fpath*name)
-#                                    catch
-#                                        tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
-#                                        push!(args, tmp)
-#                                    end
-#                                else
-#                                    tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
-#                                    push!(args, tmp)
-#                                end
+#                                tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
+#                                push!(args, tmp)
 #                            end
 #                        end
 #                    end
@@ -300,7 +226,7 @@ end
 #end
 #
 ## save the input data to be looped over in the next stage
-#name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 ## the loop will sequentially write and submit different experiments based on the parameter combinations
@@ -314,7 +240,7 @@ end
 #    write(f,"#SBATCH --partition=cpu-s1-ahn-0\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
+#    write(f,"julia SlurmExperimentDriverPronghorn.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
 #    close(f)
 #    my_command = `sbatch  submit_job.sl`
 #    run(my_command)
@@ -327,14 +253,6 @@ end
 ## arguments are
 ## time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 ##
-## incomplete will determine if the script checks for exisiting data before submitting experiments
-#incomplete = false 
-#
-## note, nanl is hard coded in the experiment, and h is inferred from the time series
-## data, this is only used for checking versus existing data with the incomplete parameter as above
-#nanl = 25000
-#h = 0.01
-#
 ## these values set parameters for the experiment when running from scratch, or can
 ## be tested versus existing data
 #sys_dim = 40
@@ -384,38 +302,8 @@ end
 #                    for shift in shifts
 #                        for N in N_ens
 #                            for s_infl in state_infl
-#                                if incomplete == true
-#                                    tanl = parse(Float64,ts[75:78])
-#                                    diffusion = parse(Float64,ts[58:61])
-#                                    name = method *
-#                                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-#                                                "_diffusion_" * rpad(diffusion, 4, "0") *
-#                                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
-#                                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
-#                                                "_obs_un_" * rpad(obs_un, 4, "0") *
-#                                                "_gamma_" * lpad(γ, 5, "0") *
-#                                                "_nanl_" * lpad(nanl, 5, "0") *
-#                                                "_tanl_" * rpad(tanl, 4, "0") *
-#                                                "_h_" * rpad(h, 4, "0") *
-#                                                "_lag_" * lpad(lag, 3, "0") *
-#                                                "_shift_" * lpad(shift, 3, "0") *
-#                                                "_mda_" * string(mda) *
-#                                                "_N_ens_" * lpad(N, 3,"0") *
-#                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                                                ".jld"
-#
-#                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "/"
-#                                    try
-#                                        f = load(fpath*name)
-#                                        
-#                                    catch
-#                                        tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
-#                                        push!(args, tmp)
-#                                    end
-#                                else
-#                                    tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
-#                                    push!(args, tmp)
-#                                end
+#                                tmp = (ts, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N, s_infl)
+#                                push!(args, tmp)
 #                            end
 #                        end
 #                    end
@@ -426,7 +314,7 @@ end
 #end
 #
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -438,7 +326,7 @@ end
 #    write(f,"#SBATCH --partition=cpu-s1-ahn-0\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
+#    write(f,"julia SlurmExperimentDriverPronghorn.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
 #    close(f)
 #    my_command = `sbatch  submit_job.sl`
 #    run(my_command)
