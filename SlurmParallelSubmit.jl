@@ -84,7 +84,7 @@ ts5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl
 # time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
 
 # incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = true
+incomplete = false
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
@@ -158,11 +158,11 @@ for ts in time_series
                                 try
                                     f = load(fpath*name)
                                 catch
-                                    tmp = (ts, method, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
+                                    tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
                                     push!(args, tmp)
                                 end
                             else
-                                tmp = (ts, method, seed, l, shift, obs_un, obs_dim, γ, N, s_infl)
+                                tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
                                 push!(args, tmp)
                             end
                         end
