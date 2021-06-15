@@ -1154,7 +1154,7 @@ function process_smoother_versus_tanl()
                 ]
                  
 
-    tanls = [0.05, 0.10, 0.15, 0.20, 0.25]
+    tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
     #tanls = [0.05, 0.10]
     total_tanls = length(tanls)
     inflations = LinRange(1.00, 1.10, 11)

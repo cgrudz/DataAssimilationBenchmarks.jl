@@ -128,7 +128,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #
 ## set the time series of observations for the truth-twin
 ##time_series = [ts01, ts02]
-#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10, ts11, ts12]
+#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
 #
 ## load the experiments as a tuple
 #args = Tuple[]
@@ -240,7 +240,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #
 ## set the time series of observations for the truth-twin
 ##time_series = [ts01, ts02]
-#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10, ts11, ts12]
+#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
 #
 ## load the experiments as a tuple
 #args = Tuple[]
@@ -361,8 +361,8 @@ state_infl = LinRange(1.00, 1.10, 11)
 
 # set the time series of observations for the truth-twin
 #time_series = [ts01, ts02]
-#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10, ts11, ts12]
-time_series = [ts06, ts07, ts08, ts09, ts10, ts11, ts12]
+#time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
+time_series = [ts06, ts07, ts08, ts09, ts10]
 
 # load the experiments
 args = Tuple[]
