@@ -333,7 +333,7 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["lin-ineks-transform", "ienks-transform"]
+methods = ["lin-ienks-transform", "ienks-transform"]
 seed = 0
 mdas = [false, true]
 
