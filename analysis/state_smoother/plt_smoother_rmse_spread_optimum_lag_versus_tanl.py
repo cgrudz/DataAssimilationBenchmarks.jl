@@ -11,17 +11,17 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
 total_lag = 53
 shift = 1
-tanls = [0.05, 0.10, 0.15, 0.20, 0.25]
+tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanls = len(tanls)
 
 fig = plt.figure()

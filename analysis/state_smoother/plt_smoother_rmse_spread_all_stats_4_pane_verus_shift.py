@@ -90,8 +90,10 @@ def find_optimal_values(method, stat, data):
 
     return [rmse_vals, spread_vals]
 
-color_map = sns.color_palette("husl", 101)
-max_scale = 0.30
+#color_map = sns.color_palette("husl", 101)
+#color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
+color_map = sns.color_palette("cubehelix", as_cmap=True)
+max_scale = 0.50
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]
