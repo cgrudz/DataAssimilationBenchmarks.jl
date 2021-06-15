@@ -43,7 +43,7 @@ stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25]
 total_tanl = len(tanls)
 mda = "false"
-#mda = "true"
+mda = "true"
 total_lag = 53
 shift = 1
 
@@ -86,8 +86,14 @@ def find_optimal_values(method, stat, data):
 
     return [rmse_vals, spread_vals]
 
-color_map = sns.color_palette("husl", 101)
-max_scale = 0.30
+#color_map = sns.color_palette("husl", 101)
+color_map = sns.cubehelix_palette(80, reverse=True)
+#color_map = sns.cubehelix_palette(80, start=.75, rot=.20, reverse=True)
+
+
+
+
+max_scale = 1.00
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]
