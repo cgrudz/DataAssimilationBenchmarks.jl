@@ -9,7 +9,8 @@ using Debugger
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
 @everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
 @everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, ParallelExperimentDriver
-@everywhere export wrap_exp
+@everywhere export experiment 
+#@everywhere export wrap_exp
 
 ########################################################################################################################
 ########################################################################################################################
@@ -19,11 +20,11 @@ using Debugger
 # timeseries are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-time_series_1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-time_series_2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-time_series_3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
-time_series_4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
-time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
+ts1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+ts2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+ts3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
+ts4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
+ts5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
@@ -99,48 +100,49 @@ time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F
 ########################################################################################################################
 # Classic smoothers
 ########################################################################################################################
-## classic_state parallel run, arguments are
-## time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
-#
-#schemes = ["enks-n-primal"]
-#seed = 0
-##lags = 1:3:52
+# classic_state parallel run, arguments are
+# time_series, method, seed, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
+
+schemes = ["etks"]
+seed = 0
+lags = 1:3:52
+shifts = [1]
 #lags = [1, 2, 4, 8, 16, 32, 64]
-##gammas = Array{Float64}(1:11)
-#gammas = [1.0]
-#shift = 1
-#obs_un = 1.0
-#obs_dim = 40
-##N_ens = 15:2:41
-#N_ens = [21]
+#gammas = Array{Float64}(1:11)
+gammas = [1.0]
+shift = 1
+obs_un = 1.0
+obs_dim = 40
+#N_ens = 15:2:41
+N_ens = [21]
 #state_infl = [1.0]
-##state_infl = LinRange(1.0, 1.10, 11)
-#time_series = [time_series_1, time_series_2]
-#
-## load the experiments
-#args = Tuple[]
-#for ts in time_series
-#    for scheme in schemes
-#        for γ in gammas
-#            for l in 1:length(lags)
-#                # optional definition of shifts in terms of the current lag parameter for a
-#                # range of shift values
-#                lag = lags[l]
-#                shifts = lags[1:l]
-#                for shift in shifts
-#                    for N in N_ens
-#                        for s_infl in state_infl
-#                            tmp = (ts, scheme, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
-#                            push!(args, tmp)
-#                        end
-#                    end
-#                end
-#            end
-#        end
-#    end
-#end
-#
-#
+state_infl = LinRange(1.0, 1.10, 11)
+time_series = [ts1, ts2, ts3, ts4, ts5]
+
+# load the experiments
+args = Tuple[]
+for ts in time_series
+    for scheme in schemes
+        for γ in gammas
+            for l in 1:length(lags)
+                # optional definition of shifts in terms of the current lag parameter for a
+                # range of shift values
+                lag = lags[l]
+                #shifts = lags[1:l]
+                for shift in shifts
+                    for N in N_ens
+                        for s_infl in state_infl
+                            tmp = (ts, scheme, seed, lag, shift, obs_un, obs_dim, γ, N, s_infl)
+                            push!(args, tmp)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+
 ## define the robust to failure wrapper
 #function wrap_exp(arguments)
 #    try
@@ -149,10 +151,11 @@ time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F
 #        print("Error on " * string(args) * "\n")
 #    end
 #end
-#
+
+experiment = SmootherExps.classic_state
 #experiment = wrap_exp
-#
-#
+
+
 ########################################################################################################################
 ## classic_param single run for debugging, arguments are
 ##  [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
@@ -194,61 +197,61 @@ time_series_5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F
 ########################################################################################################################
 # Single iteration smoothers
 ########################################################################################################################
-# single iteration single run for degbugging, arguments are
-# [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
-
-schemes = ["enks-n-primal"]
-seed = 0
-#lags = 1:3:52
-lags = [1, 2, 4, 8, 16, 32, 64]
-#gammas = Array{Float64}(1:11)
-gammas = [1.0]
-#shift = 1
-obs_un = 1.0
-obs_dim = 40
-#N_ens = 15:2:41
-N_ens = [21]
-state_infl = [1.0]
-#state_infl = LinRange(1.0, 1.10, 11)
-time_series = [time_series_1, time_series_2]
-mdas = [false]
-
-# load the experiments
-args = Tuple[]
-for m in mdas
-    for ts in time_series
-        for γ in gammas
-            for scheme in schemes
-                for l in 1:length(lags)
-                    # optional definition of shifts in terms of the current lag parameter for a
-                    # range of shift values
-                    lag = lags[l]
-                    shifts = lags[1:l]
-                    for shift in shifts
-                        for N in N_ens
-                            for s_infl in state_infl
-                                tmp = (ts, scheme, seed, lag, shift, m, obs_un, obs_dim, γ, N, s_infl)
-                                push!(args, tmp)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-# define the robust to failure wrapper
-function wrap_exp(arguments)
-    try
-        single_iteration_state(arguments)
-    catch
-        print("Error on " * string(args) * "\n")
-    end
-end
-
-experiment = wrap_exp
-
+## single iteration single run for degbugging, arguments are
+## [time_series, method, seed, lag, shift, mda, obs_un, obs_dim, N_ens, state_infl = args
+#
+#schemes = ["enks-n-primal"]
+#seed = 0
+##lags = 1:3:52
+#lags = [1, 2, 4, 8, 16, 32, 64]
+##gammas = Array{Float64}(1:11)
+#gammas = [1.0]
+##shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+##N_ens = 15:2:41
+#N_ens = [21]
+#state_infl = [1.0]
+##state_infl = LinRange(1.0, 1.10, 11)
+#time_series = [time_series_1, time_series_2]
+#mdas = [false]
+#
+## load the experiments
+#args = Tuple[]
+#for m in mdas
+#    for ts in time_series
+#        for γ in gammas
+#            for scheme in schemes
+#                for l in 1:length(lags)
+#                    # optional definition of shifts in terms of the current lag parameter for a
+#                    # range of shift values
+#                    lag = lags[l]
+#                    shifts = lags[1:l]
+#                    for shift in shifts
+#                        for N in N_ens
+#                            for s_infl in state_infl
+#                                tmp = (ts, scheme, seed, lag, shift, m, obs_un, obs_dim, γ, N, s_infl)
+#                                push!(args, tmp)
+#                            end
+#                        end
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+#
+## define the robust to failure wrapper
+#function wrap_exp(arguments)
+#    try
+#        single_iteration_state(arguments)
+#    catch
+#        print("Error on " * string(args) * "\n")
+#    end
+#end
+#
+#experiment = wrap_exp
+#
 ########################################################################################################################
 # hybrid_param single run for debugging, arguments are
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl = args
