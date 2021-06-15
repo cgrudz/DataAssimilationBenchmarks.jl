@@ -95,7 +95,7 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["etks"]
+methods = ["enks-n-primal"]
 seed = 0
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
@@ -116,8 +116,8 @@ N_ens = [21]
 #N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
-#state_infl = [1.0]
-state_infl = LinRange(1.00, 1.10, 11)
+state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 
 # set the time series of observations for the truth-twin
 #time_series = [ts1, ts2]
@@ -147,7 +147,7 @@ for ts in time_series
                                             "_nanl_" * lpad(nanl, 5, "0") *
                                             "_tanl_" * rpad(tanl, 4, "0") *
                                             "_h_" * rpad(h, 4, "0") *
-                                            "_lag_" * lpad(l, 3, "0") *
+                                            "_lag_" * lpad(lag, 3, "0") *
                                             "_shift_" * lpad(shift, 3, "0") *
                                             "_mda_false" *
                                             "_N_ens_" * lpad(N, 3,"0") *
@@ -325,7 +325,7 @@ end
 ## be tested versus existing data
 #sys_dim = 40
 #obs_dim = 40
-#methods = ["lin-ienks-transform", "ienks-transform"]
+#methods = ["lin-ineks-transform", "ienks-transform"]
 #seed = 0
 #mdas = [false, true]
 #
@@ -348,8 +348,8 @@ end
 ##N_ens = 15:2:43
 #
 ## inflation values, finite size versions should only be 1.0 generally 
-#state_infl = [1.0]
-##state_infl = LinRange(1.00, 1.10, 11)
+##state_infl = [1.0]
+#state_infl = LinRange(1.00, 1.10, 11)
 #
 ## set the time series of observations for the truth-twin
 ##time_series = [ts1, ts2]
