@@ -2,11 +2,11 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/data")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/methods")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/models")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/experiments")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/data")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
