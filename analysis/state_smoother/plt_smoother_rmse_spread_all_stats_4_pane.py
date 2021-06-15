@@ -40,8 +40,8 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 #method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-tanl = 0.05
-#tanl = 0.10
+#tanl = 0.05
+tanl = 0.10
 mda = "false"
 #mda = "true"
 total_lag = 53
@@ -95,7 +95,9 @@ def find_optimal_values(method, stat, data):
 
 
 color_map = sns.color_palette("husl", 101)
-max_scale = 0.30
+color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
+#color_map = sns.color_palette("magma", as_cmap=True) 
+max_scale = 1.00
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]

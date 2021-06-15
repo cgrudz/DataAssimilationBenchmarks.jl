@@ -42,8 +42,8 @@ method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 total_lag = 53
 total_gamma = 11
 shift = 1
@@ -90,8 +90,13 @@ def find_optimal_values(method, stat, data):
 
     return [rmse_vals, spread_vals]
 
-color_map = sns.color_palette("husl", 101)
-max_scale = 1.00
+
+#color_map = sns.color_palette("husl", 301)
+#color_map = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True, reverse=True) 
+color_map = sns.color_palette("cubehelix", as_cmap=True)
+#color_map = sns.color_palette("crest_r", as_cmap=True)
+#color_map = sns.cubehelix_palette(80, reverse=True)
+max_scale = 0.50
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]

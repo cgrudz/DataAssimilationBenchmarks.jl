@@ -40,10 +40,10 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-tanls = [0.05, 0.10, 0.15, 0.20, 0.25]
+tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
 mda = "false"
-mda = "true"
+#mda = "true"
 total_lag = 53
 shift = 1
 
@@ -87,7 +87,7 @@ def find_optimal_values(method, stat, data):
     return [rmse_vals, spread_vals]
 
 #color_map = sns.color_palette("husl", 101)
-color_map = sns.cubehelix_palette(80, reverse=True)
+color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
 #color_map = sns.cubehelix_palette(80, start=.75, rot=.20, reverse=True)
 
 
@@ -153,7 +153,7 @@ x_tics = []
 x_vals = tanls
 x_tic_vals = range(len(x_vals))
 for i in range(len(x_vals)):
-    if i % 2 == 0:
+    if i % 4 == 0:
         x_labs.append(str(x_vals[i]))
         x_tics.append(x_tic_vals[i])
 
