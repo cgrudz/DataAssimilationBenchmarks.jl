@@ -2,11 +2,11 @@
 module SlurmParallelSubmitPronghorn
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/data")
-push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark")
-push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
-push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
-push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/methods")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/models")
+push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
@@ -66,7 +66,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/filter_state_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -146,7 +146,7 @@ for ts in time_series
     end
 end
 
-name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld"
+name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
 for j in 1:length(args) 
@@ -226,7 +226,7 @@ end
 #end
 #
 ## save the input data to be looped over in the next stage
-#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 ## the loop will sequentially write and submit different experiments based on the parameter combinations
@@ -314,7 +314,7 @@ end
 #end
 #
 #
-#name = "/data/gpfs/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 

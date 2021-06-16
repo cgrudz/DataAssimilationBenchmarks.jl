@@ -4,10 +4,10 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 using Debugger
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/methods")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/models")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/da_benchmark/experiments")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/methods")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/models")
+@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 @everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, ParallelExperimentDriver
 @everywhere export experiment 
 #@everywhere export wrap_exp
@@ -25,8 +25,6 @@ ts2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl
 ts3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
 ts4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
 ts5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
 
 ########################################################################################################################

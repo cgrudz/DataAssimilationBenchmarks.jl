@@ -2,11 +2,11 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/data")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/methods")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/models")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/experiments")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBencharks/data")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBencharks")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBencharks/methods")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBencharks/models")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBencharks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
@@ -66,7 +66,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBencharks/data/input_data/filter_state_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -180,7 +180,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBencharks/data/input_data/classic_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -295,7 +295,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #end
 #
 ## save the input data to be looped over in the next stage
-#name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBencharks/data/input_data/single_iteration_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 ## the loop will sequentially write and submit different experiments based on the parameter combinations
@@ -420,7 +420,7 @@ for mda in mdas
 end
 
 
-name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
+name = "/home/cgrudzien/DataAssimilationBencharks/data/input_data/iterative_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
 for j in 1:length(args) 

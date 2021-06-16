@@ -1850,7 +1850,7 @@ function rename_data_smoother_state()
     end
 
     # for each DA method in the experiment, process the data, loading into the dictionary
-    fpath = "/x/capc/cgrudzien/da_benchmark/storage/smoother_state/"
+    fpath = "/x/capc/cgrudzien/DataAssimilationBenchmarks/storage/smoother_state/"
     for method in method_list
         fnames = []
         for lag in total_lags
