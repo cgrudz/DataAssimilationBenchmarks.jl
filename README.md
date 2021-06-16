@@ -1,4 +1,5 @@
-# DataAssimilationBenchMarks
+# DataAssimilationBenchmarks
+
 [![Build Status](https://github.com/Colin Grudzien/DataAssimilationBenchmarks.jl/workflows/CI/badge.svg)](https://github.com/Colin Grudzien/DataAssimilationBenchmarks.jl/actions)
 [![Coverage](https://codecov.io/gh/Colin Grudzien/DataAssimilationBenchmarks.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Colin Grudzien/DataAssimilationBenchmarks.jl)
 [![Coverage](https://coveralls.io/repos/github/Colin Grudzien/DataAssimilationBenchmarks.jl/badge.svg?branch=master)](https://coveralls.io/github/Colin Grudzien/DataAssimilationBenchmarks.jl?branch=master)
