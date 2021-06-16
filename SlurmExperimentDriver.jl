@@ -20,7 +20,7 @@ using SmootherExps
 # Filters 
 ########################################################################################################################
 function filter_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld")
+    f = load("/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/filter_state_input_args.jld")
     args = f["experiments"][j]
     filter_state(args)
 end
@@ -30,7 +30,7 @@ end
 # Classic smoothers
 ########################################################################################################################
 function classic_smoother_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld")
+    f = load("/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_state_smoother_input_args.jld")
     args = f["experiments"][j]
     classic_state(args)
 end
@@ -40,7 +40,7 @@ end
 # Single-iteration smoothers
 ########################################################################################################################
 function single_iteration_smoother_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld")
+    f = load("/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld")
     args = f["experiments"][j]
     single_iteration_state(args)
 end
@@ -51,7 +51,7 @@ end
 # Iterative smoothers
 ########################################################################################################################
 function iterative_smoother_state_exp(j)
-    f = load("/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld")
+    f = load("/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_state_smoother_input_args.jld")
     args = f["experiments"][j]
     iterative_state(args)
 end
