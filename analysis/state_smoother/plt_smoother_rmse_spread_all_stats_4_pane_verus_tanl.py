@@ -42,8 +42,8 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 total_lag = 53
 shift = 1
 
