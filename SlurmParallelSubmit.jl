@@ -2,11 +2,11 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/data")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/methods")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/models")
-push!(LOAD_PATH, "/home/cgrudzien/da_benchmark/experiments")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
+push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
@@ -66,7 +66,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/filter_state_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/filter_state_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -180,7 +180,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #    end
 #end
 #
-#name = "/home/cgrudzien/da_benchmark/data/input_data/classic_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -295,7 +295,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #end
 #
 ## save the input data to be looped over in the next stage
-#name = "/home/cgrudzien/da_benchmark/data/input_data/single_iteration_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 ## the loop will sequentially write and submit different experiments based on the parameter combinations
@@ -333,7 +333,7 @@ h = 0.01
 # be tested versus existing data
 sys_dim = 40
 obs_dim = 40
-methods = ["lin-ienks-transform", "ienks-transform"]
+methods = ["ienks-transform"]
 seed = 0
 mdas = [false, true]
 
@@ -362,7 +362,7 @@ state_infl = LinRange(1.00, 1.10, 11)
 # set the time series of observations for the truth-twin
 #time_series = [ts01, ts02]
 #time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
-time_series = [ts06, ts07, ts08, ts09, ts10]
+time_series = [ts08, ts09, ts10]
 
 # load the experiments
 args = Tuple[]
@@ -420,7 +420,7 @@ for mda in mdas
 end
 
 
-name = "/home/cgrudzien/da_benchmark/data/input_data/iterative_state_smoother_input_args.jld"
+name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
 for j in 1:length(args) 
@@ -428,7 +428,7 @@ for j in 1:length(args)
     write(f,"#!/bin/bash\n")
     write(f,"#SBATCH -n 1\n")
     # slow partition is for Okapi, uncomment when necessary
-    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -p slow\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
     write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")

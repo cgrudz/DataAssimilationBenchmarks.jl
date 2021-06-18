@@ -1,17 +1,14 @@
-# da_benchmark
+# DataAssimilationBenchmarks
 
 ## Description
-This is my personal data asimilation benchmark research code.  This includes code for developing and testing data assimilation schemes in the L96-s model and the nonlinear swing equations.
+This is my personal data asimilation benchmark research code with an emphasis on testing and validation of ensemble-based filters and smoothers in chaotic toy models.  The code is meant to be performant, in the sense that large hyper-parameter discretizations can be explored to determine structural sensitivity and reliability of results across different experimental regimes, with parallel implementations in Slurm.  This includes code for developing and testing data assimilation schemes in the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) currently, with further models in development.
 
 ## Structure
 The directory is structured as follows:
   * models - contains code for the dynamic model equations.
   * methods - contains DA methods and general numerical methodological code. 
   * experiments - contains the scripts that set up twin experiments
-  * data - dummy output directory for consistency with the server
+  * data - input / output directory for the inputs to and ouptuts from experiments.
 
 ## To do
-	* Write the DEnKF update? This is also a simple extension of the single-iteration formalism
-	* Decide if adaptive inflation in each scheme with MDA will be used, estimating power of the distribution
-	* get final publication version of the state estimation code prepared
-	* begin work on the stochastic model / parameter estimation / adaptive inflation schemes
+  * Begin general packaging and documentation.
