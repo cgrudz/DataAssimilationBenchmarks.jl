@@ -241,7 +241,7 @@ function process_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = false 
+    mda = true 
     diffusion = 0.00
     
     # parameters in ranges that will be used in loops
