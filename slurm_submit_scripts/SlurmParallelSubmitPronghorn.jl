@@ -326,7 +326,7 @@ for j in 1:length(args)
     write(f,"#SBATCH --partition=cpu-s1-ahn-0\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
-    write(f,"julia SlurmExperimentDriverPronghorn.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
     close(f)
     my_command = `sbatch  submit_job.sl`
     run(my_command)

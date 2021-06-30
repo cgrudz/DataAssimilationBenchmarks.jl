@@ -2,11 +2,11 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
