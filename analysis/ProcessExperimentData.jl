@@ -1126,7 +1126,7 @@ function process_smoother_versus_tanl()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true
+    mda = false
     shift = 1
     γ = 1.0
     
