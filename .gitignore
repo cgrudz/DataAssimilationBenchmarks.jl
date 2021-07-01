@@ -49,6 +49,7 @@ Thumbs.db
 *.txt
 
 # no actual data, keep output 'data' directory for server sync directory tree
+./scratch/*
 *.jld
 *.h5
 *.png
