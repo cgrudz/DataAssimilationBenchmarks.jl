@@ -2,11 +2,6 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
-#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
-#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
-#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
-#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
@@ -29,8 +24,6 @@ ts09 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 ts10 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.50_nanl_50000_spin_5000_h_0.010.jld"
 ts11 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.55_nanl_50000_spin_5000_h_0.010.jld"
 ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.60_nanl_50000_spin_5000_h_0.010.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
-#time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
 
 ########################################################################################################################
@@ -127,7 +120,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #state_infl = LinRange(1.00, 1.10, 11)
 #
 ## set the time series of observations for the truth-twin
-##time_series = [ts01, ts02]
+##time_series = [ts01]
 #time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
 #
 ## load the experiments as a tuple
@@ -360,9 +353,8 @@ end
 #state_infl = LinRange(1.00, 1.10, 11)
 #
 ## set the time series of observations for the truth-twin
-##time_series = [ts01, ts02]
+##time_series = [ts01]
 ##time_series = [ts01, ts02, ts03, ts04, ts05, ts06, ts07, ts08, ts09, ts10]
-#time_series = [ts08, ts09, ts10]
 #
 ## load the experiments
 #args = Tuple[]
