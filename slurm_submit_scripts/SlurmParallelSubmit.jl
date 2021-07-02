@@ -142,8 +142,8 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #                    for N in N_ens
 #                        for s_infl in state_infl
 #                            if incomplete == true
-#                                tanl = parse(Float64,ts[75:78])
-#                                diffusion = parse(Float64,ts[58:61])
+#                                tanl = parse(Float64,ts[76:79])
+#                                diffusion = parse(Float64,ts[59:62])
 #                                name = method *
 #                                            "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
 #                                            "_diffusion_" * rpad(diffusion, 4, "0") *
@@ -231,8 +231,8 @@ obs_un = 1.0
 obs_dim = 40
 
 # if varying nonlinearity in obs, typically take a single ensemble value
-N_ens = [21]
-#N_ens = 15:2:43
+#N_ens = [21]
+N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
 #state_infl = [1.0]
@@ -255,8 +255,8 @@ for mda in mdas
                         for N in N_ens
                             for s_infl in state_infl
                                 if incomplete == true
-                                    tanl = parse(Float64,ts[75:78])
-                                    diffusion = parse(Float64,ts[58:61])
+                                    tanl = parse(Float64,ts[76:79])
+                                    diffusion = parse(Float64,ts[59:62])
                                     name = method *
                                                 "_single_iteration_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
                                                 "_diffusion_" * rpad(diffusion, 4, "0") *
@@ -274,7 +274,7 @@ for mda in mdas
                                                 "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
                                                 ".jld"
 
-                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "_single_iteration/"
+                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/" * method * "_single_iteration/"
                                     try
                                         f = load(fpath*name)
                                     catch
@@ -298,23 +298,23 @@ end
 name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld"
 save(name, "experiments", args)
 
-## the loop will sequentially write and submit different experiments based on the parameter combinations
-## in the input data
-#for j in 1:length(args) 
-#    f = open("./submit_job.sl", "w")
-#    write(f,"#!/bin/bash\n")
-#    write(f,"#SBATCH -n 1\n")
-#    # slow partition is for Okapi, uncomment when necessary
-#    #write(f,"#SBATCH -p slow\n")
-#    write(f,"#SBATCH -o ensemble_run.out\n")
-#    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
-#    close(f)
-#    my_command = `sbatch  submit_job.sl`
-#    run(my_command)
-#end
-#
-#
+# the loop will sequentially write and submit different experiments based on the parameter combinations
+# in the input data
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    # slow partition is for Okapi, uncomment when necessary
+    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_state\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
+
+
 ########################################################################################################################
 # Iterative smoothers
 ########################################################################################################################
@@ -379,8 +379,8 @@ save(name, "experiments", args)
 #                        for N in N_ens
 #                            for s_infl in state_infl
 #                                if incomplete == true
-#                                    tanl = parse(Float64,ts[75:78])
-#                                    diffusion = parse(Float64,ts[58:61])
+#                                    tanl = parse(Float64,ts[76:79])
+#                                    diffusion = parse(Float64,ts[59:62])
 #                                    name = method *
 #                                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
 #                                                "_diffusion_" * rpad(diffusion, 4, "0") *
