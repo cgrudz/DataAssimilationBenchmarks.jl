@@ -115,7 +115,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             "state_infl" => round(infl, digits=2)
            ) 
         
-    path = "./data/" * method * "/" 
+    path = "../data/" * method * "/" 
     name = method * 
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -269,7 +269,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "param_infl" => round(param_infl, digits=2)
             )
     
-    path = "./data/" * method * "/" 
+    path = "../data/" * method * "/" 
     name =  method * 
             "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 

@@ -794,7 +794,7 @@ function process_smoother_nonlinear_obs()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = false
+    mda = true
     shift = 1
     
     # parameters in ranges that will be used in loops
