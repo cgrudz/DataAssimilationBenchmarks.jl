@@ -4,10 +4,10 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 using Debugger
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/methods")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/models")
-@everywhere push!(LOAD_PATH, "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/experiments")
+@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks")
+@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/methods")
+@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/models")
+@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/experiments")
 @everywhere using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, ParallelExperimentDriver
 @everywhere export experiment 
 #@everywhere export wrap_exp

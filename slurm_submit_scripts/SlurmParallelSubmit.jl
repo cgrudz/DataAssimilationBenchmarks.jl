@@ -2,11 +2,11 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
-push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/data")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/methods")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/models")
+#push!(LOAD_PATH, "/home/cgrudzien/DataAssimilationBenchmarks/experiments")
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
 
 ########################################################################################################################
@@ -17,18 +17,18 @@ using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debu
 # time series are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts01 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-ts02 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-ts03 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
-ts04 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
-ts05 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
-ts06 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.30_nanl_50000_spin_5000_h_0.010.jld"
-ts07 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.35_nanl_50000_spin_5000_h_0.010.jld"
-ts08 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.40_nanl_50000_spin_5000_h_0.010.jld"
-ts09 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.45_nanl_50000_spin_5000_h_0.010.jld"
-ts10 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.50_nanl_50000_spin_5000_h_0.010.jld"
-ts11 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.55_nanl_50000_spin_5000_h_0.010.jld"
-ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.60_nanl_50000_spin_5000_h_0.010.jld"
+ts01 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+ts02 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+ts03 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
+ts04 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
+ts05 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
+ts06 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.30_nanl_50000_spin_5000_h_0.010.jld"
+ts07 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.35_nanl_50000_spin_5000_h_0.010.jld"
+ts08 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.40_nanl_50000_spin_5000_h_0.010.jld"
+ts09 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.45_nanl_50000_spin_5000_h_0.010.jld"
+ts10 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.50_nanl_50000_spin_5000_h_0.010.jld"
+ts11 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.55_nanl_50000_spin_5000_h_0.010.jld"
+ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.60_nanl_50000_spin_5000_h_0.010.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld"
 #time_series = "./data/timeseries/l96_timeseries_seed_0000_dim_40_diff_0.10_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld"
 ########################################################################################################################
@@ -142,8 +142,8 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 #                    for N in N_ens
 #                        for s_infl in state_infl
 #                            if incomplete == true
-#                                tanl = parse(Float64,ts[75:78])
-#                                diffusion = parse(Float64,ts[58:61])
+#                                tanl = parse(Float64,ts[76:79])
+#                                diffusion = parse(Float64,ts[59:62])
 #                                name = method *
 #                                            "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
 #                                            "_diffusion_" * rpad(diffusion, 4, "0") *
@@ -204,7 +204,7 @@ ts12 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
 
 # incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = false
+incomplete = true 
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
@@ -220,20 +220,19 @@ seed = 0
 mdas = [false, true]
 
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
-#lags = 1:3:52
-lags = 55:3:64
+lags = 1:3:64
 shifts = [1]
 #lags = [1, 2, 4, 8, 16, 32, 64]
 
 # observation parameters, gamma controls nonlinearity
-gammas = Array{Float64}(1:11)
-#gammas = [1.0]
+#gammas = Array{Float64}(1:11)
+gammas = [1.0]
 obs_un = 1.0
 obs_dim = 40
 
 # if varying nonlinearity in obs, typically take a single ensemble value
-N_ens = [21]
-#N_ens = 15:2:43
+#N_ens = [21]
+N_ens = 15:2:43
 
 # inflation values, finite size versions should only be 1.0 generally 
 #state_infl = [1.0]
@@ -256,8 +255,8 @@ for mda in mdas
                         for N in N_ens
                             for s_infl in state_infl
                                 if incomplete == true
-                                    tanl = parse(Float64,ts[75:78])
-                                    diffusion = parse(Float64,ts[58:61])
+                                    tanl = parse(Float64,ts[76:79])
+                                    diffusion = parse(Float64,ts[59:62])
                                     name = method *
                                                 "_single_iteration_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
                                                 "_diffusion_" * rpad(diffusion, 4, "0") *
@@ -275,7 +274,7 @@ for mda in mdas
                                                 "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
                                                 ".jld"
 
-                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "_single_iteration/"
+                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/" * method * "_single_iteration/"
                                     try
                                         f = load(fpath*name)
                                     catch
@@ -380,8 +379,8 @@ end
 #                        for N in N_ens
 #                            for s_infl in state_infl
 #                                if incomplete == true
-#                                    tanl = parse(Float64,ts[75:78])
-#                                    diffusion = parse(Float64,ts[58:61])
+#                                    tanl = parse(Float64,ts[76:79])
+#                                    diffusion = parse(Float64,ts[59:62])
 #                                    name = method *
 #                                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
 #                                                "_diffusion_" * rpad(diffusion, 4, "0") *
@@ -429,7 +428,7 @@ end
 #    write(f,"#!/bin/bash\n")
 #    write(f,"#SBATCH -n 1\n")
 #    # slow partition is for Okapi, uncomment when necessary
-#    #write(f,"#SBATCH -p slow\n")
+#    write(f,"#SBATCH -p slow\n")
 #    write(f,"#SBATCH -o ensemble_run.out\n")
 #    write(f,"#SBATCH -e ensemble_run.err\n")
 #    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"iterative_smoother_state\"")
