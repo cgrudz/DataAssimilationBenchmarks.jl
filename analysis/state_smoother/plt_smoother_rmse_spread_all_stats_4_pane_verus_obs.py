@@ -42,9 +42,9 @@ method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
-#mda = "false"
+mda = "false"
 mda = "true"
-total_lag = 53
+total_lag = 65
 total_gamma = 11
 shift = 1
 
@@ -168,7 +168,7 @@ y_tics =  []
 y_vals = np.arange(1, total_lag, 3)
 y_tic_vals = range(len(y_vals), 0, -1)
 for i in range(len(y_vals)):
-    if i % 6 == 0:
+    if i % 3 == 0:
         y_labs.append(str(y_vals[i]))
         y_tics.append(y_tic_vals[i])
 

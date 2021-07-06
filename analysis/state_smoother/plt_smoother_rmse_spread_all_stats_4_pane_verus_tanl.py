@@ -42,9 +42,9 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-#mda = "false"
-mda = "true"
-total_lag = 53
+mda = "false"
+#mda = "true"
+total_lag = 65
 shift = 1
 
 f = h5.File('processed_smoother_state_versus_tanl_diffusion_0.00_nanl_20000_burn_05000_mda_' +\
@@ -165,7 +165,7 @@ y_tics =  []
 y_vals = np.arange(1, total_lag, 3)
 y_tic_vals = range(len(y_vals), 0, -1)
 for i in range(len(y_vals)):
-    if i % 6 == 0:
+    if i % 3 == 0:
         y_labs.append(str(y_vals[i]))
         y_tics.append(y_tic_vals[i])
 
