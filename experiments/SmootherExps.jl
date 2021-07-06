@@ -120,14 +120,12 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
             # we analyze the posterior states that will be discarded in the non-overlapping DAWs
             if shift == lag
-                @bp
                 # for the shift=lag, all states are analyzed and discared, no dummy past states are used
                 # truth follows times minus 1 from the filter and forecast stastistics
                 post_rmse[i + j - 2], post_spread[i + j - 2] = analyze_ensemble(post[:, :, j],
                                                                                 truth[:, i + j - 2])
 
             elseif i > lag 
-                @bp
                 # for lag > shift, we wait for the dummy lag-1-total posterior states to be cycled out
                 # the first posterior starts with the first prior at time 1, later discarded to align stats
                 post_rmse[i - lag + j - 1], post_spread[i - lag + j - 1] = analyze_ensemble(post[:, :, j], 
@@ -168,7 +166,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "state_infl" => round(state_infl, digits=2)
            )
     
-    path = "./data/" * method * "_classic/" 
+    path = "../data/" * method * "_classic/" 
     name = method * 
             "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -369,7 +367,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "param_infl"  => round(param_infl, digits=2)
            )
     
-    path = "./data/" * method * "_classic/" 
+    path = "../data/" * method * "_classic/" 
     name = method * 
             "_classic_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -611,7 +609,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "state_infl" => round(state_infl, digits=2)
            )
     
-    path = "./data/" * method * "_single_iteration/" 
+    path = "../data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -879,7 +877,7 @@ function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,I
         data["tail"] = tail
     end
 
-    path = "./data/" * method * "_single_iteration/" 
+    path = "../data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -1169,7 +1167,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
            )
     
 
-    path = "./data/" * method * "_single_iteration/" 
+    path = "../data/" * method * "_single_iteration/" 
     name = method * "_single_iteration" *
             "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 
@@ -1440,7 +1438,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
            )
     
 
-    path = "./data/" * method * "/"
+    path = "../data/" * method * "/"
     name = method * 
             "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 4, "0") * 

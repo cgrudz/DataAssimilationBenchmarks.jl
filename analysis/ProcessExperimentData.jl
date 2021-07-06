@@ -241,7 +241,7 @@ function process_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = true 
+    mda = false
     diffusion = 0.00
     
     # parameters in ranges that will be used in loops
@@ -272,14 +272,7 @@ function process_smoother_state()
     total_ensembles = length(ensemble_sizes)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-
-    # if shift is 2, we must reset the range of lags
-    if shift == 1
-        lags = 1:3:52
-    elseif shift == 2
-        lags = 4:3:52
-        lags = [2; lags]
-    end
+    lags = 1:3:64
     total_lags = length(lags)
 
     # define the storage dictionary here, looping over the method list
@@ -832,7 +825,7 @@ function process_smoother_nonlinear_obs()
     total_gammas = length(gammas)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:52
+    lags = 1:3:64
     total_lags = length(lags)
     
     # define the storage dictionary here, looping over the method list
@@ -1126,7 +1119,7 @@ function process_smoother_versus_tanl()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true
+    mda = false
     shift = 1
     γ = 1.0
     
@@ -1155,11 +1148,10 @@ function process_smoother_versus_tanl()
                  
 
     tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
-    #tanls = [0.05, 0.10]
     total_tanls = length(tanls)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:52
+    lags = 1:3:64
     total_lags = length(lags)
     
     # define the storage dictionary here, looping over the method list
@@ -1452,7 +1444,7 @@ function process_smoother_versus_shift()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = true
+    mda = false
     γ = 1.0
     
     # parameters in ranges that will be used in loops
@@ -1907,8 +1899,9 @@ end
 
 
 ########################################################################################################################
-#process_smoother_nonlinear_obs()
+#process_smoother_state()
+process_smoother_nonlinear_obs()
 #process_smoother_versus_shift()
-process_smoother_versus_tanl()
+#process_smoother_versus_tanl()
 
 end
