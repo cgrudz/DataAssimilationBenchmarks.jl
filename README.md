@@ -55,9 +55,16 @@ Data processing scripts and visualization scripts (written in Python with Matplo
 included in the "analysis" directory.
 
 
-### Installing this package from Github
+### Installing a dev package from Github
 
-### Installing this 
+Write instructions here
+
+### Installing a dev package from General registries 
+
+Write instructions here
 
 ## To do
-  * Begin general packaging and documentation.
+  * Write installation instructions
+	* Fill out more documentation on the API
+	* Build tests for the library
+
