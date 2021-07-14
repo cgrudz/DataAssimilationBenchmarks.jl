@@ -41,9 +41,9 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#mda = "false"
-mda = "true"
-total_lag = 65
+mda = "false"
+#mda = "true"
+total_lag = 92
 total_ens = 44
 shift = 1
 

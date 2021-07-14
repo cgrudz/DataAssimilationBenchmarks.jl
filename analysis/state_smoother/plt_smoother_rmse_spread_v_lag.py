@@ -17,13 +17,13 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 #tanl = 0.10
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
 ensemble = 3
-total_lag = 53
+total_lag = 92
 shift = 1
 #shift = 2
 plot_range = len(range(1,total_lag,3))
@@ -147,8 +147,8 @@ ax0.set_yticks(np.arange(0,31,2)*.01)
 
 ax1.set_xlim([0.5, total_lag])
 ax0.set_xlim([0.5, total_lag])
-ax1.set_xticks(range(1, total_lag,3))
-ax0.set_xticks(range(1, total_lag ,3))
+ax1.set_xticks(range(1, total_lag,6))
+ax0.set_xticks(range(1, total_lag,6))
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
