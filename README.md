@@ -36,7 +36,7 @@ The directory is structured as follows:
   * data - this is an input / output directory for the inputs to and ouptuts from experiments.
   * scratch - this is a storage directory for backups
   * analysis - contains auxilliary scripts for batch processing experiment results and for plotting in Python
-	* test - contains test cases for the package, currently under development
+  * test - contains test cases for the package, currently under development
 
 ## Installation
 
