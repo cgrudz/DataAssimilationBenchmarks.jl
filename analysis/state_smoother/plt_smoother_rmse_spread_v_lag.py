@@ -12,11 +12,9 @@ import h5py as h5
 
 obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "enks-n-primal-ls_classic", "enks-n-primal-ls_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#tanl = 0.10
 #mda = "false"
 mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']

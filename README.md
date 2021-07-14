@@ -59,9 +59,46 @@ included in the "analysis" directory.
 
 Write instructions here
 
-### Installing a dev package from General registries 
+### Installing a dev package from the Julia General registries 
 
 Write instructions here
+
+## Using solvers in DataAssimilationBenchmarks
+
+Write instructions here
+
+### General API for solvers
+
+Write instructions here
+
+### Currently debugged and validated methods
+
+Write instructions here
+
+## Using experiments in dev package
+
+Write instructions here
+
+### GenerateTimeSeries
+
+Write instructions here
+
+### FilterExps
+
+Write instructions here
+
+### SmootherExps
+
+Write instructions here
+
+### SingleExperimentDriver / ParallelExperimentDriver
+
+Write instructions here
+
+### SlurmExperimentDrivers
+
+Write instructions here
+
 
 ## To do
   * Write installation instructions
