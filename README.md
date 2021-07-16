@@ -30,6 +30,7 @@ This includes code for developing and testing data assimilation schemes in the
 ### Validated methods currently in use
 
 <table>
+<tr>
 <th>
 	<td>Estimator / implemented techniques</td>
 	<td>Tuned multiplicative inflation</td>
@@ -39,14 +40,29 @@ This includes code for developing and testing data assimilation schemes in the
 	<td>Hybridization</td>
 	<td>Multiple data assimilation (general shift and lag)</td>
 <th>
+</tr>
 <tr>
   <td>EnKF (Perturbed Obs.)</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+</tr>
+<tr>
   <td>ETKF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+</tr>
+<tr>
   <td>MLEF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+</tr>
+<tr>
   <td>EnKS</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+</tr>
+<tr>
   <td>ETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+</tr>
+<tr>
   <td>SIETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+</tr>
+<tr>
   <td>IEnKS transform</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+</tr>
+<tr>
   <td>IEnKS bundle</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
 </tr>
 </table>
