@@ -27,6 +27,30 @@ reliability of results across different experimental regimes, with parallel impl
 This includes code for developing and testing data assimilation schemes in the 
 [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) currently, with further models in development.
 
+### Validated methods currently in use
+
+<table>
+<th>
+	<td>Estimator / implemented techniques</td>
+	<td>Tuned multiplicative inflation</td>
+	<td>Adaptive inflation, finite-size formalism (perfect model dual / primal)</td>
+	<td>Adaptive inflation, finite-size formalism (imperfect model)</td>
+	<td>Localization</td>
+	<td>Hybridization</td>
+	<td>Multiple data assimilation (general shift and lag)</td>
+<th>
+<tr>
+  <td>EnKF (Perturbed Obs.)</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+  <td>ETKF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>MLEF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>EnKS</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+  <td>ETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>SIETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>IEnKS transform</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>IEnKS bundle</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+</tr>
+</table>
+
 ### Structure
 The directory is structured as follows:
   * src - contains the main wrapper module
