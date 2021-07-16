@@ -30,16 +30,13 @@ This includes code for developing and testing data assimilation schemes in the
 ### Validated methods currently in use
 
 <table>
-<tr>
-<th>
-	<td>Estimator / implemented techniques</td>
-	<td>Tuned multiplicative inflation</td>
-	<td>Adaptive inflation, finite-size formalism (perfect model dual / primal)</td>
-	<td>Adaptive inflation, finite-size formalism (imperfect model)</td>
-	<td>Localization</td>
-	<td>Hybridization</td>
-	<td>Multiple data assimilation (general shift and lag)</td>
-<th>
+	<th>Estimator / implemented techniques</td>
+	<th>Tuned multiplicative inflation</td>
+	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</td>
+	<th>Adaptive inflation, finite-size formalism (imperfect model)</td>
+	<th>Localization</td>
+	<th>Hybridization</td>
+	<th>Multiple data assimilation (general shift and lag)</td>
 </tr>
 <tr>
   <td>EnKF (Perturbed Obs.)</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
