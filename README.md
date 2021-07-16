@@ -1,4 +1,4 @@
-# DataAssimilationBenchmarks
+# DataAssimilationBenchmarks.jl
 
 ```
   _____        _                         _           _ _       _   _              
@@ -17,7 +17,7 @@
                                                             _/ |                  
                                                            |__/                   
 ```
-## Welcome to DataAssimilationBenchmarks!
+## Welcome to DataAssimilationBenchmarks.jl!
 
 ### Description
 This is my personal data asimilation benchmark research code with an emphasis on testing and validation
