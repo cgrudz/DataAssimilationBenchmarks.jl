@@ -52,7 +52,7 @@ This includes code for developing and testing data assimilation schemes in the
   <td>EnKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>ETKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
+  <td>ETKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
 </tr>
 <tr>
   <td>SIETKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
