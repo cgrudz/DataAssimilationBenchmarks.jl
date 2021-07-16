@@ -30,16 +30,17 @@ This includes code for developing and testing data assimilation schemes in the
 ### Validated methods currently in use
 
 <table>
-	<th>Estimator / implemented techniques</td>
-	<th>Tuned multiplicative inflation</td>
-	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</td>
-	<th>Adaptive inflation, finite-size formalism (imperfect model)</td>
-	<th>Localization</td>
-	<th>Hybridization</td>
-	<th>Multiple data assimilation (general shift and lag)</td>
+<tr>
+	<th>Estimator / implemented techniques</th>
+	<th>Tuned multiplicative inflation</th>
+	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</th>
+	<th>Adaptive inflation, finite-size formalism (imperfect model)</th>
+	<th>Localization</th>
+	<th>Hybridization</th>
+	<th>Multiple data assimilation (general shift and lag)</th>
 </tr>
 <tr>
-  <td>EnKF (Perturbed Obs.)</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+  <td>EnKF (Perturbed Obs.)</td><td>X</td>X<td></td><td></td><td></td><td></td><td>NA</td>
 </tr>
 <tr>
   <td>ETKF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
@@ -48,19 +49,19 @@ This includes code for developing and testing data assimilation schemes in the
   <td>MLEF, right transform)</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>EnKS</td><td>X</td><td></td><td></td><td></td><td></td><td>NA</td>
+  <td>EnKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>ETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>ETKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
 </tr>
 <tr>
-  <td>SIETKS</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>SIETKS</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
 </tr>
 <tr>
-  <td>IEnKS transform</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>IEnKS transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
 </tr>
 <tr>
-  <td>IEnKS bundle</td><td>X</td>X<td></td><td></td><td></td><td></td><td>X</td>
+  <td>IEnKS bundle</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
 </tr>
 </table>
 
