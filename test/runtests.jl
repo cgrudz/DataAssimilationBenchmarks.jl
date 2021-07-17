@@ -1,4 +1,6 @@
 using DataAssimilationBenchmarks
+using DataAssimilationBenchmarks.DeSolvers
+using DataAssimilationBenchmarks.L96
 import("./TestTimeSeriesGeneration.jl")
 
 """import some piece of data for reference (from artifacts) here"""
