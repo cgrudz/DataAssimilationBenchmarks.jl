@@ -241,7 +241,7 @@ function process_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = false
+    mda = true
     diffusion = 0.00
     
     # parameters in ranges that will be used in loops
@@ -272,7 +272,7 @@ function process_smoother_state()
     total_ensembles = length(ensemble_sizes)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:64
+    lags = 1:3:91
     total_lags = length(lags)
 
     # define the storage dictionary here, looping over the method list
@@ -291,6 +291,7 @@ function process_smoother_state()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_ensembles)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_ensembles)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_ensembles)
                 end
         else
             # create storage for lags, inflations and ensembles
@@ -303,6 +304,7 @@ function process_smoother_state()
                 # for iterative schemes, additionally store statistics of iterations
                 data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_inflations, total_ensembles)
                 data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_inflations, total_ensembles)
+                data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_inflations, total_ensembles)
             end
         end
     end
@@ -341,7 +343,16 @@ function process_smoother_state()
                                                              total_lags - k, 
                                                              j + 1
                                                             ] = mean(iter_seq[burn+1: nanl+burn]) 
-                            data[method * "_iteration_std"][total_lags - k, j + 1] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                            data[method * "_iteration_std"][
+                                                            total_lags - k,
+                                                            j + 1
+                                                           ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                            data[method * "_iteration_median"][
+                                                               total_lags - k, 
+                                                               j + 1
+                                                              ] = median(iter_seq[burn+1: nanl+burn]) 
                         end
                     catch
                         # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -358,10 +369,16 @@ function process_smoother_state()
                                                              total_lags - k, 
                                                              j + 1
                                                             ] = Inf 
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - k, 
                                                             j + 1
                                                            ] = Inf 
+                            
+                            data[method * "_iteration_median"][
+                                                               total_lags - k, 
+                                                               j + 1
+                                                              ] = Inf 
                         end
                     end
                 else
@@ -394,11 +411,18 @@ function process_smoother_state()
                                                                  total_inflations + 1 - i, 
                                                                  j+1
                                                                 ] = mean(iter_seq[burn+1: nanl+burn]) 
+                                
                                 data[method * "_iteration_std"][
                                                                 total_lags - k, 
                                                                 total_inflations + 1 - i, 
                                                                 j + 1
                                                                ] = std(iter_seq[burn+1: nanl+burn]) 
+                                
+                                data[method * "_iteration_median"][
+                                                                   total_lags - k, 
+                                                                   total_inflations + 1 - i, 
+                                                                   j + 1
+                                                                  ] = median(iter_seq[burn+1: nanl+burn]) 
                             end
                         catch
                             # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -417,11 +441,18 @@ function process_smoother_state()
                                                                  total_inflations + 1 - i, 
                                                                  j + 1
                                                                 ] = Inf 
+                                
                                 data[method * "_iteration_std"][
                                                                 total_lags - k, 
                                                                 total_inflations + 1 - i, 
                                                                 j + 1
                                                                ] = Inf 
+                                
+                                data[method * "_iteration_median"][
+                                                                   total_lags - k, 
+                                                                   total_inflations + 1 - i, 
+                                                                   j + 1
+                                                                  ] = Inf 
                             end
                         end
                     end
@@ -1899,8 +1930,8 @@ end
 
 
 ########################################################################################################################
-#process_smoother_state()
-process_smoother_nonlinear_obs()
+process_smoother_state()
+#process_smoother_nonlinear_obs()
 #process_smoother_versus_shift()
 #process_smoother_versus_tanl()
 
