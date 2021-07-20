@@ -178,9 +178,6 @@ function rand_orth(N_ens::Int64)
     # and B is a full rank orthogonal matrix
     B, R = qr!(B)
     B * U_p * transpose(B)
-    #B_tmp = B[:, 2:end] * Q
-    #B_tmp = hcat(-b_1, B_tmp)
-    #B_tmp * transpose(B)
 end
 
 
