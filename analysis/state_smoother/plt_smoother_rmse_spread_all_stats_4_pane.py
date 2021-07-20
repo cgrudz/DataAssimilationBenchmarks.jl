@@ -49,6 +49,7 @@ shift = 1
 
 f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
         '_nanl_20000_burn_05000_mda_' + mda + '_shift_' + str(shift).rjust(3,"0")+ '.h5', 'r')
+
 rmse_label_h_positions = [0.115, 0.220, 0.325, 0.430]
 spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
 label_v_positions = [0.336, 0.626, 0.916]
@@ -87,9 +88,6 @@ def find_optimal_values(method, stat, data):
     spread_vals = np.transpose(spread_vals)
 
     return [rmse_vals, spread_vals]
-
-
-
 
 
 color_map = sns.color_palette("husl", 101)

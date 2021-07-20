@@ -35,7 +35,6 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    @bp
     nanl = 25
 
     # set seed 

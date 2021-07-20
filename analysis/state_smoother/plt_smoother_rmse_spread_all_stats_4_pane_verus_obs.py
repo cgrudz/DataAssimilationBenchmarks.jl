@@ -41,7 +41,6 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#tanl = 0.10
 #mda = "false"
 mda = "true"
 total_lag = 65
