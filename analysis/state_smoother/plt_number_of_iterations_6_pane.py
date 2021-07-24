@@ -10,7 +10,7 @@ import ipdb
 from matplotlib.colors import LogNorm
 import h5py as h5
 
-methods = ["ienks-transform", "ienks-transform", "ienks-n-transform"]
+methods = ["ienks-transform", "ienks-n-transform", "ienks-transform"]
 tanl = 0.05
 total_lag = 92
 total_ens = 44
@@ -104,7 +104,7 @@ scale_list = [ax0,axa]
 j = 0
 
 for method in methods:
-    if j == 0 or j == 4:
+    if j == 0 or j == 2:
         f = fsda
     else:
         f = fmda
@@ -187,8 +187,8 @@ fig_title = "Iteration statistics, shift 1, $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.210, .905, "IEnKS SDA", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
-plt.figtext(.500, .905, "IEnKS MDA", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
-plt.figtext(.790, .905, "IEnKS-N", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
+plt.figtext(.500, .905, "IEnKS-N", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
+plt.figtext(.790, .905, "IEnKS MDA", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
 
 plt.figtext(.025, .2925, r'Std', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.025, .7075, r'Mean', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

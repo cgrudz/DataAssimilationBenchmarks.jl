@@ -14,7 +14,7 @@ obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-mda = "false"
+#mda = "false"
 mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
@@ -118,9 +118,9 @@ for meth in method_list:
         elif meth == "ienks-n-transform":
             meth_name = "IEnKS-N"
         elif meth == "lin-ienks-transform":
-            meth_name = "LIEnKS"
+            meth_name = "Lin-IEnKS"
         elif meth == "lin-ienks-n-transform":
-            meth_name = "LIEnKS-N"
+            meth_name = "Lin-IEnKS-N"
         
         line_labs.append(meth_name + ' ' + stat_name)
         k+=1 
@@ -150,14 +150,14 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax1.set_yscale('log')
 
 if mda == "true":
-    title = 'MDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'MDA, inflation / lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
  
 else:
     title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
-plt.figtext(.05, .04, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)
-plt.figtext(.95, .04, r'Spread versus $N_e$', horizontalalignment='right', verticalalignment='top', fontsize=24)
+plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)
+plt.figtext(.95, .05, r'Spread versus $N_e$', horizontalalignment='right', verticalalignment='top', fontsize=24)
 plt.figtext(.50, .02, title, horizontalalignment="center", verticalalignment='center', fontsize=24)
 
 plt.show()

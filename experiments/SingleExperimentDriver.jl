@@ -46,7 +46,7 @@ end
 # the model twin.  
 
 # path to time series directory
-path = "./data/time_series/"
+path = "../data/time_series/"
 
 # file names
 fname = "l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
@@ -66,7 +66,7 @@ time_series = path * fname
 # time_series, scheme, seed, obs_un, obs_dim, γ, N_ens, infl = args
 
 function filter_state_exp()
-    args = (time_series, "etkf", 0, 1.0, 40, 1.00, 21, 1.03)
+    args = (time_series, "enkf-n-primal", 0, 1.0, 40, 1.00, 21, 1.00)
     filter_state(args)
 end
 
@@ -115,7 +115,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "etks", 0, 32, 16, true, 1.0, 40, 1.0, 21, 1.03)
+    args = (time_series, "enks-n-primal", 0, 10, 1, false, 1.0, 40, 1.0, 21, 1.00)
     single_iteration_state(args)
 end
 
@@ -138,7 +138,7 @@ end
 # time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function iterative_smoother_state_exp()
-    args = (time_series, "ienks-transform", 0, 32, 16, true, 1.0, 40, 1.0, 21, 1.03)
+    args = (time_series, "lin-ienks-n-transform", 0, 10, 1, false, 1.0, 40, 0.0, 21, 1.00)
     iterative_state(args)
 end
 

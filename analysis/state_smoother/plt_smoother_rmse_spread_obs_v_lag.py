@@ -111,9 +111,9 @@ for meth in method_list:
         elif meth == "ienks-n-transform":
             meth_name = "IEnKS-N"
         elif meth == "lin-ienks-transform":
-            meth_name = "LIEnKS"
+            meth_name = "Lin-IEnKS"
         elif meth == "lin-ienks-n-transform":
-            meth_name = "LIEnKS-N"
+            meth_name = "Lin-IEnKS-N"
         
         line_labs.append(meth_name + ' ' + stat_name)
         k+=1 

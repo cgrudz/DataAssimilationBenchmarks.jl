@@ -43,7 +43,7 @@ stats = ["post", "filt", "fore"]
 tanl = 0.05
 #mda = "false"
 mda = "true"
-total_lag = 65
+total_lag = 92
 total_gamma = 11
 shift = 1
 
@@ -133,13 +133,13 @@ for method in method_list:
             scheme = "IEnKS"
 
         elif method == "lin-ienks-transform":
-            scheme = "LIEnKS"
+            scheme = "Lin-IEnKS"
 
         elif method == "ienks-n-transform":
             scheme = "IEnKS-N"
 
         elif method == "lin-ienks-n-transform":
-            scheme = "LIEnKS-N"
+            scheme = "Lin-IEnKS-N"
 
         plt.figtext(rmse_label_h_positions[j], label_v_positions[i % 3], scheme,  
                 horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -350,7 +350,7 @@ else:
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .225, r'Posterior', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.50, .015, r'$\gamma$ parameter', horizontalalignment='center', verticalalignment='center', fontsize=22)
