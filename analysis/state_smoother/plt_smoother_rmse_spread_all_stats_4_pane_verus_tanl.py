@@ -42,9 +42,9 @@ method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-#mda = "false"
+mda = "false"
 mda = "true"
-total_lag = 65
+total_lag = 53
 shift = 1
 
 f = h5.File('processed_smoother_state_versus_tanl_diffusion_0.00_nanl_20000_burn_05000_mda_' +\
@@ -87,8 +87,8 @@ def find_optimal_values(method, stat, data):
     return [rmse_vals, spread_vals]
 
 #color_map = sns.color_palette("husl", 101)
-color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
-#color_map = sns.cubehelix_palette(80, start=.75, rot=.20, reverse=True)
+#color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
+color_map = sns.cubehelix_palette(80, start=.75, rot=1.50, reverse=True, dark=0.25)
 
 
 
@@ -131,13 +131,13 @@ for method in method_list:
             scheme = "IEnKS"
 
         elif method == "lin-ienks-transform":
-            scheme = "LIEnKS"
+            scheme = "Lin-IEnKS"
 
         elif method == "ienks-n-transform":
             scheme = "IEnKS-N"
 
         elif method == "lin-ienks-n-transform":
-            scheme = "LIEnKS-N"
+            scheme = "Lin-IEnKS-N"
 
         plt.figtext(rmse_label_h_positions[j], label_v_positions[i % 3], scheme,  
                 horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -341,14 +341,14 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift " + str(shift) 
+    fig_title = "MDA, ensemble size 21, shift " + str(shift) 
 
 else:
-    fig_title = "SDA Shift " + str(shift) 
+    fig_title = "SDA, ensemble size 21, Shift " + str(shift) 
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .225, r'Posterior', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.50, .015, r'Forecast length $\Delta$t', horizontalalignment='center', verticalalignment='center', fontsize=22)

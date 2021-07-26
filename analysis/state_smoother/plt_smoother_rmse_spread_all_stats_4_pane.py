@@ -37,8 +37,8 @@ ax8a = fig.add_axes([.839, .085, .090, .25])
 ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
-method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
@@ -90,9 +90,8 @@ def find_optimal_values(method, stat, data):
     return [rmse_vals, spread_vals]
 
 
-color_map = sns.color_palette("husl", 101)
-#color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
-#color_map = sns.color_palette("magma", as_cmap=True) 
+#color_map = sns.cubehelix_palette(80, start=3, rot=1.99, as_cmap=True, reverse=True)
+color_map = sns.cubehelix_palette(80, start=3, rot=1.60, as_cmap=True, reverse=True, gamma=0.6, dark=0.05, light=0.85)
 max_scale = 0.30
 min_scale = 0.00
 
@@ -144,13 +143,13 @@ for method in method_list:
             scheme = "IEnKS"
 
         elif method == "lin-ienks-transform":
-            scheme = "LIEnKS"
+            scheme = "Lin-IEnKS"
 
         elif method == "ienks-n-transform":
             scheme = "IEnKS-N"
 
         elif method == "lin-ienks-n-transform":
-            scheme = "LIEnKS-N"
+            scheme = "Lin-IEnKS-N"
 
         plt.figtext(rmse_label_h_positions[j], label_v_positions[i % 3], scheme,  
                 horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -338,7 +337,7 @@ else:
 
 
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .225, r'Posterior', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.50, .015, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=22)
