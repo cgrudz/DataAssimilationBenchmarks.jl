@@ -241,15 +241,17 @@ function process_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = true
+    mda = false
     diffusion = 0.00
     
     # parameters in ranges that will be used in loops
     method_list = [
                    "etks_classic", 
-                   "enks-n-primal_classic", 
+                   "enks-n-primal_classic",
+                   "mles-n-transform_classic", 
                    "etks_single_iteration", 
-                   "enks-n-primal_single_iteration", 
+                   "enks-n-primal_single_iteration",
+                   "mles-n-transform_single_iteration", 
                    "ienks-transform",
                    "ienks-n-transform",
                    "lin-ienks-transform",
@@ -279,6 +281,7 @@ function process_smoother_state()
     data = Dict{String, Array{Float64}}()
     for method in method_list
         if method[1:6] == "enks-n" || 
+            method[1:6] == "mles-n" || 
             method[1:7] == "ienks-n" ||
             method[1:11] == "lin-ienks-n"
                 # multiplicative inflation parameter should always be one, there is no dimension for this variable
@@ -316,6 +319,7 @@ function process_smoother_state()
             # loop ensemble size , last axis
             for j in 0:total_ensembles - 1
                 if method[1:6] == "enks-n" || 
+                    method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     try
@@ -470,6 +474,7 @@ function process_smoother_state()
         for lag in lags
             for N_ens in ensemble_sizes
                 if method[1:6] == "enks-n" ||
+                    method[1:6] == "mles-n" ||
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     
@@ -852,7 +857,7 @@ function process_smoother_nonlinear_obs()
                 ]
                  
 
-    gammas = Array{Float64}(1:11)
+    gammas = Array{Float64}(0:11)
     total_gammas = length(gammas)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
@@ -875,6 +880,7 @@ function process_smoother_nonlinear_obs()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_gammas)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_gammas)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_gammas)
                 end
         else
             for analysis in analysis_list
@@ -885,6 +891,7 @@ function process_smoother_nonlinear_obs()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_inflations, total_gammas)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_inflations, total_gammas)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_inflations, total_gammas)
                 end
             end
         end
@@ -924,10 +931,16 @@ function process_smoother_nonlinear_obs()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = mean(iter_seq[burn+1: nanl+burn]) 
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j, 
                                                             k + 1
                                                            ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                            data[method * "_iteration_median"][
+                                                               total_lags - j, 
+                                                               k + 1
+                                                              ] = median(iter_seq[burn+1: nanl+burn]) 
                             
                         end
                     catch
@@ -945,10 +958,17 @@ function process_smoother_nonlinear_obs()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = Inf
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j, 
                                                             k + 1
                                                            ] = Inf 
+                        
+                            data[method * "_iteration_median"][
+                                                               total_lags - j, 
+                                                               k + 1
+                                                              ] = Inf 
+                        
                         end
                     end
                 else
@@ -987,6 +1007,13 @@ function process_smoother_nonlinear_obs()
                                                                 total_inflations + 1 - i, 
                                                                 k + 1, 
                                                                ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = median(iter_seq[burn+1: nanl+burn]) 
+                            
                             end
                         catch
                             # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -998,6 +1025,27 @@ function process_smoother_nonlinear_obs()
                                                                                k + 1, 
                                                                               ] = Inf 
                                 end
+                            end
+                            
+                            if method[1:5] == "ienks"
+                                data[method * "_iteration_mean"][
+                                                                 total_lags - j,
+                                                                 total_inflations + 1 - i, 
+                                                                 k + 1, 
+                                                                ] = Inf 
+
+                                data[method * "_iteration_std"][
+                                                                total_lags - j,
+                                                                total_inflations + 1 - i, 
+                                                                k + 1, 
+                                                               ] = Inf 
+                            
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = Inf 
+                            
                             end
                         end
                     end
@@ -1158,8 +1206,10 @@ function process_smoother_versus_tanl()
     method_list = [
                    "etks_classic",
                    "enks-n-primal_classic",
+                   "mles-n-transform_classic",
                    "etks_single_iteration",
                    "enks-n-primal_single_iteration",
+                   "mles-n-transform_single_iteration",
                    "ienks-transform",
                    "ienks-n-transform",
                    "lin-ienks-transform",
@@ -1182,13 +1232,14 @@ function process_smoother_versus_tanl()
     total_tanls = length(tanls)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:64
+    lags = 1:3:52
     total_lags = length(lags)
     
     # define the storage dictionary here, looping over the method list
     data = Dict{String, Array{Float64}}()
     for method in method_list
         if method[1:6] == "enks-n" || 
+            method[1:6] == "mles-n" || 
             method[1:7] == "ienks-n" ||
             method[1:11] == "lin-ienks-n"
                 # multiplicative inflation parameter should always be one, there is no dimension for this variable
@@ -1201,6 +1252,7 @@ function process_smoother_versus_tanl()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_tanls)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_tanls)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_tanls)
                 end
         else
             for analysis in analysis_list
@@ -1211,6 +1263,7 @@ function process_smoother_versus_tanl()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_inflations, total_tanls)
                 end
             end
         end
@@ -1223,6 +1276,7 @@ function process_smoother_versus_tanl()
             # loop lags, first axis
             for j in 0:total_lags - 1
                 if method[1:6] == "enks-n" || 
+                    method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     try
@@ -1250,10 +1304,16 @@ function process_smoother_versus_tanl()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = mean(iter_seq[burn+1: nanl+burn]) 
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j, 
                                                             k + 1
                                                            ] = std(iter_seq[burn+1: nanl+burn]) 
+                            
+                            data[method * "_iteration_median"][
+                                                               total_lags - j, 
+                                                               k + 1
+                                                              ] = std(iter_seq[burn+1: nanl+burn]) 
                             
                         end
                     catch
@@ -1271,10 +1331,17 @@ function process_smoother_versus_tanl()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = Inf
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j, 
                                                             k + 1
                                                            ] = Inf 
+                        
+                            data[method * "_iteration_median"][
+                                                               total_lags - j, 
+                                                               k + 1
+                                                              ] = Inf 
+                        
                         end
                     end
                 else
@@ -1313,6 +1380,12 @@ function process_smoother_versus_tanl()
                                                                 total_inflations + 1 - i, 
                                                                 k + 1, 
                                                                ] = std(iter_seq[burn+1: nanl+burn]) 
+                                
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = std(iter_seq[burn+1: nanl+burn]) 
                             end
                         catch
                             # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -1324,6 +1397,26 @@ function process_smoother_versus_tanl()
                                                                                k + 1, 
                                                                               ] = Inf 
                                 end
+                            end
+                            
+                            if method[1:5] == "ienks"
+                                data[method * "_iteration_mean"][
+                                                                 total_lags - j,
+                                                                 total_inflations + 1 - i, 
+                                                                 k + 1, 
+                                                                ] = Inf 
+
+                                data[method * "_iteration_std"][
+                                                                total_lags - j,
+                                                                total_inflations + 1 - i, 
+                                                                k + 1, 
+                                                               ] = Inf 
+                                
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = Inf 
                             end
                         end
                     end
@@ -1341,6 +1434,7 @@ function process_smoother_versus_tanl()
         for tanl in tanls
             for lag in lags
                 if method[1:6] == "enks-n" || 
+                    method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     
@@ -1475,15 +1569,17 @@ function process_smoother_versus_shift()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = false
+    mda = true
     γ = 1.0
     
     # parameters in ranges that will be used in loops
     method_list = [
                    "etks_classic",
                    "enks-n-primal_classic",
+                   "mles-n-transform_classic",
                    "etks_single_iteration",
                    "enks-n-primal_single_iteration",
+                   "mles-n-transform_single_iteration",
                    "ienks-transform",
                    "ienks-n-transform",
                    "lin-ienks-transform",
@@ -1514,6 +1610,7 @@ function process_smoother_versus_shift()
     data = Dict{String, Array{Float64}}()
     for method in method_list
         if method[1:6] == "enks-n" || 
+            method[1:6] == "mles-n" || 
             method[1:7] == "ienks-n" ||
             method[1:11] == "lin-ienks-n"
                 # multiplicative inflation parameter should always be one, there is no dimension for this variable
@@ -1526,6 +1623,7 @@ function process_smoother_versus_shift()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef, total_lags, total_shifts)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_shifts)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_shifts)
                 end
         else
             for analysis in analysis_list
@@ -1536,6 +1634,7 @@ function process_smoother_versus_shift()
                     # for iterative schemes, additionally store statistics of iterations
                     data[method * "_iteration_mean"] = Array{Float64}(undef,  total_lags, total_inflations, total_shifts)
                     data[method * "_iteration_std"] = Array{Float64}(undef, total_lags, total_inflations, total_shifts)
+                    data[method * "_iteration_median"] = Array{Float64}(undef, total_lags, total_inflations, total_shifts)
                 end
             end
         end
@@ -1548,6 +1647,7 @@ function process_smoother_versus_shift()
             # loop lags, first axis
             for j in 0:total_lags - 1
                 if method[1:6] == "enks-n" || 
+                    method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     try
@@ -1579,10 +1679,17 @@ function process_smoother_versus_shift()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = mean(iter_seq[iter_burn+1: end]) 
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j,
                                                             k + 1,
                                                            ] = std(iter_seq[iter_burn+1: end]) 
+                       
+                            data[method * "_iteration_median"][
+                                                               total_lags - j,
+                                                               k + 1,
+                                                              ] = median(iter_seq[iter_burn+1: end]) 
+                       
                         end
                     catch
                         # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -1599,10 +1706,16 @@ function process_smoother_versus_shift()
                                                              total_lags - j,
                                                              k + 1, 
                                                             ] = Inf 
+                            
                             data[method * "_iteration_std"][
                                                             total_lags - j,
                                                             k + 1,
                                                            ] = Inf 
+                            
+                            data[method * "_iteration_median"][
+                                                               total_lags - j,
+                                                               k + 1,
+                                                              ] = Inf 
                         end
                     end
                 else
@@ -1645,6 +1758,13 @@ function process_smoother_versus_shift()
                                                                 total_inflations + 1 - i, 
                                                                 k + 1, 
                                                                ] = std(iter_seq[iter_burn+1: end]) 
+                            
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = median(iter_seq[iter_burn+1: end]) 
+                            
                             end
                         catch
                             # file is missing or corrupted, load infinity to represent an incomplete or unstable experiment
@@ -1669,6 +1789,13 @@ function process_smoother_versus_shift()
                                                                 total_inflations + 1 - i, 
                                                                 k + 1, 
                                                                ] = Inf 
+                            
+                                data[method * "_iteration_median"][
+                                                                   total_lags - j,
+                                                                   total_inflations + 1 - i, 
+                                                                   k + 1, 
+                                                                  ] = Inf 
+                            
                             end
                         end
                     end
@@ -1686,6 +1813,7 @@ function process_smoother_versus_shift()
         for shift in shifts
             for lag in lags
                 if method[1:6] == "enks-n" || 
+                    method[1:6] == "mles-n" || 
                     method[1:7] == "ienks-n" ||
                     method[1:11] == "lin-ienks-n"
                     
