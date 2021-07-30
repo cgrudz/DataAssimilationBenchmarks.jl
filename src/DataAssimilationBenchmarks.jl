@@ -11,7 +11,11 @@ include("../models/L96.jl")
 ########################################################################################################################
 
 function __init__()
+    print("Welcome to DataAssimilationBenchmarks, use the Info() method for more information on how to use this software.\n")
 
+end
+
+function Info()
     print("  _____        _                         ")
     printstyled("_",color=9)
     print("           ")
@@ -63,7 +67,7 @@ function __init__()
     print(" and visualization scripts (written in Python with Matplotlib and Seaborn) are included in the \"analysis\"\n")
     print(" directory. \n")
     print(" \n")
-    print(" Instructions on how to install the dev version of this package are included in the README.md")
+    print(" Instructions on how to install the dev version of this package are included in the README.md\n")
 
     nothing
 

@@ -12,6 +12,8 @@ import h5py as h5
 
 obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 #mda = "false"
@@ -112,6 +114,10 @@ for meth in method_list:
         elif meth == "enks-n-primal_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
+            meth_name = "SIETKS-N"
+        elif meth == "mles-n-transform_classic":
+            meth_name = "EnKS-N"
+        elif meth == "mles-n-transform_single_iteration":
             meth_name = "SIETKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"

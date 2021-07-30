@@ -12,11 +12,13 @@ import h5py as h5
 
 obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
+#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#mda = "false"
-mda = "true"
+mda = "false"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
@@ -74,6 +76,7 @@ k = 0
 for meth in method_list:
     for stat in stats:
         if meth[:6] == "enks-n" or \
+           meth[:6] == "mles-n" or \
            meth[:7] == "ienks-n" or \
            meth[:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[meth +"_" + stat + "_rmse"]))
@@ -107,10 +110,14 @@ for meth in method_list:
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal-ls_classic":
             meth_name = "EnKS-N-ls"
+        elif meth == "mles-n-transform_classic":
+            meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
             meth_name = "SIETKS-N"
         elif meth == "enks-n-primal-ls_single_iteration":
             meth_name = "SIETKS-N-ls"
+        elif meth == "mles-n-transform_single_iteration":
+            meth_name = "SIETKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
