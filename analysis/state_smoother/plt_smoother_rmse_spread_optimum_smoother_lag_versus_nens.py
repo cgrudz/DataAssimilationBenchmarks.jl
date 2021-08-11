@@ -24,7 +24,7 @@ color_list = ['#d95f02', '#7570b3', '#1b9e77']
 total_lag = 92
 shift = 1
 tanl = 0.05
-ensemble_sizes = range(15,44,2)
+ensemble_sizes = range(15,42,2)
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
@@ -156,7 +156,7 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax1.set_yscale('log')
 
 if mda == "true":
-    title = 'MDA, inflation / lag optimized for smoother RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'MDA, lag optimized for smoother RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
  
 else:
     title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 

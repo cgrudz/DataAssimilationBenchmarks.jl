@@ -13,7 +13,7 @@ import h5py as h5
 methods = ["ienks-transform", "ienks-n-transform", "ienks-transform"]
 tanl = 0.05
 total_lag = 92
-total_ens = 44
+total_ens = 42
 shift = 1
 
 fsda = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0") +'_nanl_20000_burn_05000_mda_false' + \

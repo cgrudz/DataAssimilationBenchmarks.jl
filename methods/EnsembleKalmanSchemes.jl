@@ -2122,14 +2122,12 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                 ens_mean_iter = ens_mean_0 + anom_0 * w
                 
                 if norm(Δw) < tol
-                    @bp
                     i +=1
                     break
                 end
             end
             
             # update the iteration count
-            @bp
             i+=1
         end
         # step 3: compute posterior initial condiiton and propagate forward in time

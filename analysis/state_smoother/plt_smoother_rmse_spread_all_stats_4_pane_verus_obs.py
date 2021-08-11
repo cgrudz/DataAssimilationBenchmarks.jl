@@ -41,8 +41,8 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#mda = "false"
-mda = "true"
+mda = "false"
+#mda = "true"
 total_lag = 86
 total_gamma = 11
 shift = 1
@@ -176,8 +176,8 @@ for i in range(len(y_vals)):
         y_labs.append(str(y_vals[i]))
         y_tics.append(y_tic_vals[i])
 
-y_labs.append(str(y_vals[-1]))
-y_tics.append(y_tic_vals[-1])
+#y_labs.append(str(y_vals[-1]))
+#y_tics.append(y_tic_vals[-1])
 
 ax0.tick_params(
         labelsize=20)

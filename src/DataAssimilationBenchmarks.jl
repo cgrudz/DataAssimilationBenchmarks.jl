@@ -10,11 +10,6 @@ include("../models/L96.jl")
 ########################################################################################################################
 ########################################################################################################################
 
-function __init__()
-    print("Welcome to DataAssimilationBenchmarks, use the Info() method for more information on how to use this software.\n")
-
-end
-
 function Info()
     print("  _____        _                         ")
     printstyled("_",color=9)

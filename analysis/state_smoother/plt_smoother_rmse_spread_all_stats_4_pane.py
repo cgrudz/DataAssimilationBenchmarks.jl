@@ -46,7 +46,7 @@ tanl = 0.05
 mda = "false"
 #mda = "true"
 total_lag = 92
-total_ens = 44
+total_ens = 42
 shift = 1
 
 f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
