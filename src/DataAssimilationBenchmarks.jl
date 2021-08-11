@@ -1,4 +1,4 @@
-#######################################################################################################################
+########################################################################################################################
 module DataAssimilationBenchmarks
 ########################################################################################################################
 ########################################################################################################################
@@ -17,12 +17,12 @@ function __init__()
     print("           ")
     printstyled("_",color=2)
     print(" _       _   ")
-    printstyled("_              \n",color=13) 
+    printstyled("_              \n",color=13)
     print(" |  __ \\      | |          /\\           ")
     printstyled("(_)",color=9)
     printstyled("         (_)",color=2)
     print(" |     | | ")
-    printstyled("(_)             \n",color=13)  
+    printstyled("(_)             \n",color=13)
     print(" | |  | | __ _| |_ __ _   /  \\   ___ ___ _ _ __ ___  _| | __ _| |_ _  ___  _ __   \n")
     print(" | |  | |/ _` | __/ _` | / /\\ \\ / __/ __| | '_ ` _ \\| | |/ _` | __| |/ _ \\| '_ \\  \n")
     print(" | |__| | (_| | || (_| |/ ____ \\\\__ \\__ \\ | | | | | | | | (_| | |_| | (_) | | | | \n")
@@ -51,7 +51,7 @@ function __init__()
     print(" This is my personal data asimilation benchmark research code with an emphasis on testing and validation\n")
     print(" of ensemble-based filters and smoothers in chaotic toy models. DataAssimilationBenchmarks is a wrapper\n")
     print(" library including the core numerical solvers for ordinary and stochastic differential  equations,\n")
-    print(" solvers for data assimilation routines and the core process model code for running twin experiments\n") 
+    print(" solvers for data assimilation routines and the core process model code for running twin experiments\n")
     print(" with benchmark models. These methods can be run stand-alone in other programs by calling these\n")
     print(" functions from the DeSolvers, EnsembleKalmanSchemes and L96 sub-modules from this library.\n")
     print(" Future solvers and models will be added as sub-modules in the methods and models directories respectively.\n")
