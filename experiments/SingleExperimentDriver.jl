@@ -29,7 +29,7 @@ export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_s
 # seed, state_dim, tanl, nanl, spin, diffusion, F = args
 
 function l96_time_series_exp()
-    args = (0, 40, 0.60, 50000, 5000, 0.00, 8.0)
+    args = (0, 40, 0.10, 50000, 5000, 0.00, 8.0)
     l96_time_series(args)
 end
 

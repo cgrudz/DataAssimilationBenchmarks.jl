@@ -43,7 +43,7 @@ stats = ["post", "filt", "fore"]
 tanl = 0.05
 #mda = "false"
 mda = "true"
-total_lag = 92
+total_lag = 86
 total_gamma = 11
 shift = 1
 
@@ -91,8 +91,9 @@ def find_optimal_values(method, stat, data):
 
 
 #color_map = sns.color_palette("husl", 301)
-#color_map = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True, reverse=True) 
-color_map = sns.color_palette("cubehelix", as_cmap=True)
+#color_map = sns.cubehelix_palette(start=.1, rot=-.75, as_cmap=True, reverse=True) 
+color_map = sns.cubehelix_palette(start=.1, rot=-1.75, as_cmap=True, reverse=True) 
+#color_map = sns.color_palette("cubehelix", as_cmap=True)
 #color_map = sns.color_palette("crest_r", as_cmap=True)
 #color_map = sns.cubehelix_palette(80, reverse=True)
 max_scale = 0.50
@@ -110,9 +111,13 @@ for method in method_list:
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
+            rmse = rmse[:, 1:total_gamma]
             spread = np.transpose(np.array(f[method +'_' + stat + '_spread']))
+            spread = spread[:, 1:total_gamma]
         else:
             rmse, spread = find_optimal_values(method, stat, f)
+            rmse = rmse[:, 1:total_gamma]
+            spread = spread[:, 1:total_gamma]
 
         sns.heatmap(rmse, linewidth=0.5, ax=rmse_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
         sns.heatmap(spread, linewidth=0.5, ax=spread_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)

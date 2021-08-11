@@ -38,7 +38,9 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
@@ -105,6 +107,7 @@ for method in method_list:
     for stat in stats:
         #ipdb.set_trace()
         if method[0:6] == "enks-n" or \
+           method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
@@ -130,6 +133,9 @@ for method in method_list:
         elif method == "enks-n-primal-ls_classic":
             scheme = "EnKS-N"
 
+        elif method == "mles-n-transform_classic":
+            scheme = "EnKS-N"
+
         elif method == "enks-n-dual_single_iteration":
             scheme = "SIETKS-N"
 
@@ -137,6 +143,9 @@ for method in method_list:
             scheme = "SIETKS-N"
 
         elif method == "enks-n-primal-ls_single_iteration":
+            scheme = "SIETKS-N"
+
+        elif method == "mles-n-transform_single_iteration":
             scheme = "SIETKS-N"
 
         elif method == "ienks-transform":

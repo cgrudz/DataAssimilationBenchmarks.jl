@@ -38,11 +38,12 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 
 f = h5.File('processed_smoother_state_v_shift_diffusion_0.00_tanl_' + str(tanl).ljust(4, "0") + '_nanl_20000_burn_05000_mda_' +\
         mda + '.h5', 'r')
@@ -91,7 +92,8 @@ def find_optimal_values(method, stat, data):
 
 #color_map = sns.color_palette("husl", 101)
 #color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
-color_map = sns.color_palette("cubehelix", as_cmap=True)
+#color_map = sns.color_palette("cubehelix", as_cmap=True)
+color_map = sns.cubehelix_palette(start=.1, rot=-1.75, as_cmap=True, reverse=True)
 max_scale = 0.50
 min_scale = 0.00
 
@@ -104,6 +106,7 @@ j = 0
 for method in method_list:
     for stat in stats:
         if method[0:6] == "enks-n" or \
+           method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
@@ -123,7 +126,13 @@ for method in method_list:
         elif method == "enks-n-primal_classic":
             scheme = "EnKS-N"
 
+        elif method == "mles-n-transform_classic":
+            scheme = "EnKS-N"
+
         elif method == "enks-n-primal_single_iteration":
+            scheme = "SIETKS-N"
+
+        elif method == "mles-n-transform_single_iteration":
             scheme = "SIETKS-N"
 
         elif method == "ienks-transform":
