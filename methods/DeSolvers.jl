@@ -22,7 +22,7 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
     Arguments are given as
-    x          -- array of a single state possibly including parameter values
+    x          -- array or sub-array of a single state possibly including parameter values
     t          -- time point
     kwargs     -- this should include dx_dt, the paramters for the dx_dt and optional arguments
     dx_dt      -- time derivative function with arguments x and dx_params

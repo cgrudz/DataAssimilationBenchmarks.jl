@@ -140,7 +140,7 @@ state_dim  -- keyword for parameter estimation, dimension of the dynamic state <
 ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
 
 ```
-with reduced options for the less-commonly used deterministic second order Taylor and first order Euler(-Maruyama) schemes.
+with reduced options for the less-commonly used first order Euler(-Maruyama) scheme.
 
 The time steppers over-write the value of `x` in place as a vector or a view of an array for efficient ensemble integration.
 We follow the convention in data assimilation of the extended state formalism for parameter estimation where the parameter sample
@@ -162,14 +162,41 @@ When specifically generating the truth-twin for the Lorenz96 model with additive
 See the benchmarks on the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) for a full discussion of
 statistically robust model configurations.
 
+### API for data assimilation solvers
 
-### Currently debugged and validated methods
+Different filter and smoothing schemes are run through the outer-loop routines including
 
-Write instructions here
+```{julia}
+ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},
+                         obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+
+ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any};
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10) where {T1 <: CovM}
+
+CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+```
+
+The type of analysis to be passed to the transform step is specified with the `analysis` string.  Observations
+for the filter schemes correspond to information available at a single analysis time while the ls (lag-shift)
+smoothers require an array of observations corresponding to all analysis times within the DAW.  Observation
+covariances should be typed according to the type union above for efficiency.  The state_inf is a required
+tuneable parameter for multiplicative covariance inflation.   Extended state parameter estimation covariance
+inflation can be specified in `kwargs`.  These outer loops will pass the required values to the `transform` 
+function that generates the ensemble transform for conditioning on observations.  Different outer-loop 
+schemes can be built around the `transform` function alone in order to use validated ensemble transform 
+schemes.  Utility scripts to generate observation operators, analyze ensemble statistics, etc, are included
+in the EnsembleKalmanSchemes.jl sub-module.
 
 ## Using experiments in dev package
 
-Write instructions here
 
 ### GenerateTimeSeries
 
