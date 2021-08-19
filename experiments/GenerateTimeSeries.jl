@@ -100,7 +100,7 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
            "_spin_" * lpad(spin, 4, "0") * 
            "_h_" * rpad(h, 5, "0") * 
            ".jld"
-    path = "./data/time_series/"
+    path = "../data/time_series/"
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 
