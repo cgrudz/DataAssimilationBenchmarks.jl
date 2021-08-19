@@ -78,7 +78,7 @@ The directory is structured as follows:
 
 ## Installation
 
-The main package DataAssimilationBenchmarks.jl is a wrapper library including the core numerical solvers 
+The main module DataAssimilationBenchmarks.jl is a wrapper module including the core numerical solvers 
 for ordinary and stochastic differential equations, solvers for data assimilation routines and the core 
 process model code for running twin experiments with benchmark models. These methods can be run 
 stand-alone in other programs by calling these functions from the DeSolvers, EnsembleKalmanSchemes and 
@@ -98,7 +98,7 @@ included in the "analysis" directory.
 In order to install the dev version to your Julia environment, you can use the following commands in the REPL
 
 ```{julia}
-(@v1.6) pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
+pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 ```
 
 The installed version will be included in your
@@ -109,13 +109,12 @@ on Linux and the analogous directory with respect Windows and Mac systems.
 
 ### Installing a dev package from the Julia General registries 
 
-Currently DataAssimilationBenchmarks.jl is still pending integration into the Julia General registries.  When this is available,
-instructions will be posted here.
+Currently DataAssimilationBenchmarks.jl is still pending integration into the Julia General registries.
 
 ## Using solvers in DataAssimilationBenchmarks
 
 The methods directory currently contains two types of solvers, differential equation solvers in the DeSolvers.jl sub-module,
-and ensemble-Kalman-filter-based data assimilation routines in the EnsembleKalmanSchemes.jl sub-module.
+and ensemble-Kalman-filter-based data assimilation routines and utilities in the EnsembleKalmanSchemes.jl sub-module.
 
 ### API for differential equation solvers
 
@@ -138,7 +137,6 @@ h          -- numerical discretization step size
 diffusion  -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
 state_dim  -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
 ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
-
 ```
 with reduced options for the less-commonly used first order Euler(-Maruyama) scheme.
 
@@ -149,14 +147,14 @@ should be included as trailing state variables in the columns of the ensemble ar
 ```{julia}
 true == haskey(kwargs, "state_dim")
 ```
-the `state_dim` parameter will specify the dimension of the dynamical states and creat a view of the vector `x` including all entries
+the `state_dim` parameter will specify the dimension of the dynamical states and create a view of the vector `x` including all entries
 up to this index.  The remaining entries in the vector `x` will be passed to the `dx_dt` function in a vector including
 `dx_params` in the leading entries and the extended state entries trailing.  The parameter sample values will remain unchanged
 by the time stepper when the dynamical state entries in `x` are over-written in place.
 
-Setting `diffusion>0` above introduces additive noise to the dynamical system.  The main `rk4_step!` has convergence on order 4.0
-when diffusion is equal to zero, and both strong and weak convergence on order 1.0 when stochasticity is reduced.  Nonetheless,
-this is the recommended out-of-the-box solver for any generic DA simulation for the robust performance over Euler-(Maruyama).
+Setting `diffusion > 0.0` above introduces additive noise to the dynamical system.  The main `rk4_step!` has convergence on order 4.0
+when diffusion is equal to zero, and both strong and weak convergence on order 1.0 when stochasticity is introduced.  Nonetheless,
+this is the recommended out-of-the-box solver for any generic DA simulation for the statistically robust performance, versus Euler-(Maruyama).
 When specifically generating the truth-twin for the Lorenz96 model with additive noise, this should be performed with the
 `l96s_tay2_step!` in the `models/L96.jl` sub-module while the ensemble should be generated with the `rk4_step!`.
 See the benchmarks on the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) for a full discussion of
@@ -164,7 +162,7 @@ statistically robust model configurations.
 
 ### API for data assimilation solvers
 
-Different filter and smoothing schemes are run through the outer-loop routines including
+Different filter and smoothing schemes are run through the routines including
 
 ```{julia}
 ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},
@@ -187,8 +185,8 @@ CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 The type of analysis to be passed to the transform step is specified with the `analysis` string.  Observations
 for the filter schemes correspond to information available at a single analysis time while the ls (lag-shift)
 smoothers require an array of observations corresponding to all analysis times within the DAW.  Observation
-covariances should be typed according to the type union above for efficiency.  The state_inf is a required
-tuneable parameter for multiplicative covariance inflation.   Extended state parameter estimation covariance
+covariances should be typed according to the type union above for efficiency.  The state_infl is a required
+tuneable parameter for multiplicative covariance inflation.   Extended parameter state covariance
 inflation can be specified in `kwargs`.  These outer loops will pass the required values to the `transform` 
 function that generates the ensemble transform for conditioning on observations.  Different outer-loop 
 schemes can be built around the `transform` function alone in order to use validated ensemble transform 
@@ -208,11 +206,11 @@ configuration parameters.  Currently, this only includes the L96s model, with pa
 l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
 seed, state_dim, tanl, nanl, spin, diffusion, F = args
 ```
-The `args` tuple includes the pseudo-random seed `seed`, the size of the Lorenz system `state_dim`, the continuous
-time length between sequential observations / analyses `tanl`, the number of observations / analyses to be saved
+The `args` tuple includes the pseudo-random seed `seed`, the size of the Lorenz system `state_dim`, the length of continuous
+time in between sequential observations / analyses `tanl`, the number of observations / analyses to be saved
 `nanl`, the length of the warm-up integration of the dynamical system solution to guarantee an observation generating 
 process on the attractor `spin`, the diffusion parameter determining the intensity of the random perturbations `diffusion`
-and the forcing paremeter `F`.  This automates the selection of the correct time stepper for the truth twin when using
+and the forcing parameter `F`.  This automates the selection of the correct time stepper for the truth twin when using
 deterministic or stochastic integration.  Results are saved in .jld format in the data directory, assuming the script is
 run from the REPL in the experiments directory.
 
@@ -235,9 +233,9 @@ Similar conventions follow for parameter estimation experiments
 filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Float64,Float64,Int64,Float64,Float64})
 time_series, method, seed, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 ```
-with the exception of including the standard deviation of the initial iid Gaussian draw of the parameter sample
-centered at the true value `param_err`, the standard deviation of the random walk applied to the parameter sample
-after each analysis `param_wlk` and the multiplicative covariance inflation applied separately to the extended parameter
+with the exception of including the standard deviation, `param_err`, of the initial iid Gaussian draw of the parameter sample
+centered at the true value, the standard deviation, `param_wlk`, of the random walk applied to the parameter sample
+after each analysis and the multiplicative covariance inflation applied separately to the extended parameter
 states alone `param_infl`.
 
 The number of analyses in the twin experiment `nanl` is hard-coded currently in the function body of each experiment and
@@ -275,8 +273,8 @@ The `SingleExperimentDriver.jl` is primarily for debugging purposes with tools l
 so that standard inputs can be run with the experiment called with macros.
 
 The `ParallelExperimentDriver.jl` is a simple parallel implementation, though currently lacks a soft-fail when numerical
-instability is encountered.  This means that if a single experiment configuration in the collection fails, the entire
-collection will cancel.  A fix for this is being explored, but if possible the recommendation is to use the slurm submit
+instability is encountered.  This means that if a single experiment configuration in the collection fails due to overflow, the entire
+collection will cancel.  A fix for this is being explored, but the recommendation is to use the slurm submit
 scripts below as templates for generating large parameter grid configurations and running them on servers.
 
 ### SlurmExperimentDrivers
@@ -286,6 +284,14 @@ functions as configurations.  This uses a simple looping strategy, while writing
 to be read by the parallel experiment driver within the `slurm_submit_scripts` directory.  The paralell submit script 
 should be run within the `slurm_submit_scripts` directory to specify the correct paths to the time series data, the
 experiment configuration data and to save to the correct output directory, specified by the method used.
+
+### Processing experiment outputs
+
+The `analysis` directory contains scripts for batch processing the outputs from experiments into time-averaged
+RMSE and spread and arranging these outputs in an array for plotting.  This should be modified based on the
+local paths to stored data.  This will try to load files based on parameter settings written in the name of
+the output .jld file and if this is not available, this will store `Inf` values in the place of missing data.
+
 
 ## To do
 
