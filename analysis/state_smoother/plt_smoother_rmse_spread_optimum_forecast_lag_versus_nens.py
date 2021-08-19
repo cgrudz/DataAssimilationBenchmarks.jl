@@ -149,7 +149,7 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-title = 'MDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+title = r'MDA, $L$ optimized for forecast RMSE, $S$=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)
 plt.figtext(.95, .05, r'Spread versus $N_e$', horizontalalignment='right', verticalalignment='top', fontsize=24)

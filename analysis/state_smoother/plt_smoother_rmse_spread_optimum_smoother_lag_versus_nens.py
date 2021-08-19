@@ -156,10 +156,10 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax1.set_yscale('log')
 
 if mda == "true":
-    title = 'MDA, lag optimized for smoother RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = r'MDA, $L$ optimized for smoother RMSE, $S$=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
  
 else:
-    title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = r'SDA, $L$ optimized for forecast RMSE, $S$=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)

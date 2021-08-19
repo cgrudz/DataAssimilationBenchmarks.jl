@@ -17,7 +17,7 @@ obs_un = 1.0
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-mda = "false"
+#mda = "false"
 mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
@@ -157,15 +157,15 @@ ax0.set_xticks(range(1, total_lag,6))
 #ax1.set_yscale('log')
 
 if mda == 'true':
-    title = 'MDA, shift=' + str(shift) + ', ensemble size=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'MDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 
 else:
-    title = 'SDA, shift=' + str(shift) + ', ensemble size=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'SDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
-plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
-plt.figtext(.95, .04, 'Spread versus lag', horizontalalignment='right', verticalalignment='top', fontsize=24)
+plt.figtext(.05, .04, r'RMSE versus $L$', horizontalalignment='left', verticalalignment='top', fontsize=24)
+plt.figtext(.95, .04, r'Spread versus $L$', horizontalalignment='right', verticalalignment='top', fontsize=24)
 plt.figtext(.50, .02, title, horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

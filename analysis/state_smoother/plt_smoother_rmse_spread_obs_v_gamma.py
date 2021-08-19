@@ -141,10 +141,12 @@ ax0.tick_params(
         labelsize=20,
         right=True)
 
-ax1.set_ylim([0.00,0.30])
-ax0.set_ylim([0.00,0.30])
-ax1.set_yticks(np.arange(1,31,2)*.01)
-ax0.set_yticks(np.arange(1,31,2)*.01)
+ax1.set_ylim([0.00,0.40])
+ax0.set_ylim([0.00,0.40])
+#ax1.set_yticks(np.arange(1,31,2)*.01)
+#ax0.set_yticks(np.arange(1,31,2)*.01)
+ax1.set_yticks(np.arange(1,41,4)*.01)
+ax0.set_yticks(np.arange(1,41,4)*.01)
 
 ax1.set_xlim([0.5, gamma + 0.5])
 ax0.set_xlim([0.5, gamma + 0.5])
@@ -152,9 +154,9 @@ ax0.set_xlim([0.5, gamma + 0.5])
 #ax1.set_yscale('log')
 
 if mda == "true":
-    title = 'MDA, lag optimized for forecast RMSE, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = r'MDA, $L$ optimized for forecast RMSE, $N_e$=21, $S$=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 else:
-    title = 'SDA, lag optimized for forecast RMSE, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = r'SDA, $L$ optimized for forecast RMSE, $N_e$=21, $S$=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.02, .06, r'RMSE versus $\gamma$', horizontalalignment='left', verticalalignment='top', fontsize=24)

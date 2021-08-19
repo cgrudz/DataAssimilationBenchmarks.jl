@@ -38,13 +38,13 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 total_lag = 53
 shift = 1
 
@@ -349,17 +349,17 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, ensemble size 21, shift " + str(shift) 
+    fig_title = r"MDA, $N_e$=21, $S$=" + str(shift) 
 
 else:
-    fig_title = "SDA, ensemble size 21, Shift " + str(shift) 
+    fig_title = r"SDA, $N_e$=21, $S$=" + str(shift) 
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'Forecast length $\Delta$t', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$\Delta$t', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)

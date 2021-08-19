@@ -41,8 +41,8 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 total_lag = 86
 total_gamma = 11
 shift = 1
@@ -348,17 +348,17 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = r"MDA, $S$=" + str(shift) + r", $N_e$=21, $\Delta$t="+ str(tanl)
 
 else:
-    fig_title = "SDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = "SDA, $S$=" + str(shift) + r", $N_e$=21, $\Delta$t="+ str(tanl)
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'$\gamma$ parameter', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$\gamma$', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)

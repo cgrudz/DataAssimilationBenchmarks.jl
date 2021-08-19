@@ -347,17 +347,17 @@ ax1a.set_xticklabels(x_labs, ha="right", rotation=0)
 
 
 if mda=="true":
-    fig_title = r"MDA, ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = r"MDA, $N_e$=21, $\Delta$t="+ str(tanl)
 
 else:
-    fig_title = r"SDA, ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = r"SDA, $N_e$=21, $\Delta$t="+ str(tanl)
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'Shift length', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$S$', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)

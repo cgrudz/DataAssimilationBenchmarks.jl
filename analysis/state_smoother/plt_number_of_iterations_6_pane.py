@@ -183,7 +183,7 @@ ax6.tick_params(
         labelleft=False,
         labelbottom=False)
 
-fig_title = "Iteration statistics, shift 1, $\Delta$t="+ str(tanl)
+fig_title = r"Iteration statistics, $S=$1, $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.210, .905, "IEnKS SDA", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -192,8 +192,8 @@ plt.figtext(.790, .905, "IEnKS MDA", horizontalalignment='center', verticalalign
 
 plt.figtext(.025, .2925, r'Std', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.025, .7075, r'Mean', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
-plt.figtext(.50, .02, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
+plt.figtext(.50, .02, r'$N_e$', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.5, .97, fig_title,
         horizontalalignment='center', verticalalignment='center', fontsize=24)
 
