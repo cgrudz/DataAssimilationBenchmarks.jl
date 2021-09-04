@@ -3,60 +3,64 @@ module TestTimeSeriesGeneration
 #######################################################################################################################
 # imports and exports
 using DeSolvers
-
+using L96
+using JLD
+export kwargs, time_series
 #######################################################################################################################
+function time_series()
+    # initial conditions and arguments
+    state_dim = 40
 
-function l96(x, f)
-    x_m_2  = cat(x[end-1:end], x[1:end-2])
-    x_m_1 = cat(x[end:end], x[1:end-1])
-    x_p_1 = cat(x[2:end], x[1:1], dims = 2)
+    seed = 123
+    x = zeros(state_dim)
 
-    dxdt = (x_p_1-x_m_2).*x_m_1 - x + f
+    # total number of analyses
+    nanl = 1000
 
-end
-#one step forward
+    # diffusion parameter
+    diffusion = 0.0
 
-f = 8.0
-spin = 100
-h = 0.001
-nanl = 1000
-sys_dim = 40
-diffusion = 0.1
-tanl = 0.1
-seed = 0
+    # step size
+    h = 0.01
+    # forced parameter
+    F = 8.0
+    # time between analyses
+    tanl = 0.5
 
-#fore_steps = int(tanl/h)
-fore_steps = (tanl/h)
+    kwargs = Dict{String, Any}(
+        "h" => h,
+        "diffusion" => diffusion,
+        "dx_params" => [F],
+        "dx_dt" => L96.dx_dt,
+        )
 
-#np.random.seed(seed)
-using Random
-Random.seed!(seed)
+    step_model! = DeSolvers.em_step!
 
+    f_steps = convert(Int64, tanl/h)
 
-#xt = np.ones(sys_dim)
-xt = ones(sys_dim)
+    obs = Array{Float64}(undef, state_dim, nanl)
 
-#for i in range(int(spin / h)):
-    #xt = l96_em_sde(xt, h, [f, diffusion])
-
-#tobs = np.zeros ([sys_dim, nanl])
-tobs = zeros(sys_dim, nanl)
-#for i in range(nanl)
-for i in range(0, stop = nanl)
-    #for j in range(fore_steps)
-    for j in range(0, stop = fore_steps)
-        xt = l96_em_sde(xt, h, [f, diffusion])
-        tobs[1:i] = xt
+    for i in range(1, stop=nanl)
+        for j in range(1, stop=f_steps)
+            em_step!(x, 0.0, kwargs)
+        end
+        obs[:, i] = x
     end
+
+    data = Dict{String, Any}(
+            "h" => h,
+            "diffusion" => diffusion,
+            "F" => F,
+            "tanl" => tanl,
+            "nanl" => nanl,
+            "state_dim" => state_dim,
+            "obs" => obs
+           )
+
+    path = "../data/time_series/"
+    fname = "time_series_data_seed_" * string(seed) * ".jld"
+    save(path * fname, data)
+
 end
 
-params = [spin, h, diffusion, f, seed]
-#time_series = ["tobs": tobs, "params": params]
-time_series = ["tobs"::tobs, "params"::params]
-fname = "time_series_data_seed_" * string(seed) * ".txt"
-#f = open(fname, "wb")
-f = open(fname, "w")
-#pickle.dump (time_series, f)
-dumpval = dump(fname)
-f.close()
 end

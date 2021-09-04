@@ -11,9 +11,7 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 #method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
@@ -36,7 +34,7 @@ f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(
         '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(data[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -105,7 +103,7 @@ for meth in method_list:
         if meth == "etks_classic":
             meth_name = "ETKS"
         elif meth == "etks_single_iteration":
-            meth_name = "SIETKS"
+            meth_name = "SIEnKS"
         elif meth == "enks-n-primal_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal-ls_classic":
@@ -113,11 +111,11 @@ for meth in method_list:
         elif meth == "mles-n-transform_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "enks-n-primal-ls_single_iteration":
-            meth_name = "SIETKS-N-ls"
+            meth_name = "SIEnKS-N-ls"
         elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
@@ -156,11 +154,18 @@ ax0.set_xticks(range(1, total_lag,6))
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
+#if mda == 'true':
+#    title = 'MDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+#
+#else:
+#    title = 'SDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+#
+
 if mda == 'true':
-    title = 'MDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'MDA'
 
 else:
-    title = 'SDA, $S$=' + str(shift) + r', $N_e$=' + str(range(15,44,2)[ensemble]) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = 'SDA'
 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')

@@ -41,8 +41,8 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#mda = "false"
-mda = "true"
+mda = "false"
+#mda = "true"
 total_lag = 86
 total_gamma = 11
 shift = 1
@@ -58,7 +58,7 @@ label_v_positions = [0.336, 0.626, 0.916]
 
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -126,13 +126,13 @@ for method in method_list:
             scheme = "MLES"
 
         elif method == "mles-transform_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "mles-n-transform_classic":
             scheme = "MLES-N"
 
         elif method == "mles-n-transform_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
@@ -348,10 +348,10 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = r"MDA, $S$=" + str(shift) + r", $N_e$=21, $\Delta$t="+ str(tanl)
+    fig_title = "MDA"
 
 else:
-    fig_title = "SDA, $S$=" + str(shift) + r", $N_e$=21, $\Delta$t="+ str(tanl)
+    fig_title = "SDA"
 
 
 plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

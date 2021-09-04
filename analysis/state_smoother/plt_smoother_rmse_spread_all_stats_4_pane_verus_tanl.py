@@ -38,13 +38,13 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-#mda = "false"
-mda = "true"
+mda = "false"
+#mda = "true"
 total_lag = 53
 shift = 1
 
@@ -56,7 +56,7 @@ spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
 label_v_positions = [0.336, 0.626, 0.916]
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -121,19 +121,19 @@ for method in method_list:
             scheme = "ETKS"
 
         elif method == "etks_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "enks-n-primal_classic":
-            scheme = "ETKS-N"
+            scheme = "EnKS-N"
 
         elif method == "mles-n-transform_classic":
-            scheme = "ETKS-N"
+            scheme = "EnKS-N"
 
         elif method == "enks-n-primal_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "mles-n-transform_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
@@ -349,10 +349,10 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = r"MDA, $N_e$=21, $S$=" + str(shift) 
+    fig_title = r"MDA"
 
 else:
-    fig_title = r"SDA, $N_e$=21, $S$=" + str(shift) 
+    fig_title = r"SDA"
 
 
 plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

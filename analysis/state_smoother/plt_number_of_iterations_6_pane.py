@@ -23,7 +23,7 @@ fmda = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).lju
         '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     method_iteration_means = np.array(f[method + '_iteration_mean'])
     method_iteration_stds = np.array(f[method + '_iteration_std'])
@@ -87,13 +87,13 @@ ax4 = fig.add_axes([.070, .510, .280, .395])
 ax5 = fig.add_axes([.360, .510, .280, .395])
 ax6 = fig.add_axes([.650, .510, .280, .395])
 
-color_map1 = sns.cubehelix_palette(n_colors=200, rot=1.75)
+color_map1 = sns.cubehelix_palette(n_colors=100, rot=1.75)
 color_map2 = sns.cubehelix_palette(n_colors=100, rot=1.75, start=1.5)
 color_maps = [color_map1, color_map2]
 max_scale2 = 5.0
 min_scale2 = 0.0
 
-max_scale1 = 14.0
+max_scale1 = 10.0
 min_scale1 = 1.0
 
 max_scales = [max_scale1, max_scale2]
