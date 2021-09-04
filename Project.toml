@@ -20,6 +20,11 @@ StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 [compat]
 julia = "1.6"
 Debugger = "0.6.8"
+Distributions = "0.25"
+HDF5 = "0.15"
+JLD = "0.12"
+LineSearches = "7.1"
+Optim = "1.4"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
