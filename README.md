@@ -17,6 +17,9 @@
                                                             _/ |                  
                                                            |__/                   
 ```
+[![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+
+
 ## Welcome to DataAssimilationBenchmarks.jl!
 
 ### Description
