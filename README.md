@@ -300,5 +300,5 @@ the output .jld file and if this is not available, this will store `Inf` values 
 ## To do
 
   * Build additional tests for the library
-	* Expand on the existing schemes
+  * Expand on the existing schemes
 
