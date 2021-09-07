@@ -61,7 +61,7 @@ This includes code for developing and testing data assimilation schemes in the
   <td>MLES, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>SIETKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
+  <td>SIEnKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
 </tr>
 <tr>
   <td>Gauss-Newton IEnKS, transform / bundle variants</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
