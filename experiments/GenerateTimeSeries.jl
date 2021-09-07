@@ -4,8 +4,9 @@ module GenerateTimeSeries
 # imports and exports
 using Debugger, JLD, Distributed
 using Random, Distributions, LinearAlgebra
-using DeSolvers, L96 
-export l96_time_series
+using DeSolvers
+import L96, IEEE_39_bus
+export l96_time_series, IEEE_39_time_series
 
 ########################################################################################################################
 # generate timeseries based on the model, solver and parameters
@@ -95,6 +96,94 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
            "_dim_" * lpad(state_dim, 2, "0") * 
            "_diff_" * rpad(diffusion, 4, "0") * 
            "_F_" * lpad(F, 4, "0") * 
+           "_tanl_" * rpad(tanl, 4, "0") * 
+           "_nanl_" * lpad(nanl, 5, "0") * 
+           "_spin_" * lpad(spin, 4, "0") * 
+           "_h_" * rpad(h, 5, "0") * 
+           ".jld"
+    path = "../data/time_series/"
+    save(path * name, data)
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+
+end
+
+########################################################################################################################
+
+function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
+
+    # time the experiment
+    t1 = time()
+
+    # unpack the experiment parameters determining the time series
+    seed, tanl, nanl, spin, diffusion = args
+    
+    # define the model
+    dx_dt = IEEE_39_bus.dx_dt
+    state_dim = 20
+
+    # define the model parameters
+    tmp = load("../models/IEEE_39_bus_inputs/NE_EffectiveNetworkParams.jld")
+    dx_params = [tmp["A"], tmp["D"], tmp["H"], tmp["K"], tmp["γ"], tmp["ω"]]
+
+    # define the integration scheme
+    step_model! = DeSolvers.rk4_step!
+    h = 0.01
+
+    # define the diffusion coefficient structure matrix
+    # notice that the perturbations are only applied to the frequencies
+    # based on the change of variables derivation
+    diff_struct_mat = zeros(20,20)
+    diff_struct_mat[LinearAlgebra.diagind(diff_struct_mat)[11:end]] = diffusion * tmp["ω"][1] ./ (2.0 * tmp["H"])
+
+    # set the number of discrete integrations steps between each observation time
+    f_steps = convert(Int64, tanl/h)
+
+    # set storage for the ensemble timeseries
+    obs = Array{Float64}(undef, state_dim, nanl)
+
+    # define the integration parameters in the kwargs dict
+    kwargs = Dict{String, Any}(
+              "h" => h,
+              "diffusion" => diffusion,
+              "dx_params" => dx_params, 
+              "dx_dt" => dx_dt,
+              "diff_struct_mat" => diff_struct_mat
+             )
+    
+
+    # define the steady state data from Newton approx
+    x = zeros(20)
+    x[1:10] = [-0.3125512, 0.14854342, 0.05542474, 0.00418682, 0.21460256,
+         0.04305601, 0.05535005, 0.00519187, 0.23454407, -0.44849836]
+
+    # spin the model onto the attractor
+    for j in 1:spin
+        for k in 1:f_steps
+            step_model!(x, 0.0, kwargs)
+            x[1:10] .= mod2pi.(x[1:10])
+        end
+    end
+
+    # save the model state at timesteps of tanl
+    for j in 1:nanl
+        for k in 1:f_steps
+            step_model!(x, 0.0, kwargs)
+            x[1:10] .= mod2pi.(x[1:10])
+        end
+        obs[:, j] = x
+    end
+    
+    data = Dict{String, Any}(
+                "h" => h,
+                "diffusion" => diffusion,
+                "tanl" => tanl,
+                "nanl" => nanl,
+                "spin" => spin,
+                "obs" => obs
+               )
+
+    name = "IEEE_39_bus_time_series_seed_" * lpad(seed, 4, "0") * 
+           "_diff_" * rpad(diffusion, 4, "0") * 
            "_tanl_" * rpad(tanl, 4, "0") * 
            "_nanl_" * lpad(nanl, 5, "0") * 
            "_spin_" * lpad(spin, 4, "0") * 

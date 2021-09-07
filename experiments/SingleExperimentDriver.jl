@@ -6,7 +6,7 @@ module SingleExperimentDriver
 using FilterExps, SmootherExps, GenerateTimeSeries
 export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp,
         single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, iterative_smoother_state_exp,
-        l96_time_series_exp
+        l96_time_series_exp, IEEE_39_time_series_exp
 
 ########################################################################################################################
 # Description
@@ -31,6 +31,17 @@ export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_s
 function l96_time_series_exp()
     args = (0, 40, 0.10, 50000, 5000, 0.00, 8.0)
     l96_time_series(args)
+end
+
+########################################################################################################################
+## IEEE 39 bus test case model
+########################################################################################################################
+# IEEE 39 bus test case truth twin data generated as a single function call, arguments are
+# seed, tanl, nanl, spin, diffusion = args
+
+function IEEE_39_time_series_exp()
+    args = (0, 0.01, 10000, 500, 0.0)
+    IEEE_39_time_series(args)
 end
 
 ########################################################################################################################
