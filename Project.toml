@@ -25,6 +25,7 @@ HDF5 = "0.15"
 JLD = "0.12"
 LineSearches = "7.1"
 Optim = "1.4"
+StatsFuns = "0.9"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
