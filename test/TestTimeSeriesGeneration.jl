@@ -2,21 +2,19 @@
 module TestTimeSeriesGeneration
 #######################################################################################################################
 # imports and exports
-using DeSolvers
+using DataAssimilationBenchmarks.DeSolvers
+using DataAssimilationBenchmarks.L96
+using JLD
+using Random
 
 #######################################################################################################################
 
-function l96(x, f)
-    x_m_2  = cat(x[end-1:end], x[1:end-2])
-    x_m_1 = cat(x[end:end], x[1:end-1])
-    x_p_1 = cat(x[2:end], x[1:1], dims = 2)
 
-    dxdt = (x_p_1-x_m_2).*x_m_1 - x + f
-
-end
+dx_dt = L96.dx_dt
+step_model! = DeSolvers.em_step!
 #one step forward
 
-f = 8.0
+F = 8.0
 spin = 100
 h = 0.001
 nanl = 1000
@@ -26,12 +24,17 @@ tanl = 0.1
 seed = 0
 
 #fore_steps = int(tanl/h)
-fore_steps = (tanl/h)
+fore_steps = convert(Int64, tanl/h)
 
 #np.random.seed(seed)
-using Random
 Random.seed!(seed)
 
+kwargs = Dict{String, Any}(
+          "h" => h,
+          "diffusion" => diffusion,
+          "dx_params" => [F],
+          "dx_dt" => L96.dx_dt,
+         )
 
 #xt = np.ones(sys_dim)
 xt = ones(sys_dim)
@@ -40,23 +43,29 @@ xt = ones(sys_dim)
     #xt = l96_em_sde(xt, h, [f, diffusion])
 
 #tobs = np.zeros ([sys_dim, nanl])
-tobs = zeros(sys_dim, nanl)
+tobs = Array{Float64}(undef,sys_dim, nanl)
 #for i in range(nanl)
-for i in range(0, stop = nanl)
+for i in 1:nanl
     #for j in range(fore_steps)
-    for j in range(0, stop = fore_steps)
-        xt = l96_em_sde(xt, h, [f, diffusion])
-        tobs[1:i] = xt
+    for j in 1:fore_steps
+        step_model!(xt, 0.0, kwargs)
     end
+    tobs[:,i] = xt
 end
 
-params = [spin, h, diffusion, f, seed]
-#time_series = ["tobs": tobs, "params": params]
-time_series = ["tobs"::tobs, "params"::params]
-fname = "time_series_data_seed_" * string(seed) * ".txt"
-#f = open(fname, "wb")
-f = open(fname, "w")
-#pickle.dump (time_series, f)
-dumpval = dump(fname)
-f.close()
+
+fname = "time_series_data_seed_" * string(seed) * ".jld"
+
+data = Dict{String, Any}(
+    "h" => h,
+    "diffusion" => diffusion,
+    "F" => F,
+    "tanl" => tanl,
+    "nanl" => nanl,
+    "sys_dim" => sys_dim,
+    "tobs" => tobs
+    )
+path = "../data/time_series/"
+save(path * fname, data)
+
 end
