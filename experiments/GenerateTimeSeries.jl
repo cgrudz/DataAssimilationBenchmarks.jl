@@ -61,10 +61,8 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
     end
 
     # seed the random generator
-    μ = zeros(state_dim)
-    σ = 1.0
     Random.seed!(seed)
-    x = rand(MvNormal(μ,σ))
+    x = rand(Normal(), state_dim)
 
     # spin the model onto the attractor
     for j in 1:spin
@@ -160,6 +158,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     for j in 1:spin
         for k in 1:f_steps
             step_model!(x, 0.0, kwargs)
+            # set phase angles mod 2pi
             x[1:10] .= mod2pi.(x[1:10])
         end
     end
@@ -168,6 +167,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     for j in 1:nanl
         for k in 1:f_steps
             step_model!(x, 0.0, kwargs)
+            # set phase angles mod 2pi
             x[1:10] .= mod2pi.(x[1:10])
         end
         obs[:, j] = x

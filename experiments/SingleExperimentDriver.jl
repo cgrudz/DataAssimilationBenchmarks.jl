@@ -40,7 +40,7 @@ end
 # seed, tanl, nanl, spin, diffusion = args
 
 function IEEE_39_time_series_exp()
-    args = (0, 0.01, 10000, 500, 0.0)
+    args = (0, 0.01, 10000, 5000, 0.01)
     IEEE_39_time_series(args)
 end
 

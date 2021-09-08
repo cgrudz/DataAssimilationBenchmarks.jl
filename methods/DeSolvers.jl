@@ -40,7 +40,6 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]
-    @bp
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
@@ -69,12 +68,13 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(MvNormal(zeros(state_dim), 1.0)) 
+            ξ = rand(Normal(), state_dim) 
         end
         if haskey(kwargs, "diff_struct_mat")
-            # diffusion is a scalar intensity which is applied to the structure
-            # matrix for the diffusion coefficients above
-            diffusion = diffusion * kwargs["diff_struct_mat"]
+            # diffusion is then a scalar intensity which is applied to the 
+            # structure matrix for the diffusion coefficients above
+            diff_struct_mat = kwargs["diff_struct_mat"]::Array{Float64}
+            diffusion = diffusion * diff_struct_mat 
         end
 
     else
@@ -159,7 +159,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(MvNormal(zeros(state_dim), 1.0)) 
+            ξ = rand(Normal(), state_dim) 
         end
 
     else
