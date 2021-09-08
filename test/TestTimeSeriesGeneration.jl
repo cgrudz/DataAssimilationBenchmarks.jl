@@ -8,6 +8,9 @@ using JLD
 using Random
 
 #######################################################################################################################
+function time_series()
+    # initial conditions and arguments
+    state_dim = 40
 
 
 dx_dt = L96.dx_dt

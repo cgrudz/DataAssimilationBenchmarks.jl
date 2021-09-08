@@ -17,10 +17,13 @@
                                                             _/ |                  
                                                            |__/                   
 ```
+[![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+
+
 ## Welcome to DataAssimilationBenchmarks.jl!
 
 ### Description
-This is my personal data asimilation benchmark research code with an emphasis on testing and validation
+This is my personal data assimilation benchmark research code with an emphasis on testing and validation
 of ensemble-based filters and sequential smoothers in chaotic toy models.  The code is meant to be performant, 
 in the sense that large hyper-parameter discretizations can be explored to determine structural sensitivity 
 and reliability of results across different experimental regimes, with parallel implementations in Slurm.
@@ -58,7 +61,7 @@ This includes code for developing and testing data assimilation schemes in the
   <td>MLES, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>SIETKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
+  <td>SIEnKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
 </tr>
 <tr>
   <td>Gauss-Newton IEnKS, transform / bundle variants</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
@@ -92,24 +95,25 @@ The "slurm_submit_scripts" directory includes routines for parallel submission o
 Data processing scripts and visualization scripts (written in Python with Matplotlib and Seaborn) are 
 included in the "analysis" directory.
 
-
-### Installing a dev package from Github
+### Installing a dev package from the Julia General registries 
 
 In order to install the dev version to your Julia environment, you can use the following commands in the REPL
 
 ```{julia}
-pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
+pkg> dev DataAssimilationBenchmarks.jl
 ```
 
 The installed version will be included in your
+
 ```
 ~/.julia/dev/
 ```
 on Linux and the analogous directory with respect Windows and Mac systems.
 
-### Installing a dev package from the Julia General registries 
-
-Currently DataAssimilationBenchmarks.jl is still pending integration into the Julia General registries.
+Alternatively, you can install this from my Github directly as follows:
+```{julia}
+pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
+```
 
 ## Using solvers in DataAssimilationBenchmarks
 
@@ -295,6 +299,6 @@ the output .jld file and if this is not available, this will store `Inf` values 
 
 ## To do
 
-	* Build tests for the library
-	* Submit to Julia General Registries
+  * Build additional tests for the library
+  * Expand on the existing schemes
 

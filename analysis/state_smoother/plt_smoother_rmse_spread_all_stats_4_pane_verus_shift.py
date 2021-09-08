@@ -38,8 +38,8 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
@@ -59,7 +59,7 @@ total_shifts = len(shifts)
 
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -121,7 +121,7 @@ for method in method_list:
             scheme = "ETKS"
 
         elif method == "etks_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "enks-n-primal_classic":
             scheme = "EnKS-N"
@@ -130,10 +130,10 @@ for method in method_list:
             scheme = "EnKS-N"
 
         elif method == "enks-n-primal_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "mles-n-transform_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
@@ -347,10 +347,10 @@ ax1a.set_xticklabels(x_labs, ha="right", rotation=0)
 
 
 if mda=="true":
-    fig_title = r"MDA, $N_e$=21, $\Delta$t="+ str(tanl)
+    fig_title = r"MDA"
 
 else:
-    fig_title = r"SDA, $N_e$=21, $\Delta$t="+ str(tanl)
+    fig_title = r"SDA"
 
 
 plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')

@@ -110,15 +110,15 @@ for meth in method_list:
         if meth == "etks_classic":
             meth_name = "ETKS"
         elif meth == "etks_single_iteration":
-            meth_name = "SIETKS"
+            meth_name = "SIEnKS"
         elif meth == "enks-n-primal_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "mles-n-transform_classic":
             meth_name = "EnKS-N"
         elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
@@ -155,11 +155,12 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-if mda == "true":
-    title = r'MDA, $L$ optimized for smoother RMSE, $S$=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
- 
+if mda=="true":
+    title = r"MDA, optimized for smoother RMSE"
+
 else:
-    title = r'SDA, $L$ optimized for forecast RMSE, $S$=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = r"SDA, optimized for smoother RMSE"
+
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)

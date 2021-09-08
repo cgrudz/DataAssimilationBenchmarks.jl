@@ -12,6 +12,9 @@ export rk4_step!, tay2_step!, em_step!
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+# vector for model parameters which may come in the form of a vector
+# of floats, or a vector of Arrays of floats
+ParamVec = Union{Vector{Float64},Vector{Array{Float64}}}
 
 ########################################################################################################################
 ########################################################################################################################
@@ -37,10 +40,11 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]
+    @bp
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
-        params = kwargs["dx_params"]::Vector{Float64}
+        params = kwargs["dx_params"]::ParamVec
     end
 
     # infer the (possibly) extended state dimension
@@ -66,6 +70,11 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
             ξ = rand(MvNormal(zeros(state_dim), 1.0)) 
+        end
+        if haskey(kwargs, "diff_struct_mat")
+            # diffusion is a scalar intensity which is applied to the structure
+            # matrix for the diffusion coefficients above
+            diffusion = diffusion * kwargs["diff_struct_mat"]
         end
 
     else
