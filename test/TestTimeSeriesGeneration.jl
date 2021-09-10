@@ -67,6 +67,11 @@ data = Dict{String, Any}(
     "tobs" => tobs
     )
 path = "../data/time_series/"
-save(path * fname, data)
 
+    try
+        save(path * fname, data)
+        did_write = true
+    catch
+        did_write = false
+    end
 end
