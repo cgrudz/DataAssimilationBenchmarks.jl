@@ -32,6 +32,7 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     dx_params  -- tuple of parameters necessary to resolve dx_dt, not including parameters in the extended state vector 
     h          -- numerical discretization step size
     diffusion  -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
+    diff_mat   -- structur matrix for the diffusion coefficients, replaces the default uniform scaling 
     state_dim  -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
     ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization
     """
@@ -70,20 +71,15 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
             # generate perturbation for brownian motion if not neccesary to reproduce
             ξ = rand(Normal(), state_dim) 
         end
-        if haskey(kwargs, "diff_struct_mat")
-            # diffusion is then a scalar intensity which is applied to the 
-            # structure matrix for the diffusion coefficients above
-            diff_struct_mat = kwargs["diff_struct_mat"]::Array{Float64}
-            diffusion = diffusion * diff_struct_mat 
+        if haskey(kwargs, "diff_mat")
+            # diffusion is a scalar intensity which is applied to the 
+            # structure matrix for the diffusion coefficients
+            diff_mat = kwargs["diff_mat"]::Array{Float64}
+            diffusion = diffusion * diff_mat 
         end
-
-    else
-        # if deterministic RK, load dummy ξ of zeros
-        ξ = zeros(state_dim)
+        # rescale the standard normal to variance h for Wiener process
+        W = ξ * sqrt(h)
     end
-
-    # rescale the standard normal to variance h for Wiener process
-    W = ξ * sqrt(h)
 
     # load parameter values from the extended state into the derivative
     if param_est
@@ -97,14 +93,26 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
         end
     end
 
+    # pre-allocate storage for the Runge-Kutta scheme
+    κ = Array{Float64}(undef, state_dim, 4)
+
     # terms of the RK scheme recursively evolve the dynamic state components alone
-    k1 = dx_dt(v, t, params) * h + diffusion * W
-    k2 = dx_dt(v + 0.5 * k1, t + 0.5 * h, params) * h + diffusion * W
-    k3 = dx_dt(v + 0.5 * k2, t + 0.5 * h, params) * h + diffusion * W
-    k4 = dx_dt(v + k3, t + h, params) * h + diffusion * W
+    if diffusion != 0.0
+        # SDE formulation
+        κ[:, 1] = dx_dt(v, t, params) * h + diffusion * W
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h + diffusion * W
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h + diffusion * W
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h + diffusion * W
+    else
+        # deterministic formulation
+        κ[:, 1] = dx_dt(v, t, params) * h 
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h 
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h 
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h 
+    end
     
     # compute the update to the dynamic variables
-    x[begin: state_dim] = v + (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4) 
+    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
     x
 end
 
