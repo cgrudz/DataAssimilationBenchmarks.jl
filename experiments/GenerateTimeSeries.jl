@@ -183,7 +183,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
                )
 
     name = "IEEE_39_bus_time_series_seed_" * lpad(seed, 4, "0") * 
-           "_diff_" * rpad(diffusion, 4, "0") * 
+           "_diff_" * rpad(diffusion, 5, "0") * 
            "_tanl_" * rpad(tanl, 4, "0") * 
            "_nanl_" * lpad(nanl, 5, "0") * 
            "_spin_" * lpad(spin, 4, "0") * 

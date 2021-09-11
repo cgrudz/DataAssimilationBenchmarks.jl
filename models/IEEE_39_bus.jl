@@ -46,7 +46,7 @@ function dx_dt(x::T, t::Float64, dx_params::Vector{Array{Float64}}) where {T <: 
     # derivative of the phase equals frequency
     dx[1:n_g] .= δ_2
 
-    # compute the derivative of the frequencies
+    # compute the derivative of the inertia normalized frequencies
     # entry j is defined as A_j * ω/2 - D_j /2 * δ_2 - Σ_{i!=j} K * ω/2 * sin(δ_j - δ_i - γ_ij)
     for j in 1:n_g
         for i in 1:n_g
@@ -59,6 +59,9 @@ function dx_dt(x::T, t::Float64, dx_params::Vector{Array{Float64}}) where {T <: 
         # finally apply the remaining terms
         dx[n_g + j] += A[j] - δ_2[j] * D[j] / 2.0
     end
+    # to compute the derivative of the frequencies, we finally 
+    # divide back out by the inertia
+    dx[n_g + 1 : end] = dx[n_g + 1: end] ./ H
     return dx
 end
 
