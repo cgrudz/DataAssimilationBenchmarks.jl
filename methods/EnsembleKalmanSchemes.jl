@@ -109,7 +109,7 @@ end
 ########################################################################################################################
 # ensemble state statistics
 
-function analyze_ensemble(ens::Array{Float64,2}, truth::Vector{Float64})
+function analyze_ensemble(ens::ArView, truth::Vector{Float64})
     """This will compute the ensemble RMSE as compared with the true twin, and the ensemble spread."""
 
     # infer the shapes
@@ -133,7 +133,7 @@ end
 ########################################################################################################################
 # ensemble parameter statistics
 
-function analyze_ensemble_parameters(ens::Array{Float64,2}, truth::Vector{Float64})
+function analyze_ensemble_parameters(ens::ArView, truth::Vector{Float64})
     """This will compute the ensemble RMSE as compared with the true twin, and the ensemble spread."""
 
     # infer the shapes

@@ -6,12 +6,12 @@ using Debugger, JLD, Distributed
 using Random, Distributions, LinearAlgebra
 using DeSolvers
 import L96, IEEE_39_bus
-export l96_time_series, IEEE_39_time_series
+export L96_time_series, IEEE_39_time_series
 
 ########################################################################################################################
 # generate timeseries based on the model, solver and parameters
 
-function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
+function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
 
     # time the experiment
     t1 = time()
@@ -21,6 +21,7 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
     
     # define the model
     dx_dt = L96.dx_dt
+    dx_params = Dict{String, Array{Float64}}("F" => [8.0])
 
     # define the integration scheme
     if diffusion == 0.0
@@ -51,7 +52,7 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
     kwargs = Dict{String, Any}(
               "h" => h,
               "diffusion" => diffusion,
-              "dx_params" => [F],
+              "dx_params" => dx_params,
               "dx_dt" => dx_dt,
              )
     if diffusion != 0.0
@@ -82,7 +83,7 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
     data = Dict{String, Any}(
                 "h" => h,
                 "diffusion" => diffusion,
-                "F" => F,
+                "dx_params" => dx_params, 
                 "tanl" => tanl,
                 "nanl" => nanl,
                 "spin" => spin,
@@ -90,9 +91,9 @@ function l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
                 "obs" => obs
                )
 
-    name = "l96_time_series_seed_" * lpad(seed, 4, "0") * 
+    name = "L96_time_series_seed_" * lpad(seed, 4, "0") * 
            "_dim_" * lpad(state_dim, 2, "0") * 
-           "_diff_" * rpad(diffusion, 4, "0") * 
+           "_diff_" * rpad(diffusion, 5, "0") * 
            "_F_" * lpad(F, 4, "0") * 
            "_tanl_" * rpad(tanl, 4, "0") * 
            "_nanl_" * lpad(nanl, 5, "0") * 
@@ -121,7 +122,14 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 
     # define the model parameters
     tmp = load("../models/IEEE_39_bus_inputs/NE_EffectiveNetworkParams.jld")
-    dx_params = [tmp["A"], tmp["D"], tmp["H"], tmp["K"], tmp["γ"], tmp["ω"]]
+    dx_params = Dict{String, Array{Float64}}(
+                                             "A" => tmp["A"], 
+                                             "D" => tmp["D"], 
+                                             "H" => tmp["H"], 
+                                             "K" => tmp["K"],
+                                             "γ" => tmp["γ"], 
+                                             "ω" => tmp["ω"]
+                                            )
 
     # define the integration scheme
     step_model! = DeSolvers.rk4_step!
@@ -159,7 +167,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
         for k in 1:f_steps
             step_model!(x, 0.0, kwargs)
             # set phase angles mod 2pi
-            x[1:10] .= mod2pi.(x[1:10])
+            x[1:10] .= rem2pi.(x[1:10], RoundNearest)
         end
     end
 
@@ -168,7 +176,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
         for k in 1:f_steps
             step_model!(x, 0.0, kwargs)
             # set phase angles mod 2pi
-            x[1:10] .= mod2pi.(x[1:10])
+            x[1:10] .= rem2pi.(x[1:10], RoundNearest)
         end
         obs[:, j] = x
     end
@@ -176,6 +184,8 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     data = Dict{String, Any}(
                 "h" => h,
                 "diffusion" => diffusion,
+                "diff_mat" => diff_mat,
+                "dx_params" => dx_params, 
                 "tanl" => tanl,
                 "nanl" => nanl,
                 "spin" => spin,

@@ -6,8 +6,16 @@ module FilterExps
 using Debugger, JLD
 using Random, Distributions, Statistics
 using LinearAlgebra
-using EnsembleKalmanSchemes, DeSolvers, L96
+using EnsembleKalmanSchemes, DeSolvers, L96, IEEE_39_bus
 export filter_state, filter_param
+
+########################################################################################################################
+########################################################################################################################
+# Type union declarations for multiple dispatch
+# and type aliases
+
+# dictionaries of parameters
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
 ########################################################################################################################
 ########################################################################################################################
@@ -25,10 +33,10 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    f = ts["F"]::Float64
+    dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = L96.dx_dt
+    dx_dt = IEEE_39_bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -52,15 +60,20 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     truth = copy(obs)
     
     # define kwargs for the filtering method
+    # and the underlying dynamical model
     kwargs = Dict{String,Any}(
               "dx_dt" => dx_dt,
               "f_steps" => f_steps,
               "step_model" => step_model!, 
-              "dx_params" => [f],
+              "dx_params" => dx_params,
               "h" => h,
               "diffusion" => diffusion,
               "gamma" => γ,
              )
+    # check if there is a diffusion structure matrix
+    if haskey(ts, "diff_mat")
+        kwargs["diff_mat"] = ts["diff_mat"]
+    end
 
     # define the observation operator, observation error covariance and observations with error 
     obs = alternating_obs_operator(obs, obs_dim, kwargs) 
@@ -81,6 +94,10 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             # loop over the integration steps between observations
             @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
+                if parentmodule(dx_dt) == IEEE_39_bus 
+                    # set phase angles mod 2pi
+                    ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                end
             end
         end
 
@@ -103,6 +120,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             "method" => method,
             "seed" => seed, 
             "diffusion" => diffusion,
+            "dx_params" => dx_params,
             "sys_dim" => sys_dim,
             "obs_dim" => obs_dim, 
             "obs_un" => obs_un,
@@ -113,11 +131,15 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             "N_ens" => N_ens, 
             "state_infl" => round(infl, digits=2)
            ) 
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]
+    end
         
     path = "../data/" * method * "/" 
     name = method * 
-            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 4, "0") * 
+            "_" * string(parentmodule(dx_dt)) *
+            "_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -147,17 +169,17 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    f = ts["F"]::Float64
+    dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = L96.dx_dt
+    dx_dt = IEEE_39_bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -165,10 +187,25 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # define the initial ensembles, squeezing the sys_dim times 1 array from the timeseries generation
     obs = ts["obs"]::Array{Float64, 2}
     init = obs[:, 1]
-    param_truth = [f]
+    param_truth = [pop!(dx_params, "H"); pop!(dx_params, "D")]
+    param_truth = param_truth[:]
     state_dim = length(init)
     sys_dim = state_dim + length(param_truth)
 
+    # define kwargs, note the possible exclusion of dx_params if this is the only parameter for
+    # dx_dt and this is the parameter to be estimated
+    kwargs = Dict{String,Any}(
+              "dx_dt" => dx_dt,
+              "dx_params" => dx_params,
+              "f_steps" => f_steps,
+              "step_model" => step_model!,
+              "h" => h,
+              "diffusion" => diffusion,
+              "gamma" => γ,
+              "state_dim" => state_dim,
+              "param_infl" => param_infl
+             )
+    
     # define the observation sequence where we project the true state into the observation space and
     # perturb by white-in-time-and-space noise with standard deviation obs_un
     obs = obs[:, 2:nanl + 1]
@@ -179,25 +216,12 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     # define the associated time invariant observation error covariance
     obs_cov = obs_un^2.0 * I
     
-    # define kwargs, note the possible exclusion of dx_params if this is the only parameter for
-    # dx_dt and this is the parameter to be estimated
-    kwargs = Dict{String,Any}(
-              "dx_dt" => dx_dt,
-              "f_steps" => f_steps,
-              "step_model" => step_model!,
-              "h" => h,
-              "diffusion" => diffusion,
-              "gamma" => γ,
-              "state_dim" => state_dim,
-              "param_infl" => param_infl
-             )
-    
     # define the initial ensembles
     ens = rand(MvNormal(init, I), N_ens)
     
     if length(param_truth) > 1
         # note here the covariance is supplied such that the standard deviation is a percent of the parameter value
-        param_ens = rand(MvNormal(param_truth, diagm(param_truth * param_err).^2.0), N_ens)
+        param_ens = rand(MvNormal(param_truth[:], diagm(param_truth[:] * param_err).^2.0), N_ens)
     else
         # note here the standard deviation is supplied directly
         param_ens = rand(Normal(param_truth[1], param_truth[1]*param_err), 1, N_ens)
@@ -205,6 +229,12 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     
     # defined the extended state ensemble
     ens = [ens; param_ens]
+
+    # we define the parameter sample as the key name and index
+    # of the extended state vector pair, to be loaded in the
+    # ensemble integration step
+    param_sample = Dict("H" => [21:30], "D" => [31:40])
+    kwargs["param_sample"] = param_sample
 
     # create storage for the forecast and analysis statistics
     fore_rmse = Vector{Float64}(undef, nanl)
@@ -219,9 +249,20 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     for i in 1:nanl
         # for each ensemble member
         for j in 1:N_ens
+            if parentmodule(dx_dt) == IEEE_39_bus
+                # we define the diffusion structure matrix with respect to the sample value
+                # of the inertia, as per each ensemble member
+                diff_mat = zeros(20,20)
+                diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = dx_params["ω"][1] ./ (2.0 * ens[21:30, j])
+                kwargs["diff_mat"] = diff_mat
+            end
             @views for k in 1:f_steps
                 # loop over the integration steps between observations
                 step_model!(ens[:, j], 0.0, kwargs)
+                if parentmodule(dx_dt) == IEEE_39_bus 
+                    # set phase angles mod 2pi
+                    ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                end
             end
         end
     
@@ -229,7 +270,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, H, obs[:, i], obs_cov, state_infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, state_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage
@@ -240,7 +281,10 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
         para_rmse[i], para_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
-        param_ens .= param_ens + param_wlk * rand(Normal(), length(param_truth), N_ens)
+        # with standard deviation given by the param_wlk scaling
+        # of the mean vector
+        param_mean = mean(param_ens, dims=2)
+        param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(), length(param_truth), N_ens)
     end
 
     data = Dict{String,Any}(
@@ -253,6 +297,8 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "method" => method,
             "seed" => seed, 
             "diffusion" => diffusion,
+            "dx_params" => dx_params,
+            "param_truth" => param_truth,
             "sys_dim" => sys_dim,
             "state_dim" => state_dim,
             "obs_dim" => obs_dim, 
@@ -268,10 +314,16 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             "param_infl" => round(param_infl, digits=2)
             )
     
+    # check if there is a diffusion structure matrix
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]
+    end
+
     path = "../data/" * method * "/" 
     name =  method * 
-            "_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 4, "0") * 
+            "_" * string(parentmodule(dx_dt)) *
+            "_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_state_dim_" * lpad(state_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
