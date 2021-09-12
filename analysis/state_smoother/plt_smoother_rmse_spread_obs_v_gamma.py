@@ -15,13 +15,11 @@ obs_un = 1.0
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#tanl = 0.10
 mda = "false"
-mda = "true"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-total_lag = 53
 shift = 1
 gamma=11
 
@@ -34,7 +32,7 @@ f = h5.File('processed_smoother_nonlinear_obs_state_diffusion_0.00_tanl_' + str(
         mda + '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post' 
+    tuning_stat = 'fore' 
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -94,8 +92,10 @@ k = 0
 for meth in method_list:
     for stat in stats:
         rmse, spread = find_optimal_values(meth, stat, f)
-        l, = ax0.plot(range(1, gamma + 1), rmse[:gamma], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
-        ax1.plot(range(1, gamma + 1), spread[:gamma], marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        rmse = rmse[1:gamma+1]
+        spread = spread[1:gamma+1]
+        l, = ax0.plot(range(1, gamma + 1), rmse, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        ax1.plot(range(1, gamma + 1), spread, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
         line_list.append(l)
 
         if stat == 'post':
@@ -110,19 +110,19 @@ for meth in method_list:
         if meth == "mles-transform_classic":
             meth_name = "MLES"
         elif meth == "mles-transform_single_iteration":
-            meth_name = "SIETKS"
+            meth_name = "SIEnKS"
         elif meth == "mles-n-transform_classic":
             meth_name = "MLES-N"
         elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
             meth_name = "IEnKS-N"
         elif meth == "lin-ienks-transform":
-            meth_name = "LIEnKS"
+            meth_name = "Lin-IEnKS"
         elif meth == "lin-ienks-n-transform":
-            meth_name = "LIEnKS-N"
+            meth_name = "Lin-IEnKS-N"
         
         line_labs.append(meth_name + ' ' + stat_name)
         k+=1 
@@ -141,24 +141,28 @@ ax0.tick_params(
         labelsize=20,
         right=True)
 
-ax1.set_ylim([0.00,0.30])
-ax0.set_ylim([0.00,0.30])
-ax1.set_yticks(np.arange(1,31,2)*.01)
-ax0.set_yticks(np.arange(1,31,2)*.01)
+ax1.set_ylim([0.00,0.40])
+ax0.set_ylim([0.00,0.40])
+#ax1.set_yticks(np.arange(1,31,2)*.01)
+#ax0.set_yticks(np.arange(1,31,2)*.01)
+ax1.set_yticks(np.arange(1,41,4)*.01)
+ax0.set_yticks(np.arange(1,41,4)*.01)
 
 ax1.set_xlim([0.5, gamma + 0.5])
 ax0.set_xlim([0.5, gamma + 0.5])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-if mda == "true":
-    title = 'MDA, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+if mda=="true":
+    title = r"MDA, optimized for forecast RMSE"
+
 else:
-    title = 'SDA, ensemble size=21, shift=' + str(shift)  + r', $\Delta$t=' + str(tanl).ljust(4,"0")
+    title = r"SDA, optimized for forecast RMSE"
+
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
-plt.figtext(.05, .04, r'RMSE versus $\gamma$', horizontalalignment='left', verticalalignment='top', fontsize=24)
-plt.figtext(.95, .04, r'Spread versus $\gamma$', horizontalalignment='right', verticalalignment='top', fontsize=24)
+plt.figtext(.02, .06, r'RMSE versus $\gamma$', horizontalalignment='left', verticalalignment='top', fontsize=24)
+plt.figtext(.98, .06, r'Spread versus $\gamma$', horizontalalignment='right', verticalalignment='top', fontsize=24)
 plt.figtext(.50, .02, title, horizontalalignment="center", verticalalignment='center', fontsize=24)
 
 plt.show()

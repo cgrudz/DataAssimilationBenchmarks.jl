@@ -16,7 +16,7 @@ obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-#mda = "false"
+mda = "false"
 mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
@@ -24,7 +24,7 @@ color_list = ['#d95f02', '#7570b3', '#1b9e77']
 total_lag = 92
 shift = 1
 tanl = 0.05
-ensemble_sizes = range(15,44,2)
+ensemble_sizes = range(15,42,2)
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
@@ -34,7 +34,7 @@ f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(
         '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'fore' 
+    tuning_stat = 'post' 
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -110,15 +110,15 @@ for meth in method_list:
         if meth == "etks_classic":
             meth_name = "ETKS"
         elif meth == "etks_single_iteration":
-            meth_name = "SIETKS"
+            meth_name = "SIEnKS"
         elif meth == "enks-n-primal_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "mles-n-transform_classic":
             meth_name = "EnKS-N"
         elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
@@ -145,21 +145,22 @@ ax0.tick_params(
         labelsize=20,
         right=True)
 
-ax1.set_ylim([0.00,0.20])
-ax0.set_ylim([0.00,0.20])
-ax1.set_yticks(np.arange(1,21,2)*.01)
-ax0.set_yticks(np.arange(1,21,2)*.01)
+ax1.set_ylim([0.00,0.30])
+ax0.set_ylim([0.00,0.30])
+ax1.set_yticks(np.arange(1,31,2)*.01)
+ax0.set_yticks(np.arange(1,31,2)*.01)
 
 ax1.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-if mda == "true":
-    title = 'MDA, inflation / lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
- 
+if mda=="true":
+    title = r"MDA, optimized for smoother RMSE"
+
 else:
-    title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = r"SDA, optimized for smoother RMSE"
+
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)

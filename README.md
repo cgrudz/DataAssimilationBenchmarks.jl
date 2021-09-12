@@ -17,10 +17,13 @@
                                                             _/ |                  
                                                            |__/                   
 ```
+[![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+
+
 ## Welcome to DataAssimilationBenchmarks.jl!
 
 ### Description
-This is my personal data asimilation benchmark research code with an emphasis on testing and validation
+This is my personal data assimilation benchmark research code with an emphasis on testing and validation
 of ensemble-based filters and sequential smoothers in chaotic toy models.  The code is meant to be performant, 
 in the sense that large hyper-parameter discretizations can be explored to determine structural sensitivity 
 and reliability of results across different experimental regimes, with parallel implementations in Slurm.
@@ -35,33 +38,33 @@ This includes code for developing and testing data assimilation schemes in the
 	<th>Tuned multiplicative inflation</th>
 	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</th>
 	<th>Adaptive inflation, finite-size formalism (imperfect model)</th>
-	<th>Localization</th>
-	<th>Hybridization</th>
+	<th>Linesearch</th>
+	<th>Localization / Hybridization</th>
 	<th>Multiple data assimilation (general shift and lag)</th>
 </tr>
 <tr>
-  <td>EnKF, perturbed obs.</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>EnKF, perturbed obs.</td><td>X</td><td>X</td><td></td><td>NA</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>ETKF, right transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>ETKF</td><td>X</td><td>X</td><td></td><td>NA</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>MLEF, right transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>MLEF, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>EnKS, perturbed obs.</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>EnKS, perturbed obs.</td><td>X</td><td>X</td><td></td><td>NA</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>ETKS, right transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>NA</td>
+  <td>ETKS</td><td>X</td><td>X</td><td></td><td>NA</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>SIETKS, right transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
+  <td>MLES, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>IEnKS transform</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
+  <td>SIEnKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
 </tr>
 <tr>
-  <td>IEnKS bundle</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
+  <td>Gauss-Newton IEnKS, transform / bundle variants</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
 </tr>
 </table>
 
@@ -78,7 +81,7 @@ The directory is structured as follows:
 
 ## Installation
 
-The main package DataAssimilationBenchmarks.jl is a wrapper library including the core numerical solvers 
+The main module DataAssimilationBenchmarks.jl is a wrapper module including the core numerical solvers 
 for ordinary and stochastic differential equations, solvers for data assimilation routines and the core 
 process model code for running twin experiments with benchmark models. These methods can be run 
 stand-alone in other programs by calling these functions from the DeSolvers, EnsembleKalmanSchemes and 
@@ -92,54 +95,210 @@ The "slurm_submit_scripts" directory includes routines for parallel submission o
 Data processing scripts and visualization scripts (written in Python with Matplotlib and Seaborn) are 
 included in the "analysis" directory.
 
-
-### Installing a dev package from Github
-
-Write instructions here
-
 ### Installing a dev package from the Julia General registries 
 
-Write instructions here
+In order to install the dev version to your Julia environment, you can use the following commands in the REPL
+
+```{julia}
+pkg> dev DataAssimilationBenchmarks.jl
+```
+
+The installed version will be included in your
+
+```
+~/.julia/dev/
+```
+on Linux and the analogous directory with respect Windows and Mac systems.
+
+Alternatively, you can install this from my Github directly as follows:
+```{julia}
+pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
+```
 
 ## Using solvers in DataAssimilationBenchmarks
 
-Write instructions here
+The methods directory currently contains two types of solvers, differential equation solvers in the DeSolvers.jl sub-module,
+and ensemble-Kalman-filter-based data assimilation routines and utilities in the EnsembleKalmanSchemes.jl sub-module.
 
-### General API for solvers
+### API for differential equation solvers
 
-Write instructions here
+Three general schemes are developed for ordinary and stochastic differential equations, the four-stage Runge-Kutta, second order Taylor,
+and the Euler-(Maruyama) schemes.  Because the second order Taylor-Stratonovich scheme relies specifically on the structure of the
+Lorenz-96 model with additive noise, this is included separately in the `models/L96.jl` sub-module.
 
-### Currently debugged and validated methods
+General schemes such as the four-stage Runge-Kutta and the Euler-(Maruyama) schemes are built to take in arguments of the form
 
-Write instructions here
+```{julia}
+(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+x          -- array or sub-array of a single state possibly including parameter values
+t          -- time point
+kwargs     -- this should include dx_dt, the paramters for the dx_dt and optional arguments
+dx_dt      -- time derivative function with arguments x and dx_params
+dx_params  -- tuple of parameters necessary to resolve dx_dt, not including parameters in the extended state vector 
+h          -- numerical discretization step size
+diffusion  -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
+state_dim  -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
+ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
+```
+with reduced options for the less-commonly used first order Euler(-Maruyama) scheme.
+
+The time steppers over-write the value of `x` in place as a vector or a view of an array for efficient ensemble integration.
+We follow the convention in data assimilation of the extended state formalism for parameter estimation where the parameter sample
+should be included as trailing state variables in the columns of the ensemble array.  If
+
+```{julia}
+true == haskey(kwargs, "state_dim")
+```
+the `state_dim` parameter will specify the dimension of the dynamical states and create a view of the vector `x` including all entries
+up to this index.  The remaining entries in the vector `x` will be passed to the `dx_dt` function in a vector including
+`dx_params` in the leading entries and the extended state entries trailing.  The parameter sample values will remain unchanged
+by the time stepper when the dynamical state entries in `x` are over-written in place.
+
+Setting `diffusion > 0.0` above introduces additive noise to the dynamical system.  The main `rk4_step!` has convergence on order 4.0
+when diffusion is equal to zero, and both strong and weak convergence on order 1.0 when stochasticity is introduced.  Nonetheless,
+this is the recommended out-of-the-box solver for any generic DA simulation for the statistically robust performance, versus Euler-(Maruyama).
+When specifically generating the truth-twin for the Lorenz96 model with additive noise, this should be performed with the
+`l96s_tay2_step!` in the `models/L96.jl` sub-module while the ensemble should be generated with the `rk4_step!`.
+See the benchmarks on the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) for a full discussion of
+statistically robust model configurations.
+
+### API for data assimilation solvers
+
+Different filter and smoothing schemes are run through the routines including
+
+```{julia}
+ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},
+                         obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+
+
+ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
+                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any};
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10) where {T1 <: CovM}
+
+CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+```
+
+The type of analysis to be passed to the transform step is specified with the `analysis` string.  Observations
+for the filter schemes correspond to information available at a single analysis time while the ls (lag-shift)
+smoothers require an array of observations corresponding to all analysis times within the DAW.  Observation
+covariances should be typed according to the type union above for efficiency.  The state_infl is a required
+tuneable parameter for multiplicative covariance inflation.   Extended parameter state covariance
+inflation can be specified in `kwargs`.  These outer loops will pass the required values to the `transform` 
+function that generates the ensemble transform for conditioning on observations.  Different outer-loop 
+schemes can be built around the `transform` function alone in order to use validated ensemble transform 
+schemes.  Utility scripts to generate observation operators, analyze ensemble statistics, etc, are included
+in the EnsembleKalmanSchemes.jl sub-module.
 
 ## Using experiments in dev package
 
-Write instructions here
+In order to use the full experiment drivers, to both generate time series for the truth twin and for
+running the twin experiments, one must have access to the sub-modules in the `experiments` directory.
 
 ### GenerateTimeSeries
 
-Write instructions here
+GenerateTimeSeries is a sub-module used to generate a time series for a twin experiment based on tuneable
+configuration parameters.  Currently, this only includes the L96s model, with parameters defined as
+```{julia}
+l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
+seed, state_dim, tanl, nanl, spin, diffusion, F = args
+```
+The `args` tuple includes the pseudo-random seed `seed`, the size of the Lorenz system `state_dim`, the length of continuous
+time in between sequential observations / analyses `tanl`, the number of observations / analyses to be saved
+`nanl`, the length of the warm-up integration of the dynamical system solution to guarantee an observation generating 
+process on the attractor `spin`, the diffusion parameter determining the intensity of the random perturbations `diffusion`
+and the forcing parameter `F`.  This automates the selection of the correct time stepper for the truth twin when using
+deterministic or stochastic integration.  Results are saved in .jld format in the data directory, assuming the script is
+run from the REPL in the experiments directory.
 
 ### FilterExps
 
-Write instructions here
+The `FilterExps.jl` sub-module configures twin experiments using stored time series data as generated above for 
+efficiency when using the same base-line time series to generate possibly different experiment configurations.
+Experiment configurations are generated by
+```{julia}
+filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int64,Float64})
+time_series, method, seed, obs_un, obs_dim, γ, N_ens, infl = args
+```
+where `time_series` specifies the path to the .jld truth twin, `method` specifies the filter scheme, `seed` specifies
+the pseudo-random seed, `obs_un` specifies the observation error standard deviation, assuming a uniform scaling observation
+error covariance, `obs_dim` specifies the dimension of the observation vector, `γ` specifies the level of the nonliearity
+in the `alternating_obs_operator`, `N_ens` specifies the ensemble size and `infl` specifies the (static) multiplicative inflation.
+
+Similar conventions follow for parameter estimation experiments
+```{julia}
+filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Float64,Float64,Int64,Float64,Float64})
+time_series, method, seed, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
+```
+with the exception of including the standard deviation, `param_err`, of the initial iid Gaussian draw of the parameter sample
+centered at the true value, the standard deviation, `param_wlk`, of the random walk applied to the parameter sample
+after each analysis and the multiplicative covariance inflation applied separately to the extended parameter
+states alone `param_infl`.
+
+The number of analyses in the twin experiment `nanl` is hard-coded currently in the function body of each experiment and
+should be adjusted there.  Results are saved in the `data` directory according to the method used, assuming that the experiment
+is run from the `experiments` directory or the `slurm_submit_scripts` directory.
 
 ### SmootherExps
 
-Write instructions here
+The `SmootherExps.jl` sub-module configures twin experiments using stored time series data as generated above for 
+efficiency when using the same base-line time series to generate possibly different experiment configurations.
+Experiment configurations are generated by function calls as with the filter experiments, but with the additional
+options of how the outer-loop is configured with a classic, single-iteration or the fully iterative Gauss-Newton style smoother.
+The parameters `lag` and `shift` specify how the data assimilation windows are translated in over the observation
+and analysis times.  The `mda` parameter is only applicable to the single-iteration and Gauss-Newton style smoothers,
+utlizing sequential multiple data assimilation.  Note, the single-iteration and fully iterative Gauss-Newton style smoothers are
+only defined for MDA compatible values of lag and shift where the lag is an integer multiple of the shift.
+
+Currently debugged and validated smoother experiment configurations include
+```
+classic_state          -- classic EnKS style state estimation
+classic_param          -- classic EnKS style state-parameter estimation
+single_iteration_state -- single-iteration EnKS state estimation
+single_iteration_param -- single-iteration EnKS state-parameter estimation
+iterative_state        -- Gauss-Newton style state estimation
+```
+Other techniques are still in debugging and validation.  Each of these takes an analysis type as used in the
+`transform` function in the `EnsembleKalmanSchemes.jl` sub-module, like the filter analyses in the filter experiments.
 
 ### SingleExperimentDriver / ParallelExperimentDriver
 
-Write instructions here
+While the above filter experiments and smoother experiments configure twin experiments, run them and save the outputs,
+the `SingleExperimentDriver.jl` and `ParallelExperimentDriver.jl` can be used as wrappers to run generic model settings for
+debugging and validation, or to use built-in Julia parallelism to run a collection experiments over a parameter grid.
+The `SingleExperimentDriver.jl` is primarily for debugging purposes with tools like `BenchmarkTools.jl` and `Debugger.jl`,
+so that standard inputs can be run with the experiment called with macros.
+
+The `ParallelExperimentDriver.jl` is a simple parallel implementation, though currently lacks a soft-fail when numerical
+instability is encountered.  This means that if a single experiment configuration in the collection fails due to overflow, the entire
+collection will cancel.  A fix for this is being explored, but the recommendation is to use the slurm submit
+scripts below as templates for generating large parameter grid configurations and running them on servers.
 
 ### SlurmExperimentDrivers
 
-Write instructions here
+These are a collection of templates for automatically generating an array of parameter tuples to pass to the experiment
+functions as configurations.  This uses a simple looping strategy, while writing out the configurations to a .jld file
+to be read by the parallel experiment driver within the `slurm_submit_scripts` directory.  The paralell submit script 
+should be run within the `slurm_submit_scripts` directory to specify the correct paths to the time series data, the
+experiment configuration data and to save to the correct output directory, specified by the method used.
+
+### Processing experiment outputs
+
+The `analysis` directory contains scripts for batch processing the outputs from experiments into time-averaged
+RMSE and spread and arranging these outputs in an array for plotting.  This should be modified based on the
+local paths to stored data.  This will try to load files based on parameter settings written in the name of
+the output .jld file and if this is not available, this will store `Inf` values in the place of missing data.
 
 
 ## To do
-  * Write installation instructions
-	* Fill out more documentation on the API
-	* Build tests for the library
+
+  * Build additional tests for the library
+  * Expand on the existing schemes
 

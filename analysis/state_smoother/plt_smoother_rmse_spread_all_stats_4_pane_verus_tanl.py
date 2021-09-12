@@ -38,13 +38,14 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanls = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 total_tanl = len(tanls)
-#mda = "false"
-mda = "true"
-total_lag = 65
+mda = "false"
+#mda = "true"
+total_lag = 53
 shift = 1
 
 f = h5.File('processed_smoother_state_versus_tanl_diffusion_0.00_nanl_20000_burn_05000_mda_' +\
@@ -55,7 +56,7 @@ spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
 label_v_positions = [0.336, 0.626, 0.916]
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -87,8 +88,8 @@ def find_optimal_values(method, stat, data):
     return [rmse_vals, spread_vals]
 
 #color_map = sns.color_palette("husl", 101)
-color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
-#color_map = sns.cubehelix_palette(80, start=.75, rot=.20, reverse=True)
+#color_map = sns.cubehelix_palette(80, rot=1.5, gamma=0.8, as_cmap=True)
+color_map = sns.cubehelix_palette(80, start=.75, rot=1.50, reverse=True, dark=0.25)
 
 
 
@@ -105,6 +106,7 @@ j = 0
 for method in method_list:
     for stat in stats:
         if method[0:6] == "enks-n" or \
+           method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
@@ -119,25 +121,31 @@ for method in method_list:
             scheme = "ETKS"
 
         elif method == "etks_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "enks-n-primal_classic":
-            scheme = "ETKS-N"
+            scheme = "EnKS-N"
+
+        elif method == "mles-n-transform_classic":
+            scheme = "EnKS-N"
 
         elif method == "enks-n-primal_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
+
+        elif method == "mles-n-transform_single_iteration":
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
 
         elif method == "lin-ienks-transform":
-            scheme = "LIEnKS"
+            scheme = "Lin-IEnKS"
 
         elif method == "ienks-n-transform":
             scheme = "IEnKS-N"
 
         elif method == "lin-ienks-n-transform":
-            scheme = "LIEnKS-N"
+            scheme = "Lin-IEnKS-N"
 
         plt.figtext(rmse_label_h_positions[j], label_v_positions[i % 3], scheme,  
                 horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -341,17 +349,17 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift " + str(shift) 
+    fig_title = r"MDA"
 
 else:
-    fig_title = "SDA Shift " + str(shift) 
+    fig_title = r"SDA"
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .225, r'Posterior', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'Forecast length $\Delta$t', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$\Delta$t', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)

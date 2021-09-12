@@ -12,8 +12,6 @@ import h5py as h5
 
 obs_un = 1.0
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 #mda = "false"
@@ -24,7 +22,7 @@ color_list = ['#d95f02', '#7570b3', '#1b9e77']
 total_lag = 92
 shift = 1
 tanl = 0.05
-ensemble_sizes = range(15,44,2)
+ensemble_sizes = range(15,42,2)
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
@@ -110,15 +108,11 @@ for meth in method_list:
         if meth == "etks_classic":
             meth_name = "ETKS"
         elif meth == "etks_single_iteration":
-            meth_name = "SIETKS"
+            meth_name = "SIEnKS"
         elif meth == "enks-n-primal_classic":
             meth_name = "EnKS-N"
         elif meth == "enks-n-primal_single_iteration":
-            meth_name = "SIETKS-N"
-        elif meth == "mles-n-transform_classic":
-            meth_name = "EnKS-N"
-        elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
@@ -155,11 +149,12 @@ ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
 #ax0.set_yscale('log')
 #ax1.set_yscale('log')
 
-if mda == "true":
-    title = 'MDA, inflation / lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
- 
+if mda=="true":
+    title = r"MDA, optimized for forecast RMSE"
+
 else:
-    title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = r"SDA, optimized for forecast RMSE"
+
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)

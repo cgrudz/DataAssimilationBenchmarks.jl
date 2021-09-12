@@ -9,9 +9,16 @@ export rk4_step!, tay2_step!, em_step!
 ########################################################################################################################
 ########################################################################################################################
 # Type union declarations for multiple dispatch
+# and type aliases
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+# dictionary for model parameters
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
+# dictionary containing key and index pairs to subset the state vector and merge with dx_params
+ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 ########################################################################################################################
 ########################################################################################################################
@@ -22,15 +29,17 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
     Arguments are given as
-    x          -- array of a single state possibly including parameter values
-    t          -- time point
-    kwargs     -- this should include dx_dt, the paramters for the dx_dt and optional arguments
-    dx_dt      -- time derivative function with arguments x and dx_params
-    dx_params  -- tuple of parameters necessary to resolve dx_dt, not including parameters in the extended state vector 
-    h          -- numerical discretization step size
-    diffusion  -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
-    state_dim  -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
-    ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization
+    x            -- array or sub-array of a single state possibly including parameter values
+    t            -- time point
+    kwargs       -- this should include dx_dt, the paramters for the dx_dt and optional arguments
+    dx_dt        -- time derivative function with arguments x and dx_params
+    dx_params    -- ParamDict of parameters necessary to resolve dx_dt, not including those in the extended state vector 
+    h            -- numerical discretization step size
+    diffusion    -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
+    diff_mat     -- structure matrix for the diffusion coefficients, replaces the default uniform scaling 
+    state_dim    -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
+    param_sample -- ParamSample dictionary for merging extended state with dx_params
+    ξ            -- random array size state_dim, can be defined in kwargs to provide a particular realization
     """
 
     # unpack the integration scheme arguments and the parameters of the derivative
@@ -40,14 +49,15 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
-        params = kwargs["dx_params"]::Vector{Float64}
+        params = kwargs["dx_params"]::ParamDict
     end
 
     # infer the (possibly) extended state dimension
     sys_dim = length(x)
 
     # check if extended state vector
-    if haskey(kwargs, "state_dim")
+    if haskey(kwargs, "param_sample")
+        param_sample = kwargs["param_sample"]::ParamSample
         state_dim = kwargs["state_dim"]::Int64
         v = @view x[begin: state_dim]
         param_est = true
@@ -65,37 +75,54 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(MvNormal(zeros(state_dim), 1.0)) 
+            ξ = rand(Normal(), state_dim) 
         end
-
-    else
-        # if deterministic RK, load dummy ξ of zeros
-        ξ = zeros(state_dim)
+        if haskey(kwargs, "diff_mat")
+            # diffusion is a scalar intensity which is applied to the 
+            # structure matrix for the diffusion coefficients
+            diff_mat = kwargs["diff_mat"]::Array{Float64}
+            diffusion = diffusion * diff_mat 
+        end
+        # rescale the standard normal to variance h for Wiener process
+        W = ξ * sqrt(h)
     end
-
-    # rescale the standard normal to variance h for Wiener process
-    W = ξ * sqrt(h)
 
     # load parameter values from the extended state into the derivative
     if param_est
         if haskey(kwargs, "dx_params")
             # extract the parameter sample and append to other derivative parameters
-            params = [params[:]; x[state_dim + 1: end]]
-        
+            for key in keys(param_sample)
+                params = merge(params, Dict(key => x[param_sample[key][1]]))
+            end
         else
             # set the parameter sample as the only derivative parameters
-            params = x[state_dim + 1: end]
+            params = Dict{String, Array{Float64}}
+            for key in keys(param_sample)
+                params = merge(params, Dict(key => x[param_sample[key][1]]))
+            end
         end
     end
 
+    # pre-allocate storage for the Runge-Kutta scheme
+    κ = Array{Float64}(undef, state_dim, 4)
+
     # terms of the RK scheme recursively evolve the dynamic state components alone
-    k1 = dx_dt(v, t, params) * h + diffusion * W
-    k2 = dx_dt(v + 0.5 * k1, t + 0.5 * h, params) * h + diffusion * W
-    k3 = dx_dt(v + 0.5 * k2, t + 0.5 * h, params) * h + diffusion * W
-    k4 = dx_dt(v + k3, t + h, params) * h + diffusion * W
+    if diffusion != 0.0
+        # SDE formulation
+        κ[:, 1] = dx_dt(v, t, params) * h + diffusion * W
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h + diffusion * W
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h + diffusion * W
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h + diffusion * W
+    else
+        # deterministic formulation
+        κ[:, 1] = dx_dt(v, t, params) * h 
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h 
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h 
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h 
+    end
     
     # compute the update to the dynamic variables
-    x[begin: state_dim] = v + (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4) 
+    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
     x
 end
 
@@ -115,7 +142,7 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
     # unpack dx_params
     h = kwargs["h"]::Float64
-    params = kwargs["dx_params"]::Vector{Float64}
+    params = kwargs["dx_params"]::ParamDict
     dx_dt = kwargs["dx_dt"]
     jacobian = kwargs["jacobian"]
 
@@ -138,7 +165,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
-    params = kwargs["dx_params"]::Vector{Float64}
+    params = kwargs["dx_params"]::ParamDict
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]
     state_dim = length(x)
@@ -150,7 +177,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(MvNormal(zeros(state_dim), 1.0)) 
+            ξ = rand(Normal(), state_dim) 
         end
 
     else

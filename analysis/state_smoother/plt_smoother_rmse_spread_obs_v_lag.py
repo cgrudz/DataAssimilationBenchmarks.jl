@@ -16,12 +16,12 @@ method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
-mda = "true"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-gamma = 4
-total_lag = 53
+gamma = 0
+total_lag = 85
 shift = 1
 plot_range = len(range(1,total_lag,3))
 
@@ -111,9 +111,9 @@ for meth in method_list:
         elif meth == "ienks-n-transform":
             meth_name = "IEnKS-N"
         elif meth == "lin-ienks-transform":
-            meth_name = "LIEnKS"
+            meth_name = "Lin-IEnKS"
         elif meth == "lin-ienks-n-transform":
-            meth_name = "LIEnKS-N"
+            meth_name = "Lin-IEnKS-N"
         
         line_labs.append(meth_name + ' ' + stat_name)
         k+=1 
@@ -134,8 +134,13 @@ ax0.tick_params(
 
 ax1.set_ylim([0.00,0.30])
 ax0.set_ylim([0.00,0.30])
-ax1.set_yticks(np.arange(0,31,2)*.01)
-ax0.set_yticks(np.arange(0,31,2)*.01)
+ax1.set_yticks(np.arange(0,101,5)*.01)
+ax0.set_yticks(np.arange(0,101,5)*.01)
+
+#ax1.set_ylim([0.00,2.00])
+#ax0.set_ylim([0.00,2.00])
+#ax1.set_yticks(np.arange(0,200,20)*.01)
+#ax0.set_yticks(np.arange(0,200,20)*.01)
 
 ax1.set_xlim([0.5, total_lag])
 ax0.set_xlim([0.5, total_lag])
@@ -146,10 +151,10 @@ ax0.set_xticks(range(1, total_lag ,3))
 
 
 if mda == 'true':
-    title = 'MDA, $\gamma$ ='+ str(range(1,10)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21, $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = 'MDA, $\gamma$ ='+ str(range(0,12)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21, $\Delta$t=' + str(tanl).ljust(4,"0") 
 
 else:
-    title = 'SDA, $\gamma$ ='+ str(range(1,10)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21 $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = 'SDA, $\gamma$ ='+ str(range(0,12)[gamma]) + ', shift=' + str(shift)  + r', ensemble size=21 $\Delta$t=' + str(tanl).ljust(4,"0") 
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
 plt.figtext(.05, .04, 'RMSE versus lag', horizontalalignment='left', verticalalignment='top', fontsize=24)
