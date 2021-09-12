@@ -1217,9 +1217,11 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         state_dim = kwargs["state_dim"]::Int64
         param_infl = kwargs["param_infl"]::Float64
         param_wlk = kwargs["param_wlk"]::Float64
+        param_est = true
 
     else
         state_dim = sys_dim
+        param_est = false
     end
 
     # step 1: create storage for the forecast and filter values over the DAW
@@ -1236,7 +1238,20 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         # step 2a: propagate between observation times
         for j in 1:N_ens
             @views for k in 1:f_steps
+                if param_est
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        # we define the diffusion structure matrix with respect to the sample value
+                        # of the inertia, as per each ensemble member
+                        diff_mat = zeros(20,20)
+                        diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                        kwargs["diff_mat"] = diff_mat
+                    end
+                end
                 step_model!(ens[:, j], 0.0, kwargs)
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    # set phase angles mod 2pi
+                    ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                end
             end
         end
 
@@ -1269,7 +1284,8 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
     # step 3: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
         param_ens = ens[state_dim + 1:end , :]
-        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+        param_mean = mean(param_ens, dims=2)
+        param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
         ens[state_dim + 1:end, :] = param_ens
     end
     

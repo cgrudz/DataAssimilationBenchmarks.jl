@@ -35,6 +35,12 @@ function classic_smoother_state_exp(j)
     classic_state(args)
 end
 
+function classic_smoother_param_exp(j)
+    f = load("../data/input_data/classic_param_smoother_input_args.jld")
+    args = f["experiments"][j]
+    classic_param(args)
+end
+
 
 ########################################################################################################################
 # Single-iteration smoothers

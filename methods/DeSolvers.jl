@@ -57,7 +57,6 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     # check if extended state vector
     if haskey(kwargs, "param_sample")
-        # NOTE: decide how to type this
         param_sample = kwargs["param_sample"]::ParamSample
         state_dim = kwargs["state_dim"]::Int64
         v = @view x[begin: state_dim]

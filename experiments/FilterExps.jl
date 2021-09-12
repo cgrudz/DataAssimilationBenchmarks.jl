@@ -70,6 +70,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
               "diffusion" => diffusion,
               "gamma" => γ,
              )
+    
     # check if there is a diffusion structure matrix
     if haskey(ts, "diff_mat")
         kwargs["diff_mat"] = ts["diff_mat"]
