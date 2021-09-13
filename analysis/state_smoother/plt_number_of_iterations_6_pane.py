@@ -13,7 +13,7 @@ import h5py as h5
 methods = ["ienks-transform", "ienks-n-transform", "ienks-transform"]
 tanl = 0.05
 total_lag = 92
-total_ens = 44
+total_ens = 42
 shift = 1
 
 fsda = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0") +'_nanl_20000_burn_05000_mda_false' + \
@@ -23,7 +23,7 @@ fmda = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).lju
         '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
 
 def find_optimal_values(method, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     method_iteration_means = np.array(f[method + '_iteration_mean'])
     method_iteration_stds = np.array(f[method + '_iteration_std'])
@@ -87,13 +87,13 @@ ax4 = fig.add_axes([.070, .510, .280, .395])
 ax5 = fig.add_axes([.360, .510, .280, .395])
 ax6 = fig.add_axes([.650, .510, .280, .395])
 
-color_map1 = sns.cubehelix_palette(n_colors=200, rot=1.75)
+color_map1 = sns.cubehelix_palette(n_colors=100, rot=1.75)
 color_map2 = sns.cubehelix_palette(n_colors=100, rot=1.75, start=1.5)
 color_maps = [color_map1, color_map2]
 max_scale2 = 5.0
 min_scale2 = 0.0
 
-max_scale1 = 14.0
+max_scale1 = 10.0
 min_scale1 = 1.0
 
 max_scales = [max_scale1, max_scale2]
@@ -183,7 +183,7 @@ ax6.tick_params(
         labelleft=False,
         labelbottom=False)
 
-fig_title = "Iteration statistics, shift 1, $\Delta$t="+ str(tanl)
+fig_title = r"Iteration statistics, $S=$1, $\Delta$t="+ str(tanl)
 
 
 plt.figtext(.210, .905, "IEnKS SDA", horizontalalignment='center', verticalalignment='bottom', fontsize=20)
@@ -192,8 +192,8 @@ plt.figtext(.790, .905, "IEnKS MDA", horizontalalignment='center', verticalalign
 
 plt.figtext(.025, .2925, r'Std', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.025, .7075, r'Mean', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
-plt.figtext(.50, .02, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
+plt.figtext(.50, .02, r'$N_e$', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.5, .97, fig_title,
         horizontalalignment='center', verticalalignment='center', fontsize=24)
 

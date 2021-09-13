@@ -38,13 +38,15 @@ ax8b = fig.add_axes([.839, .375, .090, .25])
 ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
+#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
+method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
 mda = "false"
 #mda = "true"
 total_lag = 92
-total_ens = 44
+total_ens = 42
 shift = 1
 
 f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
@@ -58,7 +60,7 @@ label_v_positions = [0.336, 0.626, 0.916]
 
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -105,6 +107,7 @@ for method in method_list:
     for stat in stats:
         #ipdb.set_trace()
         if method[0:6] == "enks-n" or \
+           method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
@@ -119,7 +122,7 @@ for method in method_list:
             scheme = "ETKS"
 
         elif method == "etks_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "enks-n-dual_classic":
             scheme = "EnKS-N"
@@ -130,14 +133,20 @@ for method in method_list:
         elif method == "enks-n-primal-ls_classic":
             scheme = "EnKS-N"
 
+        elif method == "mles-n-transform_classic":
+            scheme = "EnKS-N"
+
         elif method == "enks-n-dual_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "enks-n-primal_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "enks-n-primal-ls_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
+
+        elif method == "mles-n-transform_single_iteration":
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
@@ -329,18 +338,25 @@ ax2a.set_xticklabels(x_labs, rotation=0)
 ax1a.set_xticklabels(x_labs, rotation=0)
 
 
+#if mda=="true":
+#    fig_title = r"MDA, $S$=" + str(shift) + ", $\Delta$t="+ str(tanl)
+#
+#else:
+#    fig_title = r"SDA, $S$=" + str(shift) + ", $\Delta$t="+ str(tanl)
+#
+
 if mda=="true":
-    fig_title = "MDA, shift=" + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = r"MDA"
 
 else:
-    fig_title = "SDA, shift=" + str(shift) + ", $\Delta$t="+ str(tanl)
+    fig_title = r"SDA"
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.020, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$N_e$', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)

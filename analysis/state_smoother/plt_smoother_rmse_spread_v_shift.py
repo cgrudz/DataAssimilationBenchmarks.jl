@@ -11,27 +11,25 @@ import math
 import h5py as h5
 
 obs_un = 1.0
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 #method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
-#mda = "false"
-mda = "true"
+tanl = 0.05
+mda = "false"
+#mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
-total_lag = 92
-shift = 1
-tanl = 0.05
-ensemble_sizes = range(15,44,2)
+shifts = [1, 2, 4, 8, 16]
+
 
 fig = plt.figure()
 ax1 = fig.add_axes([.520, .10, .43, .72])
 ax0 = fig.add_axes([.050, .10, .43, .72])
 
-f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0") +'_nanl_20000_burn_05000_mda_' + mda + \
-        '_shift_' + str(shift).rjust(3, "0") + '.h5', 'r')
+f = h5.File('processed_smoother_state_v_shift_diffusion_0.00_tanl_' +\
+            str(tanl).ljust(4, "0") + '_nanl_20000_burn_05000_mda_' +\
+            mda + '.h5', 'r')
 
 def find_optimal_values(method, stat, data):
     tuning_stat = 'fore' 
@@ -45,11 +43,11 @@ def find_optimal_values(method, stat, data):
 
     if len(dims) == 2:
         tuned_rmse_min_vals = np.min(tuned_rmse, axis=1)
-        num_ens = len(tuned_rmse_min_vals)
-        rmse_vals = np.zeros([num_ens])
-        spread_vals = np.zeros([num_ens])
+        shift_len = len(tuned_rmse_min_vals)
+        rmse_vals = np.zeros([shift_len])
+        spread_vals = np.zeros([shift_len])
 
-        for j in range(num_ens):
+        for j in range(shift_len):
             min_val = tuned_rmse_min_vals[j]
             indx = tuned_rmse[j,:]
             indx = indx == min_val
@@ -65,11 +63,11 @@ def find_optimal_values(method, stat, data):
 
     else:
         tuned_rmse_min_vals = np.min(tuned_rmse, axis=(1,2))
-        num_ens = len(tuned_rmse_min_vals)
-        rmse_vals = np.zeros([num_ens])
-        spread_vals = np.zeros([num_ens])
+        shift_len = len(tuned_rmse_min_vals)
+        rmse_vals = np.zeros([shift_len])
+        spread_vals = np.zeros([shift_len])
 
-        for j in range(num_ens):
+        for j in range(shift_len):
             min_val = tuned_rmse_min_vals[j]
             indx = tuned_rmse[j,:,:]
             indx = indx == min_val
@@ -94,8 +92,10 @@ k = 0
 for meth in method_list:
     for stat in stats:
         rmse, spread = find_optimal_values(meth, stat, f)
-        l, = ax0.plot(ensemble_sizes, rmse, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
-        ax1.plot(ensemble_sizes, spread, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        rmse = rmse[0:5]
+        spread = spread[0:5]
+        l, = ax0.plot(shifts, rmse, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
+        ax1.plot(shifts, spread, marker=markerlist[j], linewidth=2, markersize=markersizes[j], color=color_list[k])
         line_list.append(l)
 
         if stat == 'post':
@@ -110,15 +110,11 @@ for meth in method_list:
         if meth == "etks_classic":
             meth_name = "ETKS"
         elif meth == "etks_single_iteration":
-            meth_name = "SIETKS"
-        elif meth == "enks-n-primal_classic":
-            meth_name = "EnKS-N"
-        elif meth == "enks-n-primal_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "SIEnKS"
         elif meth == "mles-n-transform_classic":
-            meth_name = "EnKS-N"
-        elif meth == "mles-n-transform_single_iteration":
-            meth_name = "SIETKS-N"
+            meth_name = "MLES-N"
+        elif meth == "mles-n_single_iteration":
+            meth_name = "SIEnKS-N"
         elif meth == "ienks-transform":
             meth_name = "IEnKS"
         elif meth == "ienks-n-transform":
@@ -145,25 +141,26 @@ ax0.tick_params(
         labelsize=20,
         right=True)
 
-ax1.set_ylim([0.00,0.20])
-ax0.set_ylim([0.00,0.20])
-ax1.set_yticks(np.arange(1,21,2)*.01)
-ax0.set_yticks(np.arange(1,21,2)*.01)
+ax1.set_ylim([0.00,0.40])
+ax0.set_ylim([0.00,0.40])
+#ax1.set_yticks(np.arange(1,31,2)*.01)
+#ax0.set_yticks(np.arange(1,31,2)*.01)
+ax1.set_yticks(np.arange(1,41,4)*.01)
+ax0.set_yticks(np.arange(1,41,4)*.01)
 
-ax1.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
-ax0.set_xlim([ensemble_sizes[0] - 0.05, ensemble_sizes[-1] + 0.05])
-#ax0.set_yscale('log')
-#ax1.set_yscale('log')
+#ax1.set_xlim([0.5, gamma + 0.5])
+#ax0.set_xlim([0.5, gamma + 0.5])
+ax0.set_xscale('log', basex=2)
+ax1.set_xscale('log', basex=2)
 
 if mda == "true":
-    title = 'MDA, inflation / lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0")
- 
+    title = r'MDA'
 else:
-    title = 'SDA, lag optimized for forecast RMSE, shift=' + str(shift) + r', $\Delta$t=' + str(tanl).ljust(4,"0") 
+    title = r'SDA'
 
 fig.legend(line_list, line_labs, fontsize=18, ncol=4, loc='upper center')
-plt.figtext(.05, .05, r'RMSE versus $N_e$', horizontalalignment='left', verticalalignment='top', fontsize=24)
-plt.figtext(.95, .05, r'Spread versus $N_e$', horizontalalignment='right', verticalalignment='top', fontsize=24)
+plt.figtext(.02, .06, r'RMSE versus $S$', horizontalalignment='left', verticalalignment='top', fontsize=24)
+plt.figtext(.98, .06, r'Spread versus $S$', horizontalalignment='right', verticalalignment='top', fontsize=24)
 plt.figtext(.50, .02, title, horizontalalignment="center", verticalalignment='center', fontsize=24)
 
 plt.show()

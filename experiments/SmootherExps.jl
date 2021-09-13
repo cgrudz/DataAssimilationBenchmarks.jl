@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
-using EnsembleKalmanSchemes, DeSolvers, L96
+using EnsembleKalmanSchemes, DeSolvers, L96, IEEE_39_bus
 export classic_state, classic_param, single_iteration_state, single_iteration_param, iterative_state
 
 ########################################################################################################################
@@ -16,6 +16,10 @@ export classic_state, classic_param, single_iteration_state, single_iteration_pa
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+# dictionary for model parameters
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -39,10 +43,10 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    f = ts["F"]::Float64
+    dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = L96.dx_dt
+    dx_dt = IEEE_39_bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -70,13 +74,18 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "dx_dt" => dx_dt,
                 "f_steps" => f_steps,
                 "step_model" => step_model!, 
-                "dx_params" => [f],
+                "dx_params" => dx_params,
                 "h" => h,
                 "diffusion" => diffusion,
                 "gamma" => γ,
                 "shift" => shift,
                 "mda" => mda 
                              )
+
+    # check if there is a diffusion structure matrix
+    if haskey(ts, "diff_mat")
+        kwargs["diff_mat"] = ts["diff_mat"]
+    end
 
     # define the observation operator, observation error covariance and observations with error 
     obs = alternating_obs_operator(obs, obs_dim, kwargs)
@@ -152,6 +161,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "method" => method,
             "seed"  => seed, 
             "diffusion" => diffusion,
+            "dx_params" => dx_params,
             "sys_dim" => sys_dim,
             "obs_dim" => obs_dim, 
             "obs_un" => obs_un,
@@ -166,10 +176,15 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "state_infl" => round(state_infl, digits=2)
            )
     
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]
+    end
+    
     path = "../data/" * method * "_classic/" 
-    name = method * 
-            "_classic_l96_state_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 4, "0") * 
+    name = method * "_classic_" *
+            string(parentmodule(dx_dt)) *
+            "_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -183,7 +198,6 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_N_ens_" * lpad(N_ens, 3,"0") * 
             "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
-
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
@@ -207,10 +221,10 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    f = ts["F"]::Float64
+    dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = L96.dx_dt
+    dx_dt = IEEE_39_bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -228,7 +242,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
 
     # define the initial state ensemble
     ens = rand(MvNormal(init, I), N_ens)
-    param_truth = [f]
+    param_truth = [pop!(dx_params, "H"); pop!(dx_params, "D")]
+    param_truth = param_truth[:]
     state_dim = length(init)
     sys_dim = state_dim + length(param_truth)
 
@@ -251,6 +266,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
                 "step_model" => step_model!, 
                 "h" => h,
                 "diffusion" => diffusion,
+                "dx_params" => dx_params,
                 "gamma" => γ,
                 "state_dim" => state_dim,
                 "param_wlk" => param_wlk,
@@ -266,6 +282,11 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     obs = alternating_obs_operator(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
+
+    # of the extended state vector pair, to be loaded in the
+    # ensemble integration step
+    param_sample = Dict("H" => [21:30], "D" => [31:40])
+    kwargs["param_sample"] = param_sample
 
     # create storage for the forecast and analysis statistics, indexed in relative time
     # the first index corresponds to time 1, last index corresponds to index nanl + 3 * lag + 1
@@ -349,6 +370,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "method" => method,
             "seed" => seed, 
             "diffusion" => diffusion,
+            "dx_params" => dx_params,
+            "param_truth" => param_truth,
             "sys_dim" => sys_dim,
             "state_dim" => state_dim,
             "obs_dim" => obs_dim, 
@@ -368,9 +391,10 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
            )
     
     path = "../data/" * method * "_classic/" 
-    name = method * 
-            "_classic_l96_param_benchmark_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 4, "0") * 
+    name = method * "_classic_" *
+            string(parentmodule(dx_dt)) *
+            "_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
             "_obs_un_" * rpad(obs_un, 4, "0") *

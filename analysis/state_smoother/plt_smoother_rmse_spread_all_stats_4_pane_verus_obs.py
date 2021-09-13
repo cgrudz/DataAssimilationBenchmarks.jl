@@ -41,9 +41,9 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 method_list = ["mles-transform_classic", "mles-transform_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-#mda = "false"
-mda = "true"
-total_lag = 92
+mda = "false"
+#mda = "true"
+total_lag = 86
 total_gamma = 11
 shift = 1
 
@@ -58,7 +58,7 @@ label_v_positions = [0.336, 0.626, 0.916]
 
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'post'
+    tuning_stat = 'fore'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -91,8 +91,9 @@ def find_optimal_values(method, stat, data):
 
 
 #color_map = sns.color_palette("husl", 301)
-#color_map = sns.cubehelix_palette(start=.5, rot=-.75, as_cmap=True, reverse=True) 
-color_map = sns.color_palette("cubehelix", as_cmap=True)
+#color_map = sns.cubehelix_palette(start=.1, rot=-.75, as_cmap=True, reverse=True) 
+color_map = sns.cubehelix_palette(start=.1, rot=-1.75, as_cmap=True, reverse=True) 
+#color_map = sns.color_palette("cubehelix", as_cmap=True)
 #color_map = sns.color_palette("crest_r", as_cmap=True)
 #color_map = sns.cubehelix_palette(80, reverse=True)
 max_scale = 0.50
@@ -110,9 +111,13 @@ for method in method_list:
            method[0:7] == "ienks-n" or \
            method[0:11] == "lin-ienks-n":
             rmse = np.transpose(np.array(f[method +'_' + stat + '_rmse']))
+            rmse = rmse[:, 1:total_gamma]
             spread = np.transpose(np.array(f[method +'_' + stat + '_spread']))
+            spread = spread[:, 1:total_gamma]
         else:
             rmse, spread = find_optimal_values(method, stat, f)
+            rmse = rmse[:, 1:total_gamma]
+            spread = spread[:, 1:total_gamma]
 
         sns.heatmap(rmse, linewidth=0.5, ax=rmse_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
         sns.heatmap(spread, linewidth=0.5, ax=spread_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
@@ -121,13 +126,13 @@ for method in method_list:
             scheme = "MLES"
 
         elif method == "mles-transform_single_iteration":
-            scheme = "SIETKS"
+            scheme = "SIEnKS"
 
         elif method == "mles-n-transform_classic":
             scheme = "MLES-N"
 
         elif method == "mles-n-transform_single_iteration":
-            scheme = "SIETKS-N"
+            scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
             scheme = "IEnKS"
@@ -171,8 +176,8 @@ for i in range(len(y_vals)):
         y_labs.append(str(y_vals[i]))
         y_tics.append(y_tic_vals[i])
 
-y_labs.append(str(y_vals[-1]))
-y_tics.append(y_tic_vals[-1])
+#y_labs.append(str(y_vals[-1]))
+#y_tics.append(y_tic_vals[-1])
 
 ax0.tick_params(
         labelsize=20)
@@ -343,17 +348,17 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 
 
 if mda=="true":
-    fig_title = "MDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = "MDA"
 
 else:
-    fig_title = "SDA, shift=" + str(shift) + ", ensemble size=21, $\Delta$t="+ str(tanl)
+    fig_title = "SDA"
 
 
-plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.015, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.50, .015, r'$\gamma$ parameter', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.50, .015, r'$\gamma$', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.725, .025, r'Spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .980, fig_title, horizontalalignment='center', verticalalignment='center', fontsize=22)
