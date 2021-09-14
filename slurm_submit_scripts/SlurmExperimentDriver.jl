@@ -74,6 +74,8 @@ if s == "filter_state"
     filter_state_exp(t)
 elseif s == "classic_smoother_state"
     classic_smoother_state_exp(t)
+elseif s == "classic_smoother_param"
+    classic_smoother_param_exp(t)
 elseif s == "single_iteration_smoother_state"
     single_iteration_smoother_state_exp(t)
 elseif s == "iterative_smoother_state"

@@ -101,7 +101,7 @@ for j in 1:length(args)
     write(f,"#!/bin/bash\n")
     write(f,"#SBATCH -n 1\n")
     # slow partition is for Okapi, uncomment when necessary
-    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -p slow\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
     write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"classic_smoother_param\"")
