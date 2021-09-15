@@ -11,9 +11,13 @@ export dx_dt, jacobian, l96s_tay_2_step!, ρ, α
 ########################################################################################################################
 ########################################################################################################################
 # Type union declarations for multiple dispatch
+# and type aliases
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+# dictionary for model parameters
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
 ########################################################################################################################
 ########################################################################################################################
@@ -31,11 +35,11 @@ end
 ########################################################################################################################
 # time derivative
 
-function dx_dt(x::T, t::Float64, dx_params::Vector{Float64}) where {T <: VecA}
+function dx_dt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
 	"""Time derivative for the Lorenz-96 model, x is a single model state of size state_dim."""
 
     # unpack the (only) derivative parameter for l96
-    F = dx_params[1]
+    F = dx_params["F"][1]::Float64
     x_dim = length(x)
     dx = Vector{Float64}(undef, x_dim)
 	
@@ -59,11 +63,10 @@ end
 # vectorized time derivative for demonstration purposes only, note this is much less efficient in speed
 # and in memory than the above version
 
-function dx_dt_alt(x::T, t::Float64, dx_params::Vector{Float64}) where {T <: VecA}
-
+function dx_dt_alt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
 
     # unpack the (only) derivative parameter for l96
-    f = dx_params[1]
+    F = dx_params["F"][1]::Float64
     x_dim = length(x)
     dx = Vector{Float64}(undef, x_dim)
 
@@ -73,14 +76,14 @@ function dx_dt_alt(x::T, t::Float64, dx_params::Vector{Float64}) where {T <: Vec
     x_p_1 = [x[2:end]; x[1:1]]
 
     # compute the vectorized derivative
-    dx .= (x_p_1-x_m_2) .* x_m_1 - x .+ f
+    dx .= (x_p_1-x_m_2) .* x_m_1 - x .+ F
 end
 
 
 ########################################################################################################################
 # linearized time derivative
 
-function jacobian(x::Vector{Float64}, t::Float64, dx_params::Vector{Float64})
+function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
     """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the state x.
     
     Note that this has been designed to load the entries in a standard zeros array but return a sparse array after
@@ -144,7 +147,7 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
 
     # Infer model and parameters 
     sys_dim = length(x)
-    dx_params = kwargs["dx_params"]::Vector{Float64}
+    dx_params = kwargs["dx_params"]::ParamDict
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
     p = kwargs["p"]::Int64
@@ -226,14 +229,6 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
     end
 
     # the final vectorized step forward is given as
-    #collect(Iterators.flatten(
-    #       x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
-    #       diffusion * sqrt(h) * ξ +                # stochastic euler step
-    #       diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
-    #       diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
-    #      ))
-    
-    @bp
     x .= collect(Iterators.flatten(
             x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
             diffusion * sqrt(h) * ξ +                # stochastic euler step

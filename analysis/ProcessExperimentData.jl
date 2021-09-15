@@ -52,7 +52,7 @@ function process_filter_state()
                    "etkf",
                    "enkf-n-primal", 
                   ]
-    ensemble_sizes = 15:2:43 
+    ensemble_sizes = 15:2:41 
     total_ensembles = length(ensemble_sizes)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
@@ -241,7 +241,7 @@ function process_smoother_state()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = false
+    mda = true
     diffusion = 0.00
     
     # parameters in ranges that will be used in loops
@@ -270,7 +270,7 @@ function process_smoother_state()
                 ]
                  
 
-    ensemble_sizes = 15:2:43
+    ensemble_sizes = 15:2:41
     total_ensembles = length(ensemble_sizes)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
@@ -624,7 +624,7 @@ function process_filter_nonlinear_obs()
                  "spread"
                 ]
                  
-    ensemble_sizes = 15:2:43 
+    ensemble_sizes = 15:2:41 
     total_ensembles = length(ensemble_sizes)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
@@ -861,7 +861,7 @@ function process_smoother_nonlinear_obs()
     total_gammas = length(gammas)
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:64
+    lags = 1:3:85
     total_lags = length(lags)
     
     # define the storage dictionary here, looping over the method list
@@ -1198,7 +1198,7 @@ function process_smoother_versus_tanl()
     nanl = 20000
     burn = 5000
     diffusion = 0.00
-    mda = false
+    mda = true
     shift = 1
     γ = 1.0
     
@@ -1600,10 +1600,10 @@ function process_smoother_versus_shift()
 
     inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = [1, 2, 4, 8, 16, 32, 64]
+    lags = [1, 2, 4, 8, 16, 32, 48, 64, 80, 96]
     total_lags = length(lags)
     #shifts = copy(lags)
-    shifts = [1, 2, 4, 8, 16, 32, 64]
+    shifts = [1, 2, 4, 8, 16, 32, 48, 64, 80, 96]
     total_shifts = length(shifts)
 
     # define the storage dictionary here, looping over the method list
@@ -1951,7 +1951,7 @@ function rename_data_smoother_state()
                 ]
                  
 
-    ensemble_sizes = 15:2:43 
+    ensemble_sizes = 15:2:41 
     total_ensembles = length(ensemble_sizes)
     total_inflations = LinRange(1.00, 1.10, 11)
     total_inflation = length(total_inflations)
@@ -2058,9 +2058,9 @@ end
 
 
 ########################################################################################################################
-process_smoother_state()
+#process_smoother_state()
 #process_smoother_nonlinear_obs()
-#process_smoother_versus_shift()
+process_smoother_versus_shift()
 #process_smoother_versus_tanl()
 
 end
