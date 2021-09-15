@@ -24,7 +24,7 @@ diffusion = 0.1
 tanl = 0.1
 seed = 0
 
-#fore_steps = int(tanl/h)
+
 fore_steps = convert(Int64, tanl/h)
 
 #np.random.seed(seed)
@@ -55,14 +55,23 @@ for i in 1:nanl
 end
 
 
-fname = "time_series_data_seed_" * string(seed) * ".jld"
+fname = "time_series_data_seed_" * lpad(seed, 4, "0") *
+        "_dim_" * lpad(sys_dim, 2, "0") *
+        "_diff_" * rpad(diffusion, 5, "0") *
+        "_F_" * lpad(F, 4, "0") *
+        "_tanl_" * rpad(tanl, 4, "0") *
+        "_nanl_" * lpad(nanl, 5, "0") *
+        "_h_" * rpad(h, 5, "0") *
+        "_tobs_" * (tobs,)
+        ".jld"
+
 
 data = Dict{String, Any}(
     "h" => h,
     "diffusion" => diffusion,
     "F" => F,
     "tanl" => tanl,
-    "nanl" => nanl,
+    "nanl"  => nanl,
     "sys_dim" => sys_dim,
     "tobs" => tobs
     )

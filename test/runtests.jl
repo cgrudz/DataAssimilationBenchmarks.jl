@@ -37,13 +37,5 @@ using Test
 end
 
 ########################################################################################################################
-@testset "Time Series Output Test" begin
-    try
-        save(path * fname, data)
-        did_write = true
-    catch
-        did_write = false
-    end
-    @test did_write
-end
+
 end
