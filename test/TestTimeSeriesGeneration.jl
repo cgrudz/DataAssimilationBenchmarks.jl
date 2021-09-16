@@ -13,7 +13,6 @@ using Random
 
 dx_dt = L96.dx_dt
 step_model! = DeSolvers.em_step!
-#one step forward
 
 F = 8.0
 spin = 100
@@ -24,24 +23,21 @@ diffusion = 0.1
 tanl = 0.1
 seed = 0
 
+dx_params = Dict{String, Array{Float64}}("F" => [F])
 
 fore_steps = convert(Int64, tanl/h)
 
-#np.random.seed(seed)
 Random.seed!(seed)
 
 kwargs = Dict{String, Any}(
           "h" => h,
           "diffusion" => diffusion,
-          "dx_params" => [F],
+          "dx_params" => dx_params,
           "dx_dt" => L96.dx_dt,
          )
 
 #xt = np.ones(sys_dim)
 xt = ones(sys_dim)
-
-#for i in range(int(spin / h)):
-    #xt = l96_em_sde(xt, h, [f, diffusion])
 
 #tobs = np.zeros ([sys_dim, nanl])
 tobs = Array{Float64}(undef,sys_dim, nanl)
@@ -62,7 +58,6 @@ fname = "time_series_data_seed_" * lpad(seed, 4, "0") *
         "_tanl_" * rpad(tanl, 4, "0") *
         "_nanl_" * lpad(nanl, 5, "0") *
         "_h_" * rpad(h, 5, "0") *
-        "_tobs_" * (tobs,)
         ".jld"
 
 
