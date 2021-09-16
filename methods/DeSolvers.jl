@@ -49,7 +49,7 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
-        params = kwargs["dx_params"]::ParamDict
+        dx_params = kwargs["dx_params"]::ParamDict
     end
 
     # infer the (possibly) extended state dimension
@@ -89,16 +89,17 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     # load parameter values from the extended state into the derivative
     if param_est
+        @bp
         if haskey(kwargs, "dx_params")
             # extract the parameter sample and append to other derivative parameters
             for key in keys(param_sample)
-                params = merge(params, Dict(key => x[param_sample[key][1]]))
+                dx_params = merge(dx_params, Dict(key => x[param_sample[key][1]]))
             end
         else
             # set the parameter sample as the only derivative parameters
-            params = Dict{String, Array{Float64}}
+            dx_params = Dict{String, Array{Float64}}
             for key in keys(param_sample)
-                params = merge(params, Dict(key => x[param_sample[key][1]]))
+                dx_params = merge(dx_params, Dict(key => x[param_sample[key][1]]))
             end
         end
     end
@@ -109,16 +110,16 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     # terms of the RK scheme recursively evolve the dynamic state components alone
     if diffusion != 0.0
         # SDE formulation
-        κ[:, 1] = dx_dt(v, t, params) * h + diffusion * W
-        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h + diffusion * W
-        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h + diffusion * W
-        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h + diffusion * W
+        κ[:, 1] = dx_dt(v, t, dx_params) * h + diffusion * W
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h + diffusion * W
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h + diffusion * W
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h + diffusion * W
     else
         # deterministic formulation
-        κ[:, 1] = dx_dt(v, t, params) * h 
-        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, params) * h 
-        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, params) * h 
-        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, params) * h 
+        κ[:, 1] = dx_dt(v, t, dx_params) * h 
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h 
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h 
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h 
     end
     
     # compute the update to the dynamic variables
@@ -142,17 +143,17 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
     # unpack dx_params
     h = kwargs["h"]::Float64
-    params = kwargs["dx_params"]::ParamDict
+    dx_params = kwargs["dx_params"]::ParamDict
     dx_dt = kwargs["dx_dt"]
     jacobian = kwargs["jacobian"]
 
     # calculate the evolution of x one step forward via the second order Taylor expansion
 
     # first derivative
-    dx = dx_dt(x, t, params)
+    dx = dx_dt(x, t, dx_params)
 
     # second order taylor expansion
-    x .= x + dx * h + 0.5 * jacobian(x, t, params) * dx * h^2.0
+    x .= x + dx * h + 0.5 * jacobian(x, t, dx_params) * dx * h^2.0
 end
 
 ########################################################################################################################
@@ -165,7 +166,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
-    params = kwargs["dx_params"]::ParamDict
+    dx_params = kwargs["dx_params"]::ParamDict
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]
     state_dim = length(x)
@@ -189,7 +190,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     W = ξ * sqrt(h)
 
     # step forward by interval h
-    x .= x +  h * dx_dt(x, t, params) + diffusion * W
+    x .= x +  h * dx_dt(x, t, dx_params) + diffusion * W
 end
 
 ########################################################################################################################

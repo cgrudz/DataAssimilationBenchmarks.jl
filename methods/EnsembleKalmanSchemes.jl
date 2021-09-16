@@ -14,6 +14,7 @@ export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, 
 ########################################################################################################################
 ########################################################################################################################
 # Type union declarations for multiple dispatch
+# and type aliases
 
 # covariance matrix types
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
@@ -175,7 +176,7 @@ function rand_orth(N_ens::Int64)
     B[:, 1] = b_1
 
     # note, this uses the "full" QR decomposition so that the singularity is encoded in R
-    # and B is a full rank orthogonal matrix
+    # and B is a full-size orthogonal matrix
     B, R = qr!(B)
     B * U_p * transpose(B)
 end
@@ -1218,7 +1219,6 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         param_infl = kwargs["param_infl"]::Float64
         param_wlk = kwargs["param_wlk"]::Float64
         param_est = true
-
     else
         state_dim = sys_dim
         param_est = false
@@ -1237,16 +1237,16 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         
         # step 2a: propagate between observation times
         for j in 1:N_ens
-            @views for k in 1:f_steps
-                if param_est
-                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
-                        # we define the diffusion structure matrix with respect to the sample value
-                        # of the inertia, as per each ensemble member
-                        diff_mat = zeros(20,20)
-                        diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
-                        kwargs["diff_mat"] = diff_mat
-                    end
+            if param_est
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    # we define the diffusion structure matrix with respect to the sample value
+                    # of the inertia, as per each ensemble member
+                    diff_mat = zeros(20,20)
+                    diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                    kwargs["diff_mat"] = diff_mat
                 end
+            end
+            @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
                 if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
                     # set phase angles mod 2pi
@@ -1326,9 +1326,10 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
         state_dim = kwargs["state_dim"]::Int64
         param_infl = kwargs["param_infl"]::Float64
         param_wlk = kwargs["param_wlk"]::Float64
-
+        param_est = true
     else
         state_dim = sys_dim
+        param_est = false
     end
 
     # make a copy of the intial ens for re-analysis
@@ -1369,8 +1370,21 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             for l in 1:lag
                 # step 2a: propagate between observation times
                 for j in 1:N_ens
+                    if param_est
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            # we define the diffusion structure matrix with respect to the sample value
+                            # of the inertia, as per each ensemble member
+                            diff_mat = zeros(20,20)
+                            diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                            kwargs["diff_mat"] = diff_mat
+                        end
+                    end
                     @views for k in 1:f_steps
                         step_model!(ens[:, j], 0.0, kwargs)
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            # set phase angles mod 2pi
+                            ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                        end
                     end
                 end
                 if i == 0
@@ -1437,8 +1451,21 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
         for l in 1:lag
             # step 2a: propagate between observation times
             for j in 1:N_ens
+                if param_est
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        # we define the diffusion structure matrix with respect to the sample value
+                        # of the inertia, as per each ensemble member
+                        diff_mat = zeros(20,20)
+                        diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                        kwargs["diff_mat"] = diff_mat
+                    end
+                end
                 @views for k in 1:f_steps
                     step_model!(ens[:, j], 0.0, kwargs)
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        # set phase angles mod 2pi
+                        ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                    end
                 end
             end
             if spin
@@ -1498,7 +1525,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
     # step 3b: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim
         param_ens = ens[state_dim + 1:end , :]
-        param_ens .= param_ens + param_wlk * rand(Normal(), size(param_ens))
+        param_mean = mean(param_ens, dims=2)
+        param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
         ens[state_dim + 1:end , :] = param_ens
     end
 
@@ -1509,8 +1537,21 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             posterior[:, :, s] = ens
         end
         for j in 1:N_ens
+            if param_est
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    # we define the diffusion structure matrix with respect to the sample value
+                    # of the inertia, as per each ensemble member
+                    diff_mat = zeros(20,20)
+                    diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                    kwargs["diff_mat"] = diff_mat
+                end
+            end
             @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    # set phase angles mod 2pi
+                    ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                end
             end
         end
     end
@@ -1521,221 +1562,6 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                                 "fore" => forecast, 
                                 "filt" => filtered,
                                 ) 
-end
-
-
-#########################################################################################################################
-# single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
-
-function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
-
-    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
-
-    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
-    which is pushed forward in time from the initial conidtion to shift-number of observation times.
-
-    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
-    case, a value for the parameter covariance inflation should be included in addition to the state covariance
-    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
-    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
-    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
-    
-    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
-    f_steps = kwargs["f_steps"]::Int64
-    step_model! = kwargs["step_model"]
-    posterior = kwargs["posterior"]::Array{Float64,3}
-    
-    # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
-    obs_dim, lag = size(obs)
-    sys_dim, N_ens, shift = size(posterior)
-
-    # for the adaptive inflation shceme
-    # load bool if spinning up tail of innovation statistics
-    tail_spin = kwargs["tail_spin"]::Bool
-
-    # pre_analysis will contain the sequence of the last cycle's analysis states 
-    # over the current DAW 
-    pre_analysis = kwargs["analysis"]::Array{Float64,3}
-
-    # analysis innovations contains the innovation statistics over the previous DAW plus a trail of
-    # length tail * lag to ensure more robust frequentist estimates
-    analysis_innovations = kwargs["analysis_innovations"]::Array{Float64,2}
-
-    # optional parameter estimation
-    if haskey(kwargs, "state_dim")
-        state_dim = kwargs["state_dim"]::Int64
-        param_infl = kwargs["param_infl"]::Float64
-        param_wlk = kwargs["param_wlk"]::Float64
-
-    else
-        state_dim = sys_dim
-    end
-
-    # make a copy of the intial ens for re-analysis
-    ens_0 = copy(ens)
-    
-    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
-    # the first initial condition for the future iterations regardless of sda or mda settings
-    spin = kwargs["spin"]::Bool
-    
-    # step 1: create storage for the posterior, forecast and filter values over the DAW
-    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
-    # last-iterate posterior estimate respectively
-    if spin
-        forecast = Array{Float64}(undef, sys_dim, N_ens, lag)
-        filtered = Array{Float64}(undef, sys_dim, N_ens, lag)
-    else
-        forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
-        filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
-    end
-    
-    if spin
-        ### NOTE: WRITING THIS NOW SO THAT WE WILL HAVE AN ARBITRARY TAIL OF INNOVATION STATISTICS
-        # FROM THE PASS BACK THROUGH THE WINDOW, BUT WILL COMPUTE INNOVATIONS ONLY ON THE NEW 
-        # SHIFT-LENGTH REANALYSIS STATES BY THE SHIFTED DAW
-        # create storage for the analysis means computed at each forward step of the current DAW
-        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
-    else
-        # create storage for the analysis means computed at the shift forward states in the DAW 
-        post_analysis = Array{Float64}(undef, sys_dim, N_ens, shift)
-    end
-    
-    # step 2: forward propagate the ensemble and analyze the observations
-    for l in 1:lag
-        # step 2a: propagate between observation times
-        for j in 1:N_ens
-            @views for k in 1:f_steps
-                step_model!(ens[:, j], 0.0, kwargs)
-            end
-        end
-        if spin
-            # step 2b: store the forecast to compute ensemble statistics before observations become available
-            # if spin, store all new forecast states
-            forecast[:, :, l] = ens
-            
-            # step 2c: apply the transformation and update step
-            trans = transform(analysis, ens,  obs[:, l], obs_cov, kwargs)
-            ens_update!(ens, trans)
-            
-            # compute multiplicative inflation of state variables
-            inflate_state!(ens, state_infl, sys_dim, state_dim)
-
-            # if including an extended state of parameter values,
-            # compute multiplicative inflation of parameter values
-            if state_dim != sys_dim
-                inflate_param!(ens, param_infl, sys_dim, state_dim)
-            end
-            
-            # store all new filtered states
-            filtered[:, :, l] = ens
-        
-            # store the re-analyzed ensembles for future statistics
-            post_analysis[:, :, l] = ens
-            for j in 1:l-1
-                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
-            end
-
-            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-            ens_update!(ens_0, trans)
-        
-        elseif l > (lag - shift)
-            # step 2b: store the forecast to compute ensemble statistics before observations become available
-            # if not spin, only store forecasted states for beyond unobserved times beyond previous forecast windows
-            forecast[:, :, l - (lag - shift)] = ens
-            
-            # step 2c: apply the transformation and update step
-            if tail_spin
-                trans = transform(analysis, ens, obs[:, l], obs_cov, kwargs, 
-                                  m_err=analysis_innovations[:, 1:end-shift])
-            else
-                trans = transform(analysis, ens, obs[:, l], obs_cov, kwargs,
-                                  m_err=analysis_innovations)
-            end
-
-            ens = ens_update!(ens, trans)
-            
-            # store the filtered states for previously unobserved times, not mda values
-            filtered[:, :, l - (lag - shift)] = ens
-            
-            # store the re-analyzed ensembles for future statistics
-            post_analysis[:, :, l] = ens
-            for j in 1:l-1
-                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
-            end
-
-            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-            ens_update!(ens_0, trans)
-
-        elseif l > (lag - 2 * shift)
-            # store the re-analyzed ensembles for future statistics
-            post_analysis[:, :, l] = ens
-
-            # compute the innovation versus the last cycle's analysis state
-            analysis_innovations[:, :, end - lag + l] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
-        end
-    end
-    # reset the ensemble with the re-analyzed prior 
-    ens = copy(ens_0)
-
-    # reset the analysis innovations for the next DAW
-    pre_analysis = copy(post_analysis)
-    
-    if !tail_spin 
-        # add the new shifted DAW innovations to the statistics and discard the oldest
-        # shift-innovations
-        analysis_innovations = hcat(analysis_innovations[:, shift + 1: end],
-                                    Array{Float64}(undef, sys_dim, shift))
-    end
-
-    # step 3: propagate the posterior initial condition forward to the shift-forward time
-    # step 3a: inflate the posterior covariance
-    inflate_state!(ens, state_infl, sys_dim, state_dim)
-    
-    # if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim
-        inflate_param!(ens, param_infl, sys_dim, state_dim)
-    end
-
-    # step 3b: if performing parameter estimation, apply the parameter model
-    if state_dim != sys_dim
-        param_ens = ens[state_dim + 1:end , :]
-        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
-        ens[state_dim + 1:end, :] = param_ens
-    end
-
-    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
-    # observation times
-    for s in 1:shift
-        if !mda
-            posterior[:, :, s] = ens
-        end
-        for j in 1:N_ens
-            @views for k in 1:f_steps
-                step_model!(ens[:, j], 0.0, kwargs)
-            end
-        end
-    end
-
-    if tail_spin
-        # prepare storage for the new innovations concatenated to the oldest lag-innovations
-        analysis_innovations = hcat(analysis_innovations, 
-                                    Array{Float64}(undef, sys_dim, shift))
-    else
-        # reset the analysis innovations window to remove the oldest lag-innovations
-        analysis_innovations = hcat(analysis_innovations[:, shift  + 1: end], 
-                                    Array{Float64}(undef, sys_dim, lag))
-    end
-    
-    Dict{String,Array{Float64}}(
-                                "ens" => ens, 
-                                "post" =>  posterior, 
-                                "fore" => forecast, 
-                                "filt" => filtered,
-                                "anal" => pre_analysis,
-                                "inno" => analysis_innovations,
-                               )
 end
 
 
@@ -1769,9 +1595,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
         state_dim = kwargs["state_dim"]::Int64
         param_infl = kwargs["param_infl"]::Float64
         param_wlk = kwargs["param_wlk"]::Float64
-
+        param_est = true
     else
         state_dim = sys_dim
+        param_est = false
     end
 
     # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
@@ -1865,8 +1692,21 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                 for l in 1:lag
                     # propagate between observation times
                     for j in 1:N_ens
+                        if param_est
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                                # we define the diffusion structure matrix with respect to the sample value
+                                # of the inertia, as per each ensemble member
+                                diff_mat = zeros(20,20)
+                                diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                                kwargs["diff_mat"] = diff_mat
+                            end
+                        end
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                                # set phase angles mod 2pi
+                                ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                            end
                         end
                     end
 
@@ -1958,7 +1798,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             # for the for the MDA step and shifted window
             if state_dim != sys_dim && stage == 1
                 param_ens = ens[state_dim + 1:end , :]
-                param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+                param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
                 ens[state_dim + 1:end, :] = param_ens
             end
 
@@ -1976,8 +1816,21 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
 
                     # shift the ensemble forward Δt
                     for j in 1:N_ens
+                        if param_est
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                                # we define the diffusion structure matrix with respect to the sample value
+                                # of the inertia, as per each ensemble member
+                                diff_mat = zeros(20,20)
+                                diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                                kwargs["diff_mat"] = diff_mat
+                            end
+                        end
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                                # set phase angles mod 2pi
+                                ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                            end
                         end
                     end
 
@@ -2000,6 +1853,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     for j in 1:N_ens
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                                # set phase angles mod 2pi
+                                ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                            end
                         end
                     end
                 end
@@ -2076,8 +1933,21 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             for l in 1:lag
                 # propagate between observation times
                 for j in 1:N_ens
+                    if param_est
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            # we define the diffusion structure matrix with respect to the sample value
+                            # of the inertia, as per each ensemble member
+                            diff_mat = zeros(20,20)
+                            diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                            kwargs["diff_mat"] = diff_mat
+                        end
+                    end
                     @views for k in 1:f_steps
                         step_model!(ens[:, j], 0.0, kwargs)
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            # set phase angles mod 2pi
+                            ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                        end
                     end
                 end
                 if spin
@@ -2188,8 +2058,21 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
 
             # shift the ensemble forward Δt
             for j in 1:N_ens
+                if param_est
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        # we define the diffusion structure matrix with respect to the sample value
+                        # of the inertia, as per each ensemble member
+                        diff_mat = zeros(20,20)
+                        diff_mat[LinearAlgebra.diagind(diff_mat)[11:end]] = kwargs["dx_params"]["ω"][1] ./ (2.0 * ens[21:30, j])
+                        kwargs["diff_mat"] = diff_mat
+                    end
+                end
                 @views for k in 1:f_steps
                     step_model!(ens[:, j], 0.0, kwargs)
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        # set phase angles mod 2pi
+                        ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
+                    end
                 end
             end
 
@@ -2238,6 +2121,222 @@ end
 
 end
 
+#########################################################################################################################
+# single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
+#
+#function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
+#                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+#
+#    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
+#
+#    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
+#    which is pushed forward in time from the initial conidtion to shift-number of observation times.
+#
+#    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
+#    case, a value for the parameter covariance inflation should be included in addition to the state covariance
+#    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
+#    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
+#    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
+#    
+#    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
+#    f_steps = kwargs["f_steps"]::Int64
+#    step_model! = kwargs["step_model"]
+#    posterior = kwargs["posterior"]::Array{Float64,3}
+#    
+#    # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
+#    obs_dim, lag = size(obs)
+#    sys_dim, N_ens, shift = size(posterior)
+#
+#    # for the adaptive inflation shceme
+#    # load bool if spinning up tail of innovation statistics
+#    tail_spin = kwargs["tail_spin"]::Bool
+#
+#    # pre_analysis will contain the sequence of the last cycle's analysis states 
+#    # over the current DAW 
+#    pre_analysis = kwargs["analysis"]::Array{Float64,3}
+#
+#    # analysis innovations contains the innovation statistics over the previous DAW plus a trail of
+#    # length tail * lag to ensure more robust frequentist estimates
+#    analysis_innovations = kwargs["analysis_innovations"]::Array{Float64,2}
+#
+#    # optional parameter estimation
+#    if haskey(kwargs, "state_dim")
+#        state_dim = kwargs["state_dim"]::Int64
+#        param_infl = kwargs["param_infl"]::Float64
+#        param_wlk = kwargs["param_wlk"]::Float64
+#
+#    else
+#        state_dim = sys_dim
+#    end
+#
+#    # make a copy of the intial ens for re-analysis
+#    ens_0 = copy(ens)
+#    
+#    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
+#    # the first initial condition for the future iterations regardless of sda or mda settings
+#    spin = kwargs["spin"]::Bool
+#    
+#    # step 1: create storage for the posterior, forecast and filter values over the DAW
+#    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
+#    # last-iterate posterior estimate respectively
+#    if spin
+#        forecast = Array{Float64}(undef, sys_dim, N_ens, lag)
+#        filtered = Array{Float64}(undef, sys_dim, N_ens, lag)
+#    else
+#        forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
+#        filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
+#    end
+#    
+#    if spin
+#        ### NOTE: WRITING THIS NOW SO THAT WE WILL HAVE AN ARBITRARY TAIL OF INNOVATION STATISTICS
+#        # FROM THE PASS BACK THROUGH THE WINDOW, BUT WILL COMPUTE INNOVATIONS ONLY ON THE NEW 
+#        # SHIFT-LENGTH REANALYSIS STATES BY THE SHIFTED DAW
+#        # create storage for the analysis means computed at each forward step of the current DAW
+#        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
+#    else
+#        # create storage for the analysis means computed at the shift forward states in the DAW 
+#        post_analysis = Array{Float64}(undef, sys_dim, N_ens, shift)
+#    end
+#    
+#    # step 2: forward propagate the ensemble and analyze the observations
+#    for l in 1:lag
+#        # step 2a: propagate between observation times
+#        for j in 1:N_ens
+#            @views for k in 1:f_steps
+#                step_model!(ens[:, j], 0.0, kwargs)
+#            end
+#        end
+#        if spin
+#            # step 2b: store the forecast to compute ensemble statistics before observations become available
+#            # if spin, store all new forecast states
+#            forecast[:, :, l] = ens
+#            
+#            # step 2c: apply the transformation and update step
+#            trans = transform(analysis, ens,  obs[:, l], obs_cov, kwargs)
+#            ens_update!(ens, trans)
+#            
+#            # compute multiplicative inflation of state variables
+#            inflate_state!(ens, state_infl, sys_dim, state_dim)
+#
+#            # if including an extended state of parameter values,
+#            # compute multiplicative inflation of parameter values
+#            if state_dim != sys_dim
+#                inflate_param!(ens, param_infl, sys_dim, state_dim)
+#            end
+#            
+#            # store all new filtered states
+#            filtered[:, :, l] = ens
+#        
+#            # store the re-analyzed ensembles for future statistics
+#            post_analysis[:, :, l] = ens
+#            for j in 1:l-1
+#                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+#            end
+#
+#            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+#            ens_update!(ens_0, trans)
+#        
+#        elseif l > (lag - shift)
+#            # step 2b: store the forecast to compute ensemble statistics before observations become available
+#            # if not spin, only store forecasted states for beyond unobserved times beyond previous forecast windows
+#            forecast[:, :, l - (lag - shift)] = ens
+#            
+#            # step 2c: apply the transformation and update step
+#            if tail_spin
+#                trans = transform(analysis, ens, obs[:, l], obs_cov, kwargs, 
+#                                  m_err=analysis_innovations[:, 1:end-shift])
+#            else
+#                trans = transform(analysis, ens, obs[:, l], obs_cov, kwargs,
+#                                  m_err=analysis_innovations)
+#            end
+#
+#            ens = ens_update!(ens, trans)
+#            
+#            # store the filtered states for previously unobserved times, not mda values
+#            filtered[:, :, l - (lag - shift)] = ens
+#            
+#            # store the re-analyzed ensembles for future statistics
+#            post_analysis[:, :, l] = ens
+#            for j in 1:l-1
+#                post_analysis[:, :, j] = ens_update!(post_analysis[:, :, j], trans)
+#            end
+#
+#            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
+#            ens_update!(ens_0, trans)
+#
+#        elseif l > (lag - 2 * shift)
+#            # store the re-analyzed ensembles for future statistics
+#            post_analysis[:, :, l] = ens
+#
+#            # compute the innovation versus the last cycle's analysis state
+#            analysis_innovations[:, :, end - lag + l] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
+#        end
+#    end
+#    # reset the ensemble with the re-analyzed prior 
+#    ens = copy(ens_0)
+#
+#    # reset the analysis innovations for the next DAW
+#    pre_analysis = copy(post_analysis)
+#    
+#    if !tail_spin 
+#        # add the new shifted DAW innovations to the statistics and discard the oldest
+#        # shift-innovations
+#        analysis_innovations = hcat(analysis_innovations[:, shift + 1: end],
+#                                    Array{Float64}(undef, sys_dim, shift))
+#    end
+#
+#    # step 3: propagate the posterior initial condition forward to the shift-forward time
+#    # step 3a: inflate the posterior covariance
+#    inflate_state!(ens, state_infl, sys_dim, state_dim)
+#    
+#    # if including an extended state of parameter values,
+#    # compute multiplicative inflation of parameter values
+#    if state_dim != sys_dim
+#        inflate_param!(ens, param_infl, sys_dim, state_dim)
+#    end
+#
+#    # step 3b: if performing parameter estimation, apply the parameter model
+#    if state_dim != sys_dim
+#        param_ens = ens[state_dim + 1:end , :]
+#        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+#        ens[state_dim + 1:end, :] = param_ens
+#    end
+#
+#    # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+#    # observation times
+#    for s in 1:shift
+#        if !mda
+#            posterior[:, :, s] = ens
+#        end
+#        for j in 1:N_ens
+#            @views for k in 1:f_steps
+#                step_model!(ens[:, j], 0.0, kwargs)
+#            end
+#        end
+#    end
+#
+#    if tail_spin
+#        # prepare storage for the new innovations concatenated to the oldest lag-innovations
+#        analysis_innovations = hcat(analysis_innovations, 
+#                                    Array{Float64}(undef, sys_dim, shift))
+#    else
+#        # reset the analysis innovations window to remove the oldest lag-innovations
+#        analysis_innovations = hcat(analysis_innovations[:, shift  + 1: end], 
+#                                    Array{Float64}(undef, sys_dim, lag))
+#    end
+#    
+#    Dict{String,Array{Float64}}(
+#                                "ens" => ens, 
+#                                "post" =>  posterior, 
+#                                "fore" => forecast, 
+#                                "filt" => filtered,
+#                                "anal" => pre_analysis,
+#                                "inno" => analysis_innovations,
+#                               )
+#end
+#
+#
+#########################################################################################################################
 #########################################################################################################################
 # Methods below taken from old python code, yet to completely convert, debug and benchmark
 #########################################################################################################################
