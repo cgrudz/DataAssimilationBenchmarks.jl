@@ -15,7 +15,7 @@ using Test
     x = zeros(40)
     # step size
     h = 0.01
-    # forced parameter
+    # forcing parameter
     f = 8.0
     kwargs = Dict{String, Any}(
         "h" => h,

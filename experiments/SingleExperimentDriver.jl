@@ -140,7 +140,7 @@ end
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function single_iteration_smoother_param_exp()
-    args = (time_series, "etks", 0, 10, 1, true, 0.1, 20, 1.0, 0.03, 0.0010, 21, 1.01, 1.00)
+    args = (time_series, "etks", 0, 10, 1, false, 0.1, 20, 1.0, 0.03, 0.0010, 21, 1.00, 1.00)
     single_iteration_param(args)
 end
 

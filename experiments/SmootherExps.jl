@@ -1561,7 +1561,7 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     path = "../data/" * method * "/"
     name = method * "_" * 
             string(parentmodule(dx_dt)) *
-            "_state_seed_" * lpad(seed, 4, "0") * 
+            "_param_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 

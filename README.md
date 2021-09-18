@@ -132,15 +132,25 @@ General schemes such as the four-stage Runge-Kutta and the Euler-(Maruyama) sche
 (x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
-x          -- array or sub-array of a single state possibly including parameter values
-t          -- time point
-kwargs     -- this should include dx_dt, the paramters for the dx_dt and optional arguments
-dx_dt      -- time derivative function with arguments x and dx_params
-dx_params  -- tuple of parameters necessary to resolve dx_dt, not including parameters in the extended state vector 
-h          -- numerical discretization step size
-diffusion  -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
-state_dim  -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
-ξ          -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
+x            -- array or sub-array of a single state possibly including parameter values
+t            -- time point
+kwargs       -- this should include dx_dt, the paramters for the dx_dt and optional arguments
+dx_dt        -- time derivative function with arguments x and dx_params
+dx_params    -- ParamDict of parameters necessary to resolve dx_dt, not including those in the extended state vector
+h            -- numerical discretization step size
+diffusion    -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
+diff_mat     -- structure matrix for the diffusion coefficients, replaces the default uniform scaling
+state_dim    -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
+param_sample -- ParamSample dictionary for merging extended state with dx_params
+ξ            -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
+
+
+# dictionary for model parameters
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
+# dictionary containing key and index pairs to subset the state vector and merge with dx_params
+ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+
 ```
 with reduced options for the less-commonly used first order Euler(-Maruyama) scheme.
 
@@ -149,12 +159,12 @@ We follow the convention in data assimilation of the extended state formalism fo
 should be included as trailing state variables in the columns of the ensemble array.  If
 
 ```{julia}
-true == haskey(kwargs, "state_dim")
+true == haskey(kwargs, "param_sample")
 ```
 the `state_dim` parameter will specify the dimension of the dynamical states and create a view of the vector `x` including all entries
-up to this index.  The remaining entries in the vector `x` will be passed to the `dx_dt` function in a vector including
-`dx_params` in the leading entries and the extended state entries trailing.  The parameter sample values will remain unchanged
-by the time stepper when the dynamical state entries in `x` are over-written in place.
+up to this index.  The remaining entries in the vector `x` will be passed to the `dx_dt` function in
+a dictionary merged with the `dx_params` dictionary, according to the param_sample indices and parameter values specified in `param_sample`.
+The parameter sample values will remain unchanged by the time stepper when the dynamical state entries in `x` are over-written in place.
 
 Setting `diffusion > 0.0` above introduces additive noise to the dynamical system.  The main `rk4_step!` has convergence on order 4.0
 when diffusion is equal to zero, and both strong and weak convergence on order 1.0 when stochasticity is introduced.  Nonetheless,
@@ -264,6 +274,7 @@ classic_param          -- classic EnKS style state-parameter estimation
 single_iteration_state -- single-iteration EnKS state estimation
 single_iteration_param -- single-iteration EnKS state-parameter estimation
 iterative_state        -- Gauss-Newton style state estimation
+iterative_param        -- Gauss-Newton style state-parameter estimation
 ```
 Other techniques are still in debugging and validation.  Each of these takes an analysis type as used in the
 `transform` function in the `EnsembleKalmanSchemes.jl` sub-module, like the filter analyses in the filter experiments.
@@ -300,5 +311,5 @@ the output .jld file and if this is not available, this will store `Inf` values 
 ## To do
 
   * Build additional tests for the library
-  * Expand on the existing schemes
+  * Expand on the existing schemes and models
 
