@@ -51,6 +51,12 @@ function single_iteration_smoother_state_exp(j)
     single_iteration_state(args)
 end
 
+function single_iteration_smoother_param_exp(j)
+    f = load("../data/input_data/single_iteration_param_smoother_input_args.jld")
+    args = f["experiments"][j]
+    single_iteration_param(args)
+end
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -78,6 +84,8 @@ elseif s == "classic_smoother_param"
     classic_smoother_param_exp(t)
 elseif s == "single_iteration_smoother_state"
     single_iteration_smoother_state_exp(t)
+elseif s == "single_iteration_smoother_param"
+    single_iteration_smoother_param_exp(t)
 elseif s == "iterative_smoother_state"
     iterative_smoother_state_exp(t)
 end
