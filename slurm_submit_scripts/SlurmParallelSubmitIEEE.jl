@@ -257,21 +257,21 @@ end
 name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_param_smoother_input_args.jld"
 save(name, "experiments", args)
 
-#for j in 1:length(args) 
-#    f = open("./submit_job.sl", "w")
-#    write(f,"#!/bin/bash\n")
-#    write(f,"#SBATCH -n 1\n")
-#    # slow partition is for Okapi, uncomment when necessary
-#    #write(f,"#SBATCH -p slow\n")
-#    write(f,"#SBATCH -o ensemble_run.out\n")
-#    write(f,"#SBATCH -e ensemble_run.err\n")
-#    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_param\"")
-#    close(f)
-#    my_command = `sbatch  submit_job.sl`
-#    run(my_command)
-#end
-#
-#
+for j in 1:length(args) 
+    f = open("./submit_job.sl", "w")
+    write(f,"#!/bin/bash\n")
+    write(f,"#SBATCH -n 1\n")
+    # slow partition is for Okapi, uncomment when necessary
+    #write(f,"#SBATCH -p slow\n")
+    write(f,"#SBATCH -o ensemble_run.out\n")
+    write(f,"#SBATCH -e ensemble_run.err\n")
+    write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"single_iteration_smoother_param\"")
+    close(f)
+    my_command = `sbatch  submit_job.sl`
+    run(my_command)
+end
+
+
 ########################################################################################################################
 # Iterative smoothers
 ########################################################################################################################
