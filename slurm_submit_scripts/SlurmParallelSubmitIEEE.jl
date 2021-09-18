@@ -1,5 +1,5 @@
 ########################################################################################################################
-module SlurmParallelSubmit 
+module SlurmParallelSubmitIEEE
 ########################################################################################################################
 # imports and exports
 using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
@@ -30,16 +30,18 @@ ts01 = "../data/time_series/IEEE_39_bus_time_series_seed_0000_diff_0.012_tanl_0.
 # time_series, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 # incomplete will determine if the script checks for exisiting data before submitting experiments
-incomplete = false
+incomplete = true
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
 nanl = 25000
 h = 0.01
+tanl = 0.01
+diffusion = 0.012
 
 # these values set parameters for the experiment when running from scratch, or can
 # be tested versus existing data
-sys_dim = 20
+sys_dim = 40
 obs_dim = 20
 methods = ["etks"]
 seed = 0
@@ -56,7 +58,7 @@ gammas = [1.0]
 obs_un = 0.1
 param_err = 0.03
 param_infl = 1.0
-param_wlk = LinRange(0.001, 0.01, 10)
+param_wlk = round.(LinRange(0, 10, 11) * 0.001, digits=3)
 
 # if varying nonlinearity in obs, typically take a single ensemble value
 #N_ens = [21]
@@ -82,8 +84,40 @@ for ts in time_series
                     for N in N_ens
                         for s_infl in state_infl
                             for wlk in param_wlk
-                                tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, wlk, N, s_infl, param_infl)
-                                push!(args, tmp)
+                                if incomplete == true
+                                    #tanl = parse(Float64,ts[71:74])
+                                    #diffusion = parse(Float64,ts[60:64])
+                                    name = method *
+                                                "_classic_IEEE_39_bus_param_benchmark_seed_" * lpad(seed, 4, "0") *
+                                                "_diffusion_" * rpad(diffusion, 5, "0") *
+                                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
+                                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
+                                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                                "_gamma_" * lpad(γ, 5, "0") *
+                                                "_param_err_" * rpad(param_err, 4, "0") *
+                                                "_param_wlk_" * rpad(wlk, 6, "0") *
+                                                "_nanl_" * lpad(nanl, 5, "0") *
+                                                "_tanl_" * rpad(tanl, 4, "0") *
+                                                "_h_" * rpad(h, 4, "0") *
+                                                "_lag_" * lpad(lag, 3, "0") *
+                                                "_shift_" * lpad(shift, 3, "0") *
+                                                "_mda_false" *
+                                                "_N_ens_" * lpad(N, 3,"0") *
+                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
+                                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+                                                ".jld"
+
+                                    fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "_classic/"
+                                    try
+                                        f = load(fpath*name)
+                                    catch
+                                        tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, wlk, N, s_infl, param_infl)
+                                        push!(args, tmp)
+                                    end
+                                else
+                                    tmp = (ts, method, seed, lag, shift, obs_un, obs_dim, γ, param_err, wlk, N, s_infl, param_infl)
+                                    push!(args, tmp)
+                                end
                             end
                         end
                     end
@@ -101,7 +135,7 @@ for j in 1:length(args)
     write(f,"#!/bin/bash\n")
     write(f,"#SBATCH -n 1\n")
     # slow partition is for Okapi, uncomment when necessary
-    write(f,"#SBATCH -p slow\n")
+    #write(f,"#SBATCH -p slow\n")
     write(f,"#SBATCH -o ensemble_run.out\n")
     write(f,"#SBATCH -e ensemble_run.err\n")
     write(f,"julia SlurmExperimentDriver.jl " * "\"" *string(j) * "\"" * " \"classic_smoother_param\"")
