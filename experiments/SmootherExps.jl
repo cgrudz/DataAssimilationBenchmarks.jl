@@ -7,7 +7,7 @@ using Debugger
 using Random, Distributions, Statistics
 using JLD
 using LinearAlgebra
-using EnsembleKalmanSchemes, DeSolvers, L96, IEEE_39_bus
+using EnsembleKalmanSchemes, DeSolvers, L96, IEEE39bus
 export classic_state, classic_param, single_iteration_state, single_iteration_param, iterative_state, iterative_param
 
 ########################################################################################################################
@@ -47,14 +47,14 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -181,14 +181,14 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
         data["diff_mat"] = ts["diff_mat"]
     end
     
-    path = "../data/" * method * "_classic/" 
-    name = method * "_classic_" *
+    path = "../data/" * method * "-classic/" 
+    name = method * "-classic_" *
             string(parentmodule(dx_dt)) *
             "_state_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
@@ -196,8 +196,8 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") *
             "_mda_" * string(mda) * 
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
 
     save(path * name, data)
@@ -226,7 +226,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -392,26 +392,26 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
             "param_infl"  => round(param_infl, digits=2)
            )
     
-    path = "../data/" * method * "_classic/" 
-    name = method * "_classic_" *
+    path = "../data/" * method * "-classic/" 
+    name = method * "-classic_" *
             string(parentmodule(dx_dt)) *
             "_param_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
-            "_param_err_" * rpad(param_err, 4, "0") * 
-            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_paramE_" * rpad(param_err, 4, "0") * 
+            "_paramW_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") *
             "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
             ".jld"
 
     save(path * name, data)
@@ -437,7 +437,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -646,14 +646,14 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
         data["diff_mat"] = ts["diff_mat"]
     end
         
-    path = "../data/" * method * "_single_iteration/" 
-    name = method * "_single_iteration_" *
+    path = "../data/" * method * "-single-iteration/" 
+    name = method * "-single-iteration_" *
             string(parentmodule(dx_dt)) *
             "_state_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
@@ -661,8 +661,8 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
 
     save(path * name, data)
@@ -690,7 +690,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
@@ -945,26 +945,26 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
            )
     
 
-    path = "../data/" * method * "_single_iteration/" 
-    name = method * "_single_iteration_" *
+    path = "../data/" * method * "-single-iteration/" 
+    name = method * "-single-iteration_" *
             string(parentmodule(dx_dt)) *
             "_param_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
-            "_param_err_" * rpad(param_err, 4, "0") * 
-            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_paramE_" * rpad(param_err, 4, "0") * 
+            "_paramW_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
             ".jld"
 
 
@@ -991,7 +991,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     ls_smoother_iterative = ls_smoother_gauss_newton
 
@@ -1237,10 +1237,10 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     name = method * "_" *  
             string(parentmodule(dx_dt)) *
             "_state_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
@@ -1249,7 +1249,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
 
 
@@ -1278,7 +1278,7 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     tanl = ts["tanl"]::Float64
     h = 0.01
     # note the model is hard-coded here, must be adjusted at the moment in line below
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     ls_smoother_iterative = ls_smoother_gauss_newton
 
@@ -1289,7 +1289,7 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
@@ -1562,13 +1562,13 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     name = method * "_" * 
             string(parentmodule(dx_dt)) *
             "_param_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
-            "_param_err_" * rpad(param_err, 4, "0") * 
-            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_paramE_" * rpad(param_err, 4, "0") * 
+            "_paramW_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
@@ -1576,8 +1576,8 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
             "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
             ".jld"
 
 
@@ -1845,7 +1845,7 @@ end
 #            "_shift_" * lpad(shift, 3, "0") * 
 #            "_mda_" * string(mda) *
 #            "_N_ens_" * lpad(N_ens, 3,"0") * 
-#            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") * 
+#            "_state_infl_" * rpad(round(state_infl, digits=2), 4, "0") * 
 #            ".jld"
 #
 #

@@ -20,11 +20,11 @@ using Debugger
 # timeseries are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts1 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-ts2 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-ts3 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
-ts4 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
-ts5 = "./data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
+ts1 = "./data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
+ts2 = "./data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
+ts3 = "./data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
+ts4 = "./data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
+ts5 = "./data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
 ########################################################################################################################
 
 ########################################################################################################################
@@ -242,7 +242,7 @@ experiment = SmootherExps.classic_state
 ## define the robust to failure wrapper
 #function wrap_exp(arguments)
 #    try
-#        single_iteration_state(arguments)
+#        SmootherExps.single_iteration_state(arguments)
 #    catch
 #        print("Error on " * string(args) * "\n")
 #    end
@@ -286,7 +286,7 @@ experiment = SmootherExps.classic_state
 #    end
 #end
 #
-#experiment = SmootherExps.hybrid_param
+#experiment = SmootherExps.single_iteration_param
 #
 ########################################################################################################################
 ########################################################################################################################

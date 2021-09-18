@@ -5,8 +5,8 @@ module GenerateTimeSeries
 using Debugger, JLD, Distributed
 using Random, Distributions, LinearAlgebra
 using DeSolvers
-import L96, IEEE_39_bus
-export L96_time_series, IEEE_39_time_series
+import L96, IEEE39bus
+export L96_time_series, IEEE39bus_time_series
 
 ########################################################################################################################
 # generate timeseries based on the model, solver and parameters
@@ -108,7 +108,7 @@ end
 
 ########################################################################################################################
 
-function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
+function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 
     # time the experiment
     t1 = time()
@@ -117,11 +117,11 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     seed, tanl, nanl, spin, diffusion = args
     
     # define the model
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     state_dim = 20
 
     # define the model parameters
-    tmp = load("../models/IEEE_39_bus_inputs/NE_EffectiveNetworkParams.jld")
+    tmp = load("../models/IEEE39bus_inputs/NE_EffectiveNetworkParams.jld")
     dx_params = Dict{String, Array{Float64}}(
                                              "A" => tmp["A"], 
                                              "D" => tmp["D"], 
@@ -192,7 +192,7 @@ function IEEE_39_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
                 "obs" => obs
                )
 
-    name = "IEEE_39_bus_time_series_seed_" * lpad(seed, 4, "0") * 
+    name = "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
            "_diff_" * rpad(diffusion, 5, "0") * 
            "_tanl_" * rpad(tanl, 4, "0") * 
            "_nanl_" * lpad(nanl, 5, "0") * 

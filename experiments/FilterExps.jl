@@ -6,7 +6,7 @@ module FilterExps
 using Debugger, JLD
 using Random, Distributions, Statistics
 using LinearAlgebra
-using EnsembleKalmanSchemes, DeSolvers, L96, IEEE_39_bus
+using EnsembleKalmanSchemes, DeSolvers, L96, IEEE39bus
 export filter_state, filter_param
 
 ########################################################################################################################
@@ -36,14 +36,14 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -95,7 +95,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             # loop over the integration steps between observations
             @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
-                if parentmodule(dx_dt) == IEEE_39_bus 
+                if parentmodule(dx_dt) == IEEE39bus 
                     # set phase angles mod 2pi
                     ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                 end
@@ -141,16 +141,16 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     name = method * 
             "_" * string(parentmodule(dx_dt)) *
             "_state_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") *
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") *
             "_gamma_" * lpad(γ, 5, "0") *
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
-            "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
+            "_stateInfl_" * rpad(round(infl, digits=2), 4, "0") * 
             ".jld"
 
     save(path * name, data)
@@ -174,14 +174,14 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     h = 0.01
-    dx_dt = IEEE_39_bus.dx_dt
+    dx_dt = IEEE39bus.dx_dt
     step_model! = rk4_step!
     
     # number of discrete forecast steps
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 25000
+    nanl = 2500
 
     # set seed 
     Random.seed!(seed)
@@ -251,7 +251,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     for i in 1:nanl
         # for each ensemble member
         for j in 1:N_ens
-            if parentmodule(dx_dt) == IEEE_39_bus
+            if parentmodule(dx_dt) == IEEE39bus
                 # we define the diffusion structure matrix with respect to the sample value
                 # of the inertia, as per each ensemble member
                 diff_mat = zeros(20,20)
@@ -261,7 +261,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
             @views for k in 1:f_steps
                 # loop over the integration steps between observations
                 step_model!(ens[:, j], 0.0, kwargs)
-                if parentmodule(dx_dt) == IEEE_39_bus 
+                if parentmodule(dx_dt) == IEEE39bus 
                     # set phase angles mod 2pi
                     ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                 end
@@ -325,20 +325,20 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     name =  method * 
             "_" * string(parentmodule(dx_dt)) *
             "_param_seed_" * lpad(seed, 4, "0") * 
-            "_diffusion_" * rpad(diffusion, 5, "0") * 
-            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-            "_state_dim_" * lpad(state_dim, 2, "0") * 
-            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-            "_obs_un_" * rpad(obs_un, 4, "0") * 
+            "_diff_" * rpad(diffusion, 5, "0") * 
+            "_sysD_" * lpad(sys_dim, 2, "0") * 
+            "_stateD_" * lpad(state_dim, 2, "0") * 
+            "_obsD_" * lpad(obs_dim, 2, "0") * 
+            "_obsU_" * rpad(obs_un, 4, "0") * 
             "_gamma_" * lpad(γ, 5, "0") * 
-            "_param_err_" * rpad(param_err, 4, "0") * 
-            "_param_wlk_" * rpad(param_wlk, 6, "0") * 
+            "_paramE_" * rpad(param_err, 4, "0") * 
+            "_paramW_" * rpad(param_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") * 
-            "_N_ens_" * lpad(N_ens, 3, "0") * 
-            "_state_inflation_" * rpad(round(state_infl, digits=2), 4, "0") *
-            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            "_nens_" * lpad(N_ens, 3, "0") * 
+            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") *
+            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
             ".jld"
 
     save(path * name, data)

@@ -611,7 +611,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 8: package the transform output tuple
         T, w, U
     
-    elseif analysis=="etkf_sqrt_core" || analysis=="etks_sqrt_core"
+    elseif analysis=="etkf-sqrt-core" || analysis=="etks-sqrt-core"
         ### NOTE: STILL DEVELOPMENT CODE, NOT DEBUGGED 
         # needs to be revised for the calculation with unweighted anomalies
         # Uses the contribution of the model error covariance matrix Q
@@ -669,7 +669,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         # step 11: package the transform output tuple
         T, w, U
 
-    elseif analysis=="etks_adaptive"
+    elseif analysis=="etks-adaptive"
         ## NOTE: STILL DEVELOPMENT VERSION, NOT DEBUGGED
         # needs to be revised for unweighted anomalies
         # This computes the transform of the ETKF update as in Asch, Bocquet, Nodet
@@ -1238,7 +1238,7 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         # step 2a: propagate between observation times
         for j in 1:N_ens
             if param_est
-                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                     # we define the diffusion structure matrix with respect to the sample value
                     # of the inertia, as per each ensemble member
                     diff_mat = zeros(20,20)
@@ -1248,7 +1248,7 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
             end
             @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
-                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                     # set phase angles mod 2pi
                     ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                 end
@@ -1371,7 +1371,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                 # step 2a: propagate between observation times
                 for j in 1:N_ens
                     if param_est
-                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                             # we define the diffusion structure matrix with respect to the sample value
                             # of the inertia, as per each ensemble member
                             diff_mat = zeros(20,20)
@@ -1381,7 +1381,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                     end
                     @views for k in 1:f_steps
                         step_model!(ens[:, j], 0.0, kwargs)
-                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                             # set phase angles mod 2pi
                             ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                         end
@@ -1452,7 +1452,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             # step 2a: propagate between observation times
             for j in 1:N_ens
                 if param_est
-                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                         # we define the diffusion structure matrix with respect to the sample value
                         # of the inertia, as per each ensemble member
                         diff_mat = zeros(20,20)
@@ -1462,7 +1462,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
                 end
                 @views for k in 1:f_steps
                     step_model!(ens[:, j], 0.0, kwargs)
-                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                         # set phase angles mod 2pi
                         ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                     end
@@ -1538,7 +1538,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
         end
         for j in 1:N_ens
             if param_est
-                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                     # we define the diffusion structure matrix with respect to the sample value
                     # of the inertia, as per each ensemble member
                     diff_mat = zeros(20,20)
@@ -1548,7 +1548,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, o
             end
             @views for k in 1:f_steps
                 step_model!(ens[:, j], 0.0, kwargs)
-                if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                     # set phase angles mod 2pi
                     ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                 end
@@ -1569,7 +1569,7 @@ end
 
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
                              obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any};
-                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10) where {T1 <: CovM}
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=5) where {T1 <: CovM}
 
 
     """Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
@@ -1693,7 +1693,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     # propagate between observation times
                     for j in 1:N_ens
                         if param_est
-                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                                 # we define the diffusion structure matrix with respect to the sample value
                                 # of the inertia, as per each ensemble member
                                 diff_mat = zeros(20,20)
@@ -1703,7 +1703,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                         end
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
-                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                                 # set phase angles mod 2pi
                                 ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                             end
@@ -1817,7 +1817,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     # shift the ensemble forward Δt
                     for j in 1:N_ens
                         if param_est
-                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                                 # we define the diffusion structure matrix with respect to the sample value
                                 # of the inertia, as per each ensemble member
                                 diff_mat = zeros(20,20)
@@ -1827,7 +1827,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                         end
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
-                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                                 # set phase angles mod 2pi
                                 ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                             end
@@ -1853,7 +1853,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     for j in 1:N_ens
                         @views for k in 1:f_steps
                             step_model!(ens[:, j], 0.0, kwargs)
-                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                            if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                                 # set phase angles mod 2pi
                                 ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                             end
@@ -1934,7 +1934,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                 # propagate between observation times
                 for j in 1:N_ens
                     if param_est
-                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                             # we define the diffusion structure matrix with respect to the sample value
                             # of the inertia, as per each ensemble member
                             diff_mat = zeros(20,20)
@@ -1944,7 +1944,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                     end
                     @views for k in 1:f_steps
                         step_model!(ens[:, j], 0.0, kwargs)
-                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                        if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                             # set phase angles mod 2pi
                             ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                         end
@@ -2059,7 +2059,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             # shift the ensemble forward Δt
             for j in 1:N_ens
                 if param_est
-                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                         # we define the diffusion structure matrix with respect to the sample value
                         # of the inertia, as per each ensemble member
                         diff_mat = zeros(20,20)
@@ -2069,7 +2069,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
                 end
                 @views for k in 1:f_steps
                     step_model!(ens[:, j], 0.0, kwargs)
-                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE_39_bus"
+                    if string(parentmodule(kwargs["dx_dt"])) == "IEEE39bus"
                         # set phase angles mod 2pi
                         ens[1:10, j] .= rem2pi.(ens[1:10, j], RoundNearest)
                     end
