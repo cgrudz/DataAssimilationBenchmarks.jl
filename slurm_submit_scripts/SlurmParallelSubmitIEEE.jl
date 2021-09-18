@@ -12,7 +12,7 @@ using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debu
 # time series are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts01 = "../data/time_series/IEEE_39_bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld"
+ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld"
 ########################################################################################################################
 
 ########################################################################################################################
@@ -88,26 +88,26 @@ ts01 = "../data/time_series/IEEE_39_bus_time_series_seed_0000_diff_0.012_tanl_0.
 #                                    #tanl = parse(Float64,ts[71:74])
 #                                    #diffusion = parse(Float64,ts[60:64])
 #                                    name = method *
-#                                                "_classic_IEEE_39_bus_param_benchmark_seed_" * lpad(seed, 4, "0") *
-#                                                "_diffusion_" * rpad(diffusion, 5, "0") *
-#                                                "_sys_dim_" * lpad(sys_dim, 2, "0") *
-#                                                "_obs_dim_" * lpad(obs_dim, 2, "0") *
-#                                                "_obs_un_" * rpad(obs_un, 4, "0") *
+#                                                "-classic_IEEE39bus_param_seed_" * lpad(seed, 4, "0") *
+#                                                "_diff_" * rpad(diffusion, 5, "0") *
+#                                                "_sysD_" * lpad(sys_dim, 2, "0") *
+#                                                "_obsD_" * lpad(obs_dim, 2, "0") *
+#                                                "_obsU_" * rpad(obs_un, 4, "0") *
 #                                                "_gamma_" * lpad(γ, 5, "0") *
-#                                                "_param_err_" * rpad(param_err, 4, "0") *
-#                                                "_param_wlk_" * rpad(wlk, 6, "0") *
+#                                                "_paramE_" * rpad(param_err, 4, "0") *
+#                                                "_paramW_" * rpad(wlk, 6, "0") *
 #                                                "_nanl_" * lpad(nanl, 5, "0") *
 #                                                "_tanl_" * rpad(tanl, 4, "0") *
 #                                                "_h_" * rpad(h, 4, "0") *
 #                                                "_lag_" * lpad(lag, 3, "0") *
 #                                                "_shift_" * lpad(shift, 3, "0") *
 #                                                "_mda_false" *
-#                                                "_N_ens_" * lpad(N, 3,"0") *
-#                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+#                                                "_nens_" * lpad(N, 3,"0") *
+#                                                "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+#                                                "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
 #                                                ".jld"
 #
-#                                    fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "_classic/"
+#                                    fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "-classic/"
 #                                    try
 #                                        f = load(fpath*name)
 #                                    catch
@@ -214,26 +214,26 @@ for ts in time_series
                                         #tanl = parse(Float64,ts[71:74])
                                         #diffusion = parse(Float64,ts[60:64])
                                         name = method *
-                                                    "_single_iteration_IEEE_39_bus_param_benchmark_seed_" * lpad(seed, 4, "0") *
-                                                    "_diffusion_" * rpad(diffusion, 5, "0") *
-                                                    "_sys_dim_" * lpad(sys_dim, 2, "0") *
-                                                    "_obs_dim_" * lpad(obs_dim, 2, "0") *
-                                                    "_obs_un_" * rpad(obs_un, 4, "0") *
+                                                    "-single-iteration_IEEE39bus_param_seed_" * lpad(seed, 4, "0") *
+                                                    "_diff_" * rpad(diffusion, 5, "0") *
+                                                    "_sysD_" * lpad(sys_dim, 2, "0") *
+                                                    "_obsD_" * lpad(obs_dim, 2, "0") *
+                                                    "_obsU_" * rpad(obs_un, 4, "0") *
                                                     "_gamma_" * lpad(γ, 5, "0") *
-                                                    "_param_err_" * rpad(param_err, 4, "0") *
-                                                    "_param_wlk_" * rpad(wlk, 6, "0") *
+                                                    "_paramE_" * rpad(param_err, 4, "0") *
+                                                    "_paramW_" * rpad(wlk, 6, "0") *
                                                     "_nanl_" * lpad(nanl, 5, "0") *
                                                     "_tanl_" * rpad(tanl, 4, "0") *
                                                     "_h_" * rpad(h, 4, "0") *
                                                     "_lag_" * lpad(lag, 3, "0") *
                                                     "_shift_" * lpad(shift, 3, "0") *
-                                                    "_mda_false" *
-                                                    "_N_ens_" * lpad(N, 3,"0") *
-                                                    "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-                                                    "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+                                                    "_mda_" * string(mda) *
+                                                    "_nens_" * lpad(N, 3,"0") *
+                                                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+                                                    "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
                                                     ".jld"
 
-                                        fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "_single_iteration/"
+                                        fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "-single-iteration/"
                                         try
                                             f = load(fpath*name)
                                         catch
