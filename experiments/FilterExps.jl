@@ -132,6 +132,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
             "N_ens" => N_ens, 
             "state_infl" => round(infl, digits=2)
            ) 
+    
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]
     end
@@ -139,7 +140,7 @@ function filter_state(args::Tuple{String,String,Int64,Float64,Int64,Float64,Int6
     path = "../data/" * method * "/" 
     name = method * 
             "_" * string(parentmodule(dx_dt)) *
-            "_state_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_state_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -323,7 +324,7 @@ function filter_param(args::Tuple{String,String,Int64,Float64,Int64,Float64,Floa
     path = "../data/" * method * "/" 
     name =  method * 
             "_" * string(parentmodule(dx_dt)) *
-            "_param_benchmark_seed_" * lpad(seed, 4, "0") * 
+            "_param_seed_" * lpad(seed, 4, "0") * 
             "_diffusion_" * rpad(diffusion, 5, "0") * 
             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
             "_state_dim_" * lpad(state_dim, 2, "0") * 

@@ -5,7 +5,8 @@ module SingleExperimentDriver
 # imports and exports
 using FilterExps, SmootherExps, GenerateTimeSeries, Debugger
 export filter_state_exp, filter_param_exp, classic_smoother_state_exp, classic_smoother_param_exp,
-        single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, iterative_smoother_state_exp,
+        single_iteration_smoother_state_exp, single_iteration_smoother_param_exp, 
+        iterative_smoother_state_exp, iterative_smoother_param_exp, 
         L96_time_series_exp, IEEE_39_time_series_exp
 
 ########################################################################################################################
@@ -125,10 +126,10 @@ end
 # Single iteration smoothers
 ########################################################################################################################
 # Single iteration ensemble Kalman smoothing for state estimation, arguments are
-# time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
+# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function single_iteration_smoother_state_exp()
-    args = (time_series, "enks-n-primal", 0, 10, 1, false, 1.0, 40, 1.0, 21, 1.00)
+    args = (time_series, "etks", 0, 10, 1, false, 0.1, 20, 1.0, 21, 1.02)
     single_iteration_state(args)
 end
 
@@ -139,7 +140,7 @@ end
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function single_iteration_smoother_param_exp()
-    args = (time_series, "etks", 0, 10, 1, false, 1.0, 40, 1.0, 0.03, 0.0010, 21, 1.01, 1.00)
+    args = (time_series, "etks", 0, 10, 1, true, 0.1, 20, 1.0, 0.03, 0.0010, 21, 1.01, 1.00)
     single_iteration_param(args)
 end
 
@@ -148,11 +149,21 @@ end
 # Iterative smoothers
 ########################################################################################################################
 # IEnKS style iterative smoothing for state estmation, arugments are
-# time_series, method, seed, lag, shift, adaptive, mda, obs_un, obs_dim, γ, N_ens, infl = args
+# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, infl = args
 
 function iterative_smoother_state_exp()
-    args = (time_series, "lin-ienks-n-transform", 0, 10, 1, false, 1.0, 40, 0.0, 21, 1.00)
+    args = (time_series, "ienks-transform", 0, 10, 1, true, 0.1, 20, 1.0, 21, 1.02)
     iterative_state(args)
+end
+
+########################################################################################################################
+# IEnKS style iterative smoothing for joint state-parameter estmation, arugments are
+# time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ,
+# param_err, param_wlk, N_ens, state_infl, param_infl = args
+
+function iterative_smoother_param_exp()
+    args = (time_series, "ienks-transform", 0, 10, 1, false, 1.0, 20, 1.0, 0.03, 0.0010,  21, 1.02, 1.0)
+    iterative_param(args)
 end
 
 ########################################################################################################################
