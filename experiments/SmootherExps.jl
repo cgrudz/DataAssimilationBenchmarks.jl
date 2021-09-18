@@ -700,7 +700,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Bool
     n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
-    nanl = 2500
+    nanl = 25000
 
     # set seed 
     Random.seed!(seed)
