@@ -2,65 +2,80 @@
 module TestTimeSeriesGeneration
 #######################################################################################################################
 # imports and exports
-using DeSolvers
-using L96
+using DataAssimilationBenchmarks.DeSolvers
+using DataAssimilationBenchmarks.L96
 using JLD
-export kwargs, time_series
+using Random
+
 #######################################################################################################################
-function time_series()
     # initial conditions and arguments
-    state_dim = 40
 
-    seed = 123
-    x = zeros(state_dim)
 
-    # total number of analyses
-    nanl = 1000
+dx_dt = L96.dx_dt
+step_model! = DeSolvers.em_step!
 
-    # diffusion parameter
-    diffusion = 0.0
+F = 8.0
+spin = 100
+h = 0.001
+nanl = 1000
+sys_dim = 40
+diffusion = 0.1
+tanl = 0.1
+seed = 0
 
-    # step size
-    h = 0.01
-    # forced parameter
-    F = 8.0
-    # time between analyses
-    tanl = 0.5
+dx_params = Dict{String, Array{Float64}}("F" => [F])
 
-    kwargs = Dict{String, Any}(
-        "h" => h,
-        "diffusion" => diffusion,
-        "dx_params" => [F],
-        "dx_dt" => L96.dx_dt,
-        )
+fore_steps = convert(Int64, tanl/h)
 
-    step_model! = DeSolvers.em_step!
+Random.seed!(seed)
 
-    f_steps = convert(Int64, tanl/h)
+kwargs = Dict{String, Any}(
+          "h" => h,
+          "diffusion" => diffusion,
+          "dx_params" => dx_params,
+          "dx_dt" => L96.dx_dt,
+         )
 
-    obs = Array{Float64}(undef, state_dim, nanl)
+#xt = np.ones(sys_dim)
+xt = ones(sys_dim)
 
-    for i in range(1, stop=nanl)
-        for j in range(1, stop=f_steps)
-            em_step!(x, 0.0, kwargs)
-        end
-        obs[:, i] = x
+#tobs = np.zeros ([sys_dim, nanl])
+tobs = Array{Float64}(undef,sys_dim, nanl)
+#for i in range(nanl)
+for i in 1:nanl
+    #for j in range(fore_steps)
+    for j in 1:fore_steps
+        step_model!(xt, 0.0, kwargs)
     end
-
-    data = Dict{String, Any}(
-            "h" => h,
-            "diffusion" => diffusion,
-            "F" => F,
-            "tanl" => tanl,
-            "nanl" => nanl,
-            "state_dim" => state_dim,
-            "obs" => obs
-           )
-
-    path = "../data/time_series/"
-    fname = "time_series_data_seed_" * string(seed) * ".jld"
-    save(path * fname, data)
-
+    tobs[:,i] = xt
 end
 
+
+fname = "time_series_data_seed_" * lpad(seed, 4, "0") *
+        "_dim_" * lpad(sys_dim, 2, "0") *
+        "_diff_" * rpad(diffusion, 5, "0") *
+        "_F_" * lpad(F, 4, "0") *
+        "_tanl_" * rpad(tanl, 4, "0") *
+        "_nanl_" * lpad(nanl, 5, "0") *
+        "_h_" * rpad(h, 5, "0") *
+        ".jld"
+
+
+data = Dict{String, Any}(
+    "h" => h,
+    "diffusion" => diffusion,
+    "F" => F,
+    "tanl" => tanl,
+    "nanl"  => nanl,
+    "sys_dim" => sys_dim,
+    "tobs" => tobs
+    )
+path = "../data/time_series/"
+
+    try
+        save(path * fname, data)
+        did_write = true
+    catch
+        did_write = false
+    end
 end
