@@ -6,7 +6,7 @@ module ProcessExperimentData
 using Debugger
 using Statistics
 using JLD, HDF5
-export process_filter_state, process_smoother_state, process_filter_nonlinear_obs, 
+export process_filter_state, process_smoother_state, process_smoother_param, process_filter_nonlinear_obs, 
        process_smoother_nonlinear_obs, process_smoother_versus_shift, process_smoother_versus_tanl,   
        rename_smoother_state
 
@@ -147,7 +147,7 @@ function process_filter_state()
                 
                 # inflation is a static value of 1.0
                 name = method * 
-                        "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                        "_L96_state_seed_" * lpad(seed, 4, "0") *
                         "_diffusion_" * rpad(diffusion, 4, "0") * 
                         "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                         "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -165,7 +165,7 @@ function process_filter_state()
                 # loop inflations
                 for infl in inflations
                     name = method * 
-                            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                            "_L96_state_seed_" * lpad(seed, 4, "0") *
                             "_diffusion_" * rpad(diffusion, 4, "0") * 
                             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -480,7 +480,7 @@ function process_smoother_state()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                            "_L96_state_seed_" * lpad(seed, 4, "0") *
                             "_diffusion_" * rpad(diffusion, 4, "0") *
                             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -505,7 +505,7 @@ function process_smoother_state()
                     for infl in inflations
                         # loop inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -527,7 +527,7 @@ function process_smoother_state()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
@@ -602,41 +602,48 @@ function process_smoother_param()
 
     # static parameters that are not varied 
     seed = 0
-    tanl = 0.05
+    tanl = 0.01
     h = 0.01
-    obs_un = 1.0
-    obs_dim = 40
+    obs_un = 0.1
+    obs_dim = 20
     γ = 1.0
     sys_dim = 40
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = true
-    diffusion = 0.00
+    mda = false
+    diffusion = 0.012
+    param_err = 0.03
+    param_wlk = 0.0000
+    param_infl = 1.0
     
     # parameters in ranges that will be used in loops
     method_list = [
                    "etks_classic", 
+                   #"etks_single_iteration",
                   ]
     
     analysis_list = [
                      "fore",
                      "filt",
-                     "post"
+                     "post",
+                     "param",
                     ]
 
     stat_list = [
                  "rmse",
                  "spread",
-                 "param"
                 ]
                  
 
-    ensemble_sizes = 15:2:41
+    ensemble_sizes = 11:2:13
+    #ensemble_sizes = 11:2:41
     total_ensembles = length(ensemble_sizes)
-    inflations = LinRange(1.00, 1.10, 11)
+    inflations = LinRange(1.00, 1.0, 1)
+    #inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:91
+    lags = 1:3:4
+    #lags = 1:3:52
     total_lags = length(lags)
 
     # define the storage dictionary here, looping over the method list
@@ -676,6 +683,7 @@ function process_smoother_param()
 
     # auxilliary function to process data, producing rmse and spread averages
     function process_data(fnames::Vector{String}, method::String)
+        @bp
         # loop lag, first axis
         for k in 0:total_lags - 1
             # loop ensemble size , last axis
@@ -828,7 +836,7 @@ function process_smoother_param()
     end
 
     # define path to data on server
-    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/"
+    fpath = "/x/capa/scratch/cgrudzien/power_grid_data/"
     
     # generate the range of experiments, storing file names as a list
     for method in method_list
@@ -842,12 +850,14 @@ function process_smoother_param()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                            "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
-                            "_diffusion_" * rpad(diffusion, 4, "0") *
+                            "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
+                            "_diffusion_" * rpad(diffusion, 5, "0") *
                             "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                             "_obs_dim_" * lpad(obs_dim, 2, "0") * 
                             "_obs_un_" * rpad(obs_un, 4, "0") *
                             "_gamma_" * lpad(γ, 5, "0") *
+                            "_param_err_" * rpad(param_err, 4, "0") *
+                            "_param_wlk_" * rpad(param_wlk, 6, "0") *
                             "_nanl_" * lpad(nanl + burn, 5, "0") * 
                             "_tanl_" * rpad(tanl, 4, "0") * 
                             "_h_" * rpad(h, 4, "0") *
@@ -856,6 +866,7 @@ function process_smoother_param()
                             "_mda_" * string(mda) *
                             "_N_ens_" * lpad(N_ens, 3,"0") * 
                             "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
+                            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
                             ".jld"
 
                     push!(fnames, fpath * method * "/" * name)
@@ -867,12 +878,14 @@ function process_smoother_param()
                     for infl in inflations
                         # loop inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
-                                "_diffusion_" * rpad(diffusion, 4, "0") *
+                                "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
+                                "_diffusion_" * rpad(diffusion, 5, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
                                 "_obs_un_" * rpad(obs_un, 4, "0") *
                                 "_gamma_" * lpad(γ, 5, "0") *
+                                "_param_err_" * rpad(param_err, 4, "0") *
+                                "_param_wlk_" * rpad(param_wlk, 6, "0") *
                                 "_nanl_" * lpad(nanl + burn, 5, "0") * 
                                 "_tanl_" * rpad(tanl, 4, "0") * 
                                 "_h_" * rpad(h, 4, "0") *
@@ -881,6 +894,7 @@ function process_smoother_param()
                                 "_mda_false" *
                                 "_N_ens_" * lpad(N_ens, 3,"0") * 
                                 "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
                                 ".jld"
                         
                         push!(fnames, fpath * method * "/" * name)
@@ -889,12 +903,14 @@ function process_smoother_param()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
-                                "_diffusion_" * rpad(diffusion, 4, "0") *
+                                "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
+                                "_diffusion_" * rpad(diffusion, 5, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
                                 "_obs_un_" * rpad(obs_un, 4, "0") *
                                 "_gamma_" * lpad(γ, 5, "0") *
+                                "_param_err_" * rpad(param_err, 4, "0") *
+                                "_param_wlk_" * rpad(param_wlk, 6, "0") *
                                 "_nanl_" * lpad(nanl + burn, 5, "0") * 
                                 "_tanl_" * rpad(tanl, 4, "0") * 
                                 "_h_" * rpad(h, 4, "0") *
@@ -903,6 +919,7 @@ function process_smoother_param()
                                 "_mda_" * string(mda) *
                                 "_N_ens_" * lpad(N_ens, 3,"0") * 
                                 "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
+                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
                                 ".jld"
                         
                         push!(fnames, fpath * method * "/" * name)
@@ -913,13 +930,14 @@ function process_smoother_param()
         
         # turn fnames into a string array, use this as the argument in process_data
         fnames = Array{String}(fnames)
+        @bp
         process_data(fnames, method)
 
     end
 
     # create jld file name with relevant parameters
-    jlname = "processed_smoother_state" * 
-             "_diffusion_" * rpad(diffusion, 4, "0") *
+    jlname = "processed_smoother_param" * 
+             "_diffusion_" * rpad(diffusion, 5, "0") *
              "_tanl_" * rpad(tanl, 4, "0") * 
              "_nanl_" * lpad(nanl, 5, "0") * 
              "_burn_" * lpad(burn, 5, "0") * 
@@ -928,8 +946,8 @@ function process_smoother_param()
              ".jld"
 
     # create hdf5 file name with relevant parameters
-    h5name = "processed_smoother_state" * 
-             "_diffusion_" * rpad(diffusion, 4, "0") *
+    h5name = "processed_smoother_param" * 
+             "_diffusion_" * rpad(diffusion, 5, "0") *
              "_tanl_" * rpad(tanl, 4, "0") * 
              "_nanl_" * lpad(nanl, 5, "0") * 
              "_burn_" * lpad(burn, 5, "0") * 
@@ -1099,7 +1117,7 @@ function process_filter_nonlinear_obs()
                 if method[1:6] == "mlef-n" || 
                     method[1:9] == "mlef-ls-n"
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1116,7 +1134,7 @@ function process_filter_nonlinear_obs()
                 else
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1431,7 +1449,7 @@ function process_smoother_nonlinear_obs()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                        "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                        "_L96_state_seed_" * lpad(seed, 4, "0") *
                         "_diffusion_" * rpad(diffusion, 4, "0") *
                         "_sys_dim_" * lpad(sys_dim, 2, "0") *
                         "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1455,7 +1473,7 @@ function process_smoother_nonlinear_obs()
                     # also finite size formalism is incompatible with MDA
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1477,7 +1495,7 @@ function process_smoother_nonlinear_obs()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1803,7 +1821,7 @@ function process_smoother_versus_tanl()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                        "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                        "_L96_state_seed_" * lpad(seed, 4, "0") *
                         "_diffusion_" * rpad(diffusion, 4, "0") *
                         "_sys_dim_" * lpad(sys_dim, 2, "0") *
                         "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1827,7 +1845,7 @@ function process_smoother_versus_tanl()
                     # also finite size formalism is incompatible with MDA
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -1849,7 +1867,7 @@ function process_smoother_versus_tanl()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -2182,7 +2200,7 @@ function process_smoother_versus_shift()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                        "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                        "_L96_state_seed_" * lpad(seed, 4, "0") *
                         "_diffusion_" * rpad(diffusion, 4, "0") *
                         "_sys_dim_" * lpad(sys_dim, 2, "0") *
                         "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -2206,7 +2224,7 @@ function process_smoother_versus_shift()
                     # also finite size formalism is incompatible with MDA
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -2228,7 +2246,7 @@ function process_smoother_versus_shift()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(0, 4, "0") *
+                                "_L96_state_seed_" * lpad(0, 4, "0") *
                                 "_diffusion_" * rpad(diffusion, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") *
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") *
@@ -2375,7 +2393,7 @@ function rename_data_smoother_state()
                     method == "ienks-n-transform" ||
                     method == "etks_adaptive_single_iteration"
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
                                 "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -2393,7 +2411,7 @@ function rename_data_smoother_state()
                 else
                     for infl in total_inflations
                         name = method * 
-                                "_l96_state_benchmark_seed_" * lpad(seed, 4, "0") *
+                                "_L96_state_seed_" * lpad(seed, 4, "0") *
                                 "_sys_dim_" * lpad(sys_dim, 2, "0") * 
                                 "_obs_dim_" * lpad(obs_dim, 2, "0") * 
                                 "_obs_un_" * rpad(obs_un, 4, "0") *
@@ -2422,8 +2440,9 @@ end
 
 ########################################################################################################################
 #process_smoother_state()
+#process_smoother_param()
 #process_smoother_nonlinear_obs()
-process_smoother_versus_shift()
+#process_smoother_versus_shift()
 #process_smoother_versus_tanl()
 
 end
