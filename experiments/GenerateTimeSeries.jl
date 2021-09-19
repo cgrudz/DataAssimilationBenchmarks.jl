@@ -115,6 +115,7 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 
     # unpack the experiment parameters determining the time series
     seed, tanl, nanl, spin, diffusion = args
+    Random.seed!(seed)
     
     # define the model
     dx_dt = IEEE39bus.dx_dt
