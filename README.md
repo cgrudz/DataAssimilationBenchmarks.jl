@@ -18,7 +18,7 @@
                                                            |__/                   
 ```
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
-[![](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl).
+[![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 
 
 ## Welcome to DataAssimilationBenchmarks.jl!
