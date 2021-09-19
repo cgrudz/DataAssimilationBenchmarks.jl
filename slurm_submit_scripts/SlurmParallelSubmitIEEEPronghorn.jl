@@ -127,7 +127,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_param_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_param_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -255,7 +255,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_param_smoother_input_args.jld"
+#name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_param_smoother_input_args.jld"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -384,7 +384,7 @@ for ts in time_series
     end
 end
 
-name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_param_smoother_input_args.jld"
+name = "/data/gpfs/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_param_smoother_input_args.jld"
 save(name, "experiments", args)
 
 for j in 1:length(args) 
