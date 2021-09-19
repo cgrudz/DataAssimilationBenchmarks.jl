@@ -1,6 +1,6 @@
 # DataAssimilationBenchmarks.jl
 
-![DataAssimilationBenchmarks.jl logo](./assets/dabenchmarks.png)
+![DataAssimilationBenchmarks.jl logo](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/assets/dabenchmarks.png)
 
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
