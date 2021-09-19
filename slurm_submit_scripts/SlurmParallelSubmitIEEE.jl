@@ -180,7 +180,8 @@ gammas = [1.0]
 obs_un = 0.1
 param_err = 0.03
 param_infl = 1.0
-param_wlk = round.(LinRange(0, 10, 11) * 0.001, digits=3)
+#param_wlk = round.(LinRange(0, 10, 11) * 0.001, digits=3)
+param_wlk = [0.000]
 
 # if varying nonlinearity in obs, typically take a single ensemble value
 #N_ens = [21]

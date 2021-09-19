@@ -619,8 +619,9 @@ function process_smoother_param()
     
     # parameters in ranges that will be used in loops
     method_list = [
-                   "etks_classic", 
-                   #"etks_single_iteration",
+                   "etks-classic", 
+                   "etks-single-iteration",
+                   "ienks-transform",
                   ]
     
     analysis_list = [
@@ -636,14 +637,11 @@ function process_smoother_param()
                 ]
                  
 
-    ensemble_sizes = 11:2:13
-    #ensemble_sizes = 11:2:41
+    ensemble_sizes = 11:2:41
     total_ensembles = length(ensemble_sizes)
-    inflations = LinRange(1.00, 1.0, 1)
-    #inflations = LinRange(1.00, 1.10, 11)
+    inflations = LinRange(1.00, 1.10, 11)
     total_inflations = length(inflations)
-    lags = 1:3:4
-    #lags = 1:3:52
+    lags = 1:3:52
     total_lags = length(lags)
 
     # define the storage dictionary here, looping over the method list
@@ -850,23 +848,23 @@ function process_smoother_param()
                     
                     # inflation is a static value of 1.0
                     name = method * 
-                            "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
-                            "_diffusion_" * rpad(diffusion, 5, "0") *
-                            "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                            "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                            "_obs_un_" * rpad(obs_un, 4, "0") *
+                            "_IEEE39bus_param_seed_" * lpad(seed, 4, "0") *
+                            "_diff_" * rpad(diffusion, 5, "0") *
+                            "_sysD_" * lpad(sys_dim, 2, "0") * 
+                            "_obsD_" * lpad(obs_dim, 2, "0") * 
+                            "_obsU_" * rpad(obs_un, 4, "0") *
                             "_gamma_" * lpad(γ, 5, "0") *
-                            "_param_err_" * rpad(param_err, 4, "0") *
-                            "_param_wlk_" * rpad(param_wlk, 6, "0") *
+                            "_paramE_" * rpad(param_err, 4, "0") *
+                            "_paramW_" * rpad(param_wlk, 6, "0") *
                             "_nanl_" * lpad(nanl + burn, 5, "0") * 
                             "_tanl_" * rpad(tanl, 4, "0") * 
                             "_h_" * rpad(h, 4, "0") *
                             "_lag_" * lpad(lag, 3, "0") * 
                             "_shift_" * lpad(shift, 3, "0") * 
                             "_mda_" * string(mda) *
-                            "_N_ens_" * lpad(N_ens, 3,"0") * 
-                            "_state_inflation_" * rpad(round(1.00, digits=2), 4, "0") * 
-                            "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+                            "_nens_" * lpad(N_ens, 3,"0") * 
+                            "_stateInfl_" * rpad(round(1.00, digits=2), 4, "0") * 
+                            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
                             ".jld"
 
                     push!(fnames, fpath * method * "/" * name)
@@ -878,23 +876,23 @@ function process_smoother_param()
                     for infl in inflations
                         # loop inflations
                         name = method * 
-                                "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
-                                "_diffusion_" * rpad(diffusion, 5, "0") *
-                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_IEEE39bus_param_seed_" * lpad(seed, 4, "0") *
+                                "_diff_" * rpad(diffusion, 5, "0") *
+                                "_sysD_" * lpad(sys_dim, 2, "0") * 
+                                "_obsD_" * lpad(obs_dim, 2, "0") * 
+                                "_obsU_" * rpad(obs_un, 4, "0") *
                                 "_gamma_" * lpad(γ, 5, "0") *
-                                "_param_err_" * rpad(param_err, 4, "0") *
-                                "_param_wlk_" * rpad(param_wlk, 6, "0") *
+                                "_paramE_" * rpad(param_err, 4, "0") *
+                                "_paramW_" * rpad(param_wlk, 6, "0") *
                                 "_nanl_" * lpad(nanl + burn, 5, "0") * 
                                 "_tanl_" * rpad(tanl, 4, "0") * 
                                 "_h_" * rpad(h, 4, "0") *
                                 "_lag_" * lpad(lag, 3, "0") * 
                                 "_shift_" * lpad(shift, 3, "0") * 
                                 "_mda_false" *
-                                "_N_ens_" * lpad(N_ens, 3,"0") * 
-                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
-                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+                                "_nens_" * lpad(N_ens, 3,"0") * 
+                                "_stateInfl_" * rpad(round(infl, digits=2), 4, "0") * 
+                                "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
                                 ".jld"
                         
                         push!(fnames, fpath * method * "/" * name)
@@ -903,23 +901,23 @@ function process_smoother_param()
                     # loop inflations
                     for infl in inflations
                         name = method * 
-                                "_IEEE_39_bus_param_seed_" * lpad(seed, 4, "0") *
-                                "_diffusion_" * rpad(diffusion, 5, "0") *
-                                "_sys_dim_" * lpad(sys_dim, 2, "0") * 
-                                "_obs_dim_" * lpad(obs_dim, 2, "0") * 
-                                "_obs_un_" * rpad(obs_un, 4, "0") *
+                                "_IEEE39bus_param_seed_" * lpad(seed, 4, "0") *
+                                "_diff_" * rpad(diffusion, 5, "0") *
+                                "_sysD_" * lpad(sys_dim, 2, "0") * 
+                                "_obsD_" * lpad(obs_dim, 2, "0") * 
+                                "_obsU_" * rpad(obs_un, 4, "0") *
                                 "_gamma_" * lpad(γ, 5, "0") *
-                                "_param_err_" * rpad(param_err, 4, "0") *
-                                "_param_wlk_" * rpad(param_wlk, 6, "0") *
+                                "_paramE_" * rpad(param_err, 4, "0") *
+                                "_paramW_" * rpad(param_wlk, 6, "0") *
                                 "_nanl_" * lpad(nanl + burn, 5, "0") * 
                                 "_tanl_" * rpad(tanl, 4, "0") * 
                                 "_h_" * rpad(h, 4, "0") *
                                 "_lag_" * lpad(lag, 3, "0") * 
                                 "_shift_" * lpad(shift, 3, "0") * 
                                 "_mda_" * string(mda) *
-                                "_N_ens_" * lpad(N_ens, 3,"0") * 
-                                "_state_inflation_" * rpad(round(infl, digits=2), 4, "0") * 
-                                "_param_infl_" * rpad(round(param_infl, digits=2), 4, "0") *
+                                "_nens_" * lpad(N_ens, 3,"0") * 
+                                "_stateInfl_" * rpad(round(infl, digits=2), 4, "0") * 
+                                "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
                                 ".jld"
                         
                         push!(fnames, fpath * method * "/" * name)
@@ -2440,7 +2438,7 @@ end
 
 ########################################################################################################################
 #process_smoother_state()
-#process_smoother_param()
+process_smoother_param()
 #process_smoother_nonlinear_obs()
 #process_smoother_versus_shift()
 #process_smoother_versus_tanl()
