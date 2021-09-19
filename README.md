@@ -16,6 +16,8 @@ and reliability of results across different experimental regimes, with parallel 
 This includes code for developing and testing data assimilation schemes in the 
 [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) currently, with further models in development.
 
+Lines of code counter (without comments or blank lines) courtesy of [Tokei](https://github.com/XAMPPRocky/tokei).
+
 ### Validated methods currently in use
 
 <table>
