@@ -1,23 +1,9 @@
 # DataAssimilationBenchmarks.jl
 
-```
-  _____        _                         _           _ _       _   _              
- |  __ \      | |          /\           (_)         (_) |     | | (_)             
- | |  | | __ _| |_ __ _   /  \   ___ ___ _ _ __ ___  _| | __ _| |_ _  ___  _ __   
- | |  | |/ _` | __/ _` | / /\ \ / __/ __| | '_ ` _ \| | |/ _` | __| |/ _ \| '_ \  
- | |__| | (_| | || (_| |/ ____ \\__ \__ \ | | | | | | | | (_| | |_| | (_) | | | | 
- |_____/ \__,_|\__\__,_/_/    \_\___/___/_|_| |_| |_|_|_|\__,_|\__|_|\___/|_| |_| 
+![DataAssimilationBenchmarks.jl logo](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/assets/dabenchmarks.png)
 
-  ____                  _                          _          _ _
- |  _ \                | |                        | |        (_) |                
- | |_) | ___ _ __   ___| |__  _ __ ___   __ _ _ __| | _____   _| |                
- |  _ < / _ \ '_ \ / __| '_ \| '_ ` _ \ / _` | '__| |/ / __| | | |                
- | |_) |  __/ | | | (__| | | | | | | | | (_| | |  |   <\__ \_| | |                
- |____/ \___|_| |_|\___|_| |_|_| |_| |_|\__,_|_|  |_|\_\___(_) |_|                
-                                                            _/ |                  
-                                                           |__/                   
-```
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+[![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 
 
 ## Welcome to DataAssimilationBenchmarks.jl!
@@ -29,6 +15,8 @@ in the sense that large hyper-parameter discretizations can be explored to deter
 and reliability of results across different experimental regimes, with parallel implementations in Slurm.
 This includes code for developing and testing data assimilation schemes in the 
 [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) currently, with further models in development.
+
+Lines of code counter (without comments or blank lines) courtesy of [Tokei](https://github.com/XAMPPRocky/tokei).
 
 ### Validated methods currently in use
 
@@ -61,7 +49,7 @@ This includes code for developing and testing data assimilation schemes in the
   <td>MLES, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>NA</td>
 </tr>
 <tr>
-  <td>SIEnKS</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
+  <td>SIEnKS, perturbed obs / ETKF / MLEF variants</td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td>
 </tr>
 <tr>
   <td>Gauss-Newton IEnKS, transform / bundle variants</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td>
