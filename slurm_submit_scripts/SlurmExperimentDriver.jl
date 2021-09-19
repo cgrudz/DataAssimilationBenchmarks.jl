@@ -68,6 +68,12 @@ function iterative_smoother_state_exp(j)
     iterative_state(args)
 end
 
+function iterative_smoother_param_exp(j)
+    f = load("../data/input_data/iterative_param_smoother_input_args.jld")
+    args = f["experiments"][j]
+    iterative_param(args)
+end
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -88,6 +94,8 @@ elseif s == "single_iteration_smoother_param"
     single_iteration_smoother_param_exp(t)
 elseif s == "iterative_smoother_state"
     iterative_smoother_state_exp(t)
+elseif s == "iterative_smoother_param"
+    iterative_smoother_param_exp(t)
 end
 
 ########################################################################################################################
