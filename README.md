@@ -1,22 +1,7 @@
 # DataAssimilationBenchmarks.jl
 
-```
-  _____        _                         _           _ _       _   _              
- |  __ \      | |          /\           (_)         (_) |     | | (_)             
- | |  | | __ _| |_ __ _   /  \   ___ ___ _ _ __ ___  _| | __ _| |_ _  ___  _ __   
- | |  | |/ _` | __/ _` | / /\ \ / __/ __| | '_ ` _ \| | |/ _` | __| |/ _ \| '_ \  
- | |__| | (_| | || (_| |/ ____ \\__ \__ \ | | | | | | | | (_| | |_| | (_) | | | | 
- |_____/ \__,_|\__\__,_/_/    \_\___/___/_|_| |_| |_|_|_|\__,_|\__|_|\___/|_| |_| 
+![DataAssimilationBenchmarks.jl logo](./assets/dabenchmarks.png)
 
-  ____                  _                          _          _ _
- |  _ \                | |                        | |        (_) |                
- | |_) | ___ _ __   ___| |__  _ __ ___   __ _ _ __| | _____   _| |                
- |  _ < / _ \ '_ \ / __| '_ \| '_ ` _ \ / _` | '__| |/ / __| | | |                
- | |_) |  __/ | | | (__| | | | | | | | | (_| | |  |   <\__ \_| | |                
- |____/ \___|_| |_|\___|_| |_|_| |_| |_|\__,_|_|  |_|\_\___(_) |_|                
-                                                            _/ |                  
-                                                           |__/                   
-```
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 
