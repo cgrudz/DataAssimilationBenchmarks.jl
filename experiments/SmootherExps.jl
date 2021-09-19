@@ -1248,7 +1248,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
             "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
             ".jld"
 
@@ -1575,7 +1575,7 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
             "_lag_" * lpad(lag, 3, "0") * 
             "_shift_" * lpad(shift, 3, "0") * 
             "_mda_" * string(mda) *
-            "_N_ens_" * lpad(N_ens, 3,"0") * 
+            "_nens_" * lpad(N_ens, 3,"0") * 
             "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
             "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
             ".jld"
