@@ -611,7 +611,7 @@ function process_smoother_param()
     nanl = 20000
     burn = 5000
     shift = 1
-    mda = false
+    mda = true
     diffusion = 0.012
     param_err = 0.03
     param_wlk = 0.0000
@@ -621,6 +621,7 @@ function process_smoother_param()
     method_list = [
                    "etks-classic", 
                    "etks-single-iteration",
+                   "lin-ienks-transform",
                    "ienks-transform",
                   ]
     
@@ -681,7 +682,6 @@ function process_smoother_param()
 
     # auxilliary function to process data, producing rmse and spread averages
     function process_data(fnames::Vector{String}, method::String)
-        @bp
         # loop lag, first axis
         for k in 0:total_lags - 1
             # loop ensemble size , last axis
@@ -869,7 +869,7 @@ function process_smoother_param()
 
                     push!(fnames, fpath * method * "/" * name)
 
-                elseif method == "etks_classic"
+                elseif method == "etks-classic"
                     # MDA is not defined for the classic smoother, always set this to false
                     # but keep with the MDA true analysis as a reference value
                     # also finite size formalism is incompatible with MDA
@@ -925,12 +925,9 @@ function process_smoother_param()
                 end
             end
         end
-        
         # turn fnames into a string array, use this as the argument in process_data
         fnames = Array{String}(fnames)
-        @bp
         process_data(fnames, method)
-
     end
 
     # create jld file name with relevant parameters
