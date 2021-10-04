@@ -608,13 +608,13 @@ function process_smoother_param()
     obs_dim = 20
     γ = 1.0
     sys_dim = 40
-    nanl = 20000
-    burn = 5000
+    nanl = 10000
+    burn = 2000
     shift = 1
     mda = true
     diffusion = 0.012
     param_err = 0.03
-    param_wlk = 0.0000
+    param_wlk = 0.0001
     param_infl = 1.0
     
     # parameters in ranges that will be used in loops
@@ -938,6 +938,7 @@ function process_smoother_param()
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
              "_shift_" * lpad(shift, 3, "0") * 
+             "_pwlk_" * rpad(param_wlk, 6, "0") * 
              ".jld"
 
     # create hdf5 file name with relevant parameters
@@ -948,6 +949,7 @@ function process_smoother_param()
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
              "_shift_" * lpad(shift, 3, "0") * 
+             "_pwlk_" * rpad(param_wlk, 6, "0") * 
              ".h5"
 
     # write out file in jld
