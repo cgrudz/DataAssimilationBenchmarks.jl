@@ -54,7 +54,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Float64,Int64
     f_steps = convert(Int64, tanl / h)
 
     # number of analyses
-    nanl = 2500
+    nanl = 12000
 
     # set seed 
     Random.seed!(seed)
@@ -447,7 +447,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Bool
     n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
-    nanl = 2500
+    nanl = 12000
 
     # set seed 
     Random.seed!(seed)
@@ -1002,7 +1002,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float6
     n_shifts = convert(Int64, lag / shift)
 
     # number of analyses
-    nanl = 2500
+    nanl = 12000
 
     # set seed 
     Random.seed!(seed)
