@@ -119,7 +119,7 @@ for method in method_list:
         sns.heatmap(spread, linewidth=0.5, ax=spread_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
 
         if method == "etks_classic":
-            scheme = "ETKS"
+            scheme = "EnKS"
 
         elif method == "etks_single_iteration":
             scheme = "SIEnKS"
