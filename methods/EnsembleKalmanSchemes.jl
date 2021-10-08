@@ -1798,6 +1798,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::
             # for the for the MDA step and shifted window
             if state_dim != sys_dim && stage == 1
                 param_ens = ens[state_dim + 1:end , :]
+                param_mean = mean(param_ens, dims=2)
                 param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
                 ens[state_dim + 1:end, :] = param_ens
             end

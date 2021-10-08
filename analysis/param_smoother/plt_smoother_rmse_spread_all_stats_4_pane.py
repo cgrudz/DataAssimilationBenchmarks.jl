@@ -39,18 +39,18 @@ ax8c = fig.add_axes([.839, .665, .090, .25])
 
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
 #method_list = ["enks-n-primal_classic", "enks-n-primal_single_iteration", "mles-n-transform_classic", "mles-n-transform_single_iteration"]
-method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
-#method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
-stats = ["post", "filt", "fore"]
+#method_list = ["mles-n-transform_classic", "mles-n-transform_single_iteration", "lin-ienks-n-transform", "ienks-n-transform"]
+method_list = ["etks-classic", "etks-single-iteration", "lin-ienks-transform", "ienks-transform"]
+stats = ["param", "post", "fore"]
 tanl = 0.05
 mda = "false"
 #mda = "true"
-total_lag = 92
+total_lag = 53
 total_ens = 42
+param_wlk = 0.0000
 shift = 1
 
-f = h5.File('./processed_smoother_state_diffusion_0.00_tanl_' + str(tanl).ljust(4,"0")+ \
-        '_nanl_20000_burn_05000_mda_' + mda + '_shift_' + str(shift).rjust(3,"0")+ '.h5', 'r')
+f = h5.File('./processed_smoother_param_diffusion_0.012_tanl_0.01_nanl_10000_burn_02000_mda_' + mda + '_shift_001' + '_pwlk_' +str(param_wlk).ljust(6,"0") + '.h5')
 
 rmse_label_h_positions = [0.115, 0.220, 0.325, 0.430]
 spread_label_h_positions = [0.570, 0.675, 0.780, 0.885]
@@ -60,7 +60,7 @@ label_v_positions = [0.336, 0.626, 0.916]
 
 
 def find_optimal_values(method, stat, data):
-    tuning_stat = 'fore'
+    tuning_stat = 'param'
     tuned_rmse = np.array(f[method + '_' + tuning_stat + '_rmse'])
     tuned_rmse_nan = np.isnan(tuned_rmse)
     tuned_rmse[tuned_rmse_nan] = np.inf
@@ -94,7 +94,7 @@ def find_optimal_values(method, stat, data):
 
 #color_map = sns.cubehelix_palette(80, start=3, rot=1.99, as_cmap=True, reverse=True)
 color_map = sns.cubehelix_palette(80, start=3, rot=1.60, as_cmap=True, reverse=True, gamma=0.6, dark=0.05, light=0.85)
-max_scale = 0.30
+max_scale = 0.050
 min_scale = 0.00
 
 rmse_ax_list = [ax1a, ax1b, ax1c, ax2a, ax2b, ax2c, ax3a, ax3b, ax3c, ax4a, ax4b, ax4c]
@@ -105,7 +105,6 @@ j = 0
 
 for method in method_list:
     for stat in stats:
-        #ipdb.set_trace()
         if method[0:6] == "enks-n" or \
            method[0:6] == "mles-n" or \
            method[0:7] == "ienks-n" or \
@@ -115,37 +114,38 @@ for method in method_list:
         else:
             rmse, spread = find_optimal_values(method, stat, f)
 
+        #ipdb.set_trace()
         sns.heatmap(rmse, linewidth=0.5, ax=rmse_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
         sns.heatmap(spread, linewidth=0.5, ax=spread_ax_list[i], cbar_ax=ax0, vmin=min_scale, vmax=max_scale, cmap=color_map)
 
-        if method == "etks_classic":
-            scheme = "EnKS"
+        if method == "etks-classic":
+            scheme = "ETKS"
 
-        elif method == "etks_single_iteration":
+        elif method == "etks-single-iteration":
             scheme = "SIEnKS"
 
-        elif method == "enks-n-dual_classic":
+        elif method == "enks-n-dual-classic":
             scheme = "EnKS-N"
 
-        elif method == "enks-n-primal_classic":
+        elif method == "enks-n-primal-classic":
             scheme = "EnKS-N"
 
-        elif method == "enks-n-primal-ls_classic":
+        elif method == "enks-n-primal-ls-classic":
             scheme = "EnKS-N"
 
-        elif method == "mles-n-transform_classic":
+        elif method == "mles-n-transform-classic":
             scheme = "EnKS-N"
 
-        elif method == "enks-n-dual_single_iteration":
+        elif method == "enks-n-dual-single-iteration":
             scheme = "SIEnKS-N"
 
-        elif method == "enks-n-primal_single_iteration":
+        elif method == "enks-n-primal-single-iteration":
             scheme = "SIEnKS-N"
 
-        elif method == "enks-n-primal-ls_single_iteration":
+        elif method == "enks-n-primal-ls-single-iteration":
             scheme = "SIEnKS-N"
 
-        elif method == "mles-n-transform_single_iteration":
+        elif method == "mles-n-transform-single-iteration":
             scheme = "SIEnKS-N"
 
         elif method == "ienks-transform":
@@ -172,15 +172,15 @@ for method in method_list:
 
 x_labs = []
 x_tics =  []
-x_vals = np.arange(15, total_ens, 2)
+x_vals = np.arange(11, total_ens, 2)
 x_tic_vals = range(len(x_vals))
 for i in range(len(x_vals)):
     if i % 4 == 0:
         x_labs.append(str(x_vals[i]))
         x_tics.append(x_tic_vals[i])
 
-#x_labs.append(str(x_vals[-1]))
-#x_tics.append(x_tic_vals[-1])
+x_labs.append(str(x_vals[-1]))
+x_tics.append(x_tic_vals[-1])
 
 y_labs = []
 y_tics = []
@@ -353,8 +353,8 @@ else:
 
 
 plt.figtext(.020, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .225, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.500, .525, r'Filter', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .225, r'Param', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.500, .525, r'Smoother', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.500, .805, r'Forecast', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.50, .015, r'$N_e$', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.221, .025, r'RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
