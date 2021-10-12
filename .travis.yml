@@ -1,0 +1,6 @@
+language: julia
+julia:
+  - nightly
+  - 1.6
+coveralls: true
+
