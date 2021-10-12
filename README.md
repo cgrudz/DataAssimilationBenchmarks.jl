@@ -93,7 +93,7 @@ included in the "analysis" directory.
 In order to install the dev version to your Julia environment, you can use the following commands in the REPL
 
 ```{julia}
-pkg> dev DataAssimilationBenchmarks.jl
+pkg> dev DataAssimilationBenchmarks
 ```
 
 The installed version will be included in your
