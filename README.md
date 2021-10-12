@@ -4,6 +4,7 @@
 
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
+[![Coverage Status](https://coveralls.io/repos/github/cgrudz/DataAssimilationBenchmarks.jl/badge.svg?branch=master)](https://coveralls.io/github/cgrudz/DataAssimilationBenchmarks.jl?branch=master)
 
 
 ## Welcome to DataAssimilationBenchmarks.jl!
