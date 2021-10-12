@@ -7,11 +7,11 @@ using DataAssimilationBenchmarks.DeSolvers
 using DataAssimilationBenchmarks.L96
 using Test
 
-export test1
+export sumfunc
 ########################################################################################################################
 ########################################################################################################################
 # first testset using Euler Maruyama
-#@testset "Euler Maruyama" begin
+function sumfunc()
     # initial conditions and arguments
     x = zeros(40)
 
@@ -34,8 +34,13 @@ export test1
     em_step!(x, 0.0, kwargs)
 
     # evaluate test pass/fail if the vector of x is equal to (f*h) in every instance
-    test1=sum(x .== (F*h)) == 40
+    if sum(x .== (F*h)) == 40
+        sumresult = true
+    else
+        sumresult = false
+    end
 
+end
 
 ########################################################################################################################
 

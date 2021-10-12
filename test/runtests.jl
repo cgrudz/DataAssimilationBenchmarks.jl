@@ -9,12 +9,22 @@ using JLD
 using Random
 using Test
 
-
+# include statements and import statements
 include("TestDeSolvers.jl")
 import .TestDeSolvers
+import .L96
 
-#test case 1: TestDeSolvers
-@testset "DeSolvers" begin
-    @test TestDeSolvers.test1
+include("TestTimeSeriesGeneration.jl")
+import .TestDeSolvers
+import .L96
+
+# test case 1: TestDeSolvers
+@testset "Euler Maruyama" begin
+    @test TestDeSolvers.sumfunc()
+end
+
+# test case 2: TestTimeSeriesGeneration
+@testset "Time Series" begin
+    @test TestTimeSeriesGeneration.testL96()
 end
 end
