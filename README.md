@@ -4,6 +4,8 @@
 
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
+[![Build Status](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl.svg?branch=master)](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl)
+[![Coverage Status](https://coveralls.io/repos/github/cgrudz/DataAssimilationBenchmarks.jl/badge.svg?branch=master)](https://coveralls.io/github/cgrudz/DataAssimilationBenchmarks.jl?branch=master)
 
 
 ## Welcome to DataAssimilationBenchmarks.jl!
@@ -15,6 +17,9 @@ in the sense that large hyper-parameter discretizations can be explored to deter
 and reliability of results across different experimental regimes, with parallel implementations in Slurm.
 This includes code for developing and testing data assimilation schemes in the 
 [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) currently, with further models in development.
+This project supported the development of all numerical results and benchmark simulations considered in the pre-print
+[A fast, single-iteration ensemble Kalman smoother for sequential data assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/)
+available currently in open review in Geoscientific Model Development.
 
 Lines of code counter (without comments or blank lines) courtesy of [Tokei](https://github.com/XAMPPRocky/tokei).
 
@@ -88,7 +93,7 @@ included in the "analysis" directory.
 In order to install the dev version to your Julia environment, you can use the following commands in the REPL
 
 ```{julia}
-pkg> dev DataAssimilationBenchmarks.jl
+pkg> dev DataAssimilationBenchmarks
 ```
 
 The installed version will be included in your

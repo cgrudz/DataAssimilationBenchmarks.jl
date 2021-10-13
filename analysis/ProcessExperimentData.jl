@@ -608,19 +608,20 @@ function process_smoother_param()
     obs_dim = 20
     γ = 1.0
     sys_dim = 40
-    nanl = 20000
-    burn = 5000
+    nanl = 10000
+    burn = 2000
     shift = 1
-    mda = false
+    mda = true
     diffusion = 0.012
     param_err = 0.03
-    param_wlk = 0.0000
+    param_wlk = 0.0001
     param_infl = 1.0
     
     # parameters in ranges that will be used in loops
     method_list = [
                    "etks-classic", 
                    "etks-single-iteration",
+                   "lin-ienks-transform",
                    "ienks-transform",
                   ]
     
@@ -681,7 +682,6 @@ function process_smoother_param()
 
     # auxilliary function to process data, producing rmse and spread averages
     function process_data(fnames::Vector{String}, method::String)
-        @bp
         # loop lag, first axis
         for k in 0:total_lags - 1
             # loop ensemble size , last axis
@@ -869,7 +869,7 @@ function process_smoother_param()
 
                     push!(fnames, fpath * method * "/" * name)
 
-                elseif method == "etks_classic"
+                elseif method == "etks-classic"
                     # MDA is not defined for the classic smoother, always set this to false
                     # but keep with the MDA true analysis as a reference value
                     # also finite size formalism is incompatible with MDA
@@ -925,12 +925,9 @@ function process_smoother_param()
                 end
             end
         end
-        
         # turn fnames into a string array, use this as the argument in process_data
         fnames = Array{String}(fnames)
-        @bp
         process_data(fnames, method)
-
     end
 
     # create jld file name with relevant parameters
@@ -941,6 +938,7 @@ function process_smoother_param()
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
              "_shift_" * lpad(shift, 3, "0") * 
+             "_pwlk_" * rpad(param_wlk, 6, "0") * 
              ".jld"
 
     # create hdf5 file name with relevant parameters
@@ -951,6 +949,7 @@ function process_smoother_param()
              "_burn_" * lpad(burn, 5, "0") * 
              "_mda_" * string(mda) * 
              "_shift_" * lpad(shift, 3, "0") * 
+             "_pwlk_" * rpad(param_wlk, 6, "0") * 
              ".h5"
 
     # write out file in jld

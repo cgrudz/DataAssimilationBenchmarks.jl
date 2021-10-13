@@ -1,0 +1,103 @@
+        - #######################################################################################################################
+        - module TestTimeSeriesGeneration
+        - #######################################################################################################################
+        - # imports and exports
+        - using DataAssimilationBenchmarks.DeSolvers
+        - using DataAssimilationBenchmarks.L96
+        - using JLD
+        - using Random
+        - #######################################################################################################################
+        - # Test generation of the L96 model time series
+        1 function testL96()
+        - # define the model and the solver
+        1     dx_dt = L96.dx_dt
+        1     step_model! = DeSolvers.em_step!
+        - 
+        - # set model and experimental parameters
+        1     F = 8.0
+        1     h = 0.001
+        1     nanl = 1000
+        1     sys_dim = 40
+        1     diffusion = 0.1
+        1     tanl = 0.01
+        1     seed = 0
+        1     Random.seed!(seed)
+        - 
+        - # define the dx_params dict
+        1     dx_params = Dict{String, Array{Float64}}("F" => [F])
+        1     fore_steps = convert(Int64, tanl/h)
+        - 
+        - # set the kwargs for the integration scheme
+        1     kwargs = Dict{String, Any}(
+        -             "h" => h,
+        -             "diffusion" => diffusion,
+        -             "dx_params" => dx_params,
+        -             "dx_dt" => L96.dx_dt,
+        -             )
+        - 
+        - # set arbitrary initial condition
+       40     xt = ones(sys_dim)
+        - 
+        - # pre-allocate storage for the time series observations
+        1     tobs = Array{Float64}(undef,sys_dim, nanl)
+        - 
+        - # loop the experiment, taking observations at time length tanl
+        1     for i in 1:nanl
+     1000         for j in 1:fore_steps
+    19000             step_model!(xt, 0.0, kwargs)
+        -         end
+     1999         tobs[:,i] = xt
+        -     end
+        - 
+        - # define the file name for the experiment output
+        - # dynamically based on experiment parameters
+        1     fname = "time_series_data_seed_" * lpad(seed, 4, "0") *
+        -             "_dim_" * lpad(sys_dim, 2, "0") *
+        -             "_diff_" * rpad(diffusion, 5, "0") *
+        -             "_F_" * lpad(F, 4, "0") *
+        -             "_tanl_" * rpad(tanl, 4, "0") *
+        -             "_nanl_" * lpad(nanl, 5, "0") *
+        -             "_h_" * rpad(h, 5, "0") *
+        -             ".jld"
+        - 
+        - # define the experimental data in a dictionary to write with JLD
+        1     data = Dict{String, Any}(
+        -         "h" => h,
+        -         "diffusion" => diffusion,
+        -         "F" => F,
+        -         "tanl" => tanl,
+        -         "nanl"  => nanl,
+        -         "sys_dim" => sys_dim,
+        -         "tobs" => tobs
+        -         )
+        1         path = "../data/time_series/"
+        - 
+        - # test to see if the data can be written to standard output directory
+        2     function write_file()
+        1         try
+        1             save(path * fname, data)
+        1             did_write = true
+        -         catch
+        -         # if not, set test case false
+        0             did_write = false
+        -         end
+        -     end
+        - 
+        - # test to see if the data can be read from standard output directory
+        2     function load_file()
+        1         try
+        1             tmp = load(path * fname)
+        1             did_read = true
+        -         catch
+        -         # if not, set test case false
+        0             did_read = false
+        -         end
+        -     end
+        - 
+        1 write_file()
+        1 load_file()
+        - end
+        - 
+        - #######################################################################################################################
+        - 
+        - end

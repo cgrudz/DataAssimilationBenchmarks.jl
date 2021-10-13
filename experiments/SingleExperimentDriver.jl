@@ -162,7 +162,7 @@ end
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function iterative_smoother_param_exp()
-    args = (time_series, "ienks-transform", 0, 10, 1, false, 1.0, 20, 1.0, 0.03, 0.0010,  21, 1.02, 1.0)
+    args = (time_series, "ienks-transform", 0, 10, 1, true, 1.0, 20, 1.0, 0.03, 0.0001,  21, 1.02, 1.0)
     iterative_param(args)
 end
 
