@@ -285,7 +285,7 @@ incomplete = false
 
 # note, nanl is hard coded in the experiment, and h is inferred from the time series
 # data, this is only used for checking versus existing data with the incomplete parameter as above
-nanl = 25000
+nanl = 12000
 h = 0.01
 tanl = 0.01
 diffusion = 0.012
@@ -300,7 +300,7 @@ seed = 0
 # note MDA is only defined for shifts / lags where the lag is a multiple of shift
 # MDA is never defined for the classic smoother, but we will use the same parameter
 # discretizations for SDA for reference values
-lags = 1:3:52
+lags = 46:3:52
 shifts = [1]
 
 # observation parameters, gamma controls nonlinearity
@@ -324,7 +324,7 @@ state_infl = LinRange(1.00, 1.10, 11)
 time_series = [ts01]
 
 # set MDA true or false
-mdas = [false, true]
+mdas = [false]
 
 # time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 # load the experiments as a tuple
