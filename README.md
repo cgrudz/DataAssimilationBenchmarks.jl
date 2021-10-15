@@ -5,8 +5,7 @@
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 [![Build Status](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl.svg?branch=master)](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl)
-[![Coverage Status](https://coveralls.io/repos/github/cgrudz/DataAssimilationBenchmarks.jl/badge.svg?branch=master)](https://coveralls.io/github/cgrudz/DataAssimilationBenchmarks.jl?branch=master)
-
+[![codecov](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl/branch/master/graph/badge.svg?token=3XLYTH8YSZ)](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl)
 
 ## Welcome to DataAssimilationBenchmarks.jl!
 
