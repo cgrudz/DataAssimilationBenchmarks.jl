@@ -5,26 +5,23 @@ module runtests
 # imports and exports
 using DataAssimilationBenchmarks.DeSolvers
 using DataAssimilationBenchmarks.L96
-using JLD
-using Random
 using Test
 
-# include statements and import statements
-include("TestDeSolvers.jl")
-import .TestDeSolvers
-import .L96
-
+########################################################################################################################
+# include test sub-modules 
+include("TestL96.jl")
 include("TestTimeSeriesGeneration.jl")
-import .TestDeSolvers
-import .L96
+
+########################################################################################################################
+# Run tests
 
 # test case 1: TestDeSolvers
-@testset "Euler Maruyama" begin
-    @test TestDeSolvers.sumfunc()
+@testset "Lorenz-96" begin
+    @test TestL96.EMStep()
 end
 
 # test case 2: TestTimeSeriesGeneration
-@testset "Time Series" begin
+@testset "Time Series Save / Load" begin
     @test TestTimeSeriesGeneration.testL96()
 end
 end
