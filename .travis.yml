@@ -5,4 +5,6 @@ julia:
 coveralls: true
 after_success:
 - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
+after_success:
+- julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 

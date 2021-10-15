@@ -44,10 +44,10 @@ method_list = ["etks-classic", "etks-single-iteration", "lin-ienks-transform", "
 stats = ["param", "post", "fore"]
 tanl = 0.05
 mda = "false"
-#mda = "true"
+mda = "true"
 total_lag = 53
 total_ens = 42
-param_wlk = 0.0000
+param_wlk = 0.0002
 shift = 1
 
 f = h5.File('./processed_smoother_param_diffusion_0.012_tanl_0.01_nanl_10000_burn_02000_mda_' + mda + '_shift_001' + '_pwlk_' +str(param_wlk).ljust(6,"0") + '.h5')
@@ -346,10 +346,10 @@ ax1a.set_xticklabels(x_labs, rotation=0)
 #
 
 if mda=="true":
-    fig_title = r"MDA"
+    fig_title = r"MDA, paramW " + str(param_wlk)
 
 else:
-    fig_title = r"SDA"
+    fig_title = r"SDA, paramW " + str(param_wlk)
 
 
 plt.figtext(.020, .52, r'$L$', horizontalalignment='center', verticalalignment='center', fontsize=22, rotation='90')
