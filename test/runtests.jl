@@ -15,13 +15,17 @@ include("TestTimeSeriesGeneration.jl")
 ########################################################################################################################
 # Run tests
 
-# test case 1: TestDeSolvers
+# test set 1: L96 model
 @testset "Lorenz-96" begin
     @test TestL96.EMStep()
 end
 
-# test case 2: TestTimeSeriesGeneration
+# test set 2: TestTimeSeriesGeneration
 @testset "Time Series Save / Load" begin
     @test TestTimeSeriesGeneration.testL96()
 end
+
+
+########################################################################################################################
+
 end
