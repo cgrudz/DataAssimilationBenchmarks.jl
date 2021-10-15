@@ -62,14 +62,18 @@ Lines of code counter (without comments or blank lines) courtesy of [Tokei](http
 
 ### Structure
 The directory is structured as follows:
-  * src - contains the main wrapper module
-  * models - contains code for defining the dynamic model equations in twin experiments.
-  * methods - contains DA solvers and general numerical routines for running twin experiments.
-  * experiments - contains the outer-loop scripts that set up twin experiments.
-  * data - this is an input / output directory for the inputs to and ouptuts from experiments.
-  * scratch - this is a storage directory for backups
-  * analysis - contains auxilliary scripts for batch processing experiment results and for plotting in Python
-  * test - contains test cases for the package, currently under development
+<ul>
+  <li> src - contains the main wrapper module</li>
+  <ul>
+		<li> models - contains code for defining the dynamic model equations in twin experiments.</li>
+		<li> methods - contains DA solvers and general numerical routines for running twin experiments.</li>
+		<li> experiments - contains the outer-loop scripts that set up twin experiments.</li>
+		<li> data - this is an input / output directory for the inputs to and ouptuts from experiments.</li>
+		<li> analysis - contains auxilliary scripts for batch processing experiment results and for plotting in Python.</li>
+	</ul>
+  <li> scratch - this is a storage directory for backups.</li>
+  <li> test - contains test cases for the package, currently under development.</li>
+</ul>
 
 ## Installation
 
