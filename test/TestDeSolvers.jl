@@ -20,7 +20,7 @@ end
 
 
 ########################################################################################################################
-# Define auxilliary function to compute the difference of the simulated integral versus the analytical value
+# Define auxiliary function to compute the difference of the simulated integral versus the analytical value
 
 function expDiscretizationError(step_model!, h)
     # continuous time length of the integration
@@ -28,6 +28,7 @@ function expDiscretizationError(step_model!, h)
     
     # discrete integration steps
     fore_steps = convert(Int64, tanl/h)
+    time_steps = LinRange(0, tanl, fore_steps + 1)
 
     # initial data for the exponential function
     x = 1.0
@@ -44,7 +45,7 @@ function expDiscretizationError(step_model!, h)
             )
 
     for i in 1:fore_steps
-        step_model!(x, t, kwargs) 
+        step_model!(x, time_steps[i], kwargs) 
     end
 
     abs(x - exp(tanl))
@@ -52,7 +53,7 @@ end
 
 
 ########################################################################################################################
-# Define auxilliary function to compute the least-squares estimated order of convergence
+# Define auxiliary function to compute the least-squares estimated order of convergence
 
 function calculateOrderConvergence(step_model!)
     # set step sizes in increasing order for log-10 log-10 analysis

@@ -95,7 +95,8 @@ function testL96()
         end
     end
 
-return write_file() && load_file()
+    return write_file() && load_file()
+
 end
 
 
