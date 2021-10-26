@@ -85,16 +85,16 @@ are differentiated primarily in that:
 
 ## Validated methods currently in use
 
-| Estimator / implemented techniques | Tuned multiplicative inflation | Adaptive inflation, finite-size formalism (perfect model dual / primal) | Linesearch | Multiple data assimilation (general shift and lag) | 
-| ---------------------------------- | ------------------------------ | ----------------------------------------------------------------------- | ---------- | -------------------------------------------------- |
-| EnKF, perturbed obs.               | X                              | X                                                                       | NA         | NA                                                 |
-| ETKF                               | X                              | X                                                                       | NA         | NA                                                 |
-|MLEF, transform / bundle variants   | X                              | X                                                                       | X          | NA                                                 |
-| EnKS, perturbed obs.               | X                              | X                                                                       | NA         | NA                                                 |
-| ETKS                               | X                              | X                                                                       | NA         | NA                                                 |
-| MLES, transform / bundle variants  | X                              | X                                                                       | X          | NA                                                 |
-| SIEnKS                             | X                              | X                                                                       | X          | X                                                  |
-| Gauss-Newton IEnKS                 | X                              | X                                                                       |            | X                                                  |
+| Estimator / implemented techniques | Tuned inflation | Adaptive inflation | Linesearch | Multiple data assimilation | 
+| ---------------------------------- | --------------- | ------------------ | ---------- | -------------------------- |
+| EnKF, perturbed obs.               | X               | X                  | NA         | NA                         |
+| ETKF                               | X               | X                  | NA         | NA                         |
+|MLEF, transform / bundle variants   | X               | X                  | X          | NA                         |
+| EnKS, perturbed obs.               | X               | X                  | NA         | NA                         |
+| ETKS                               | X               | X                  | NA         | NA                         |
+| MLES, transform / bundle variants  | X               | X                  | X          | NA                         |
+| SIEnKS                             | X               | X                  | X          | X                          |
+| Gauss-Newton IEnKS                 | X               | X                  |            | X                          |
 
 The future development of the DataAssimilationBenchmarks.jl package is inteneded to expand upon
 the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
