@@ -66,6 +66,7 @@ Similar projects to DataAssimlationBenchmarks.jl include the DAPPER Python libra
 [@patrick_n_raanes_2018_2029296], DataAssim.jl used by [@vetra2018state], and
 EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.  These alternatives
 are differentiated primarily in that:
+
   * DAPPER is a Python-based library which is well-established, and includes many of the same
 	estimators and models. However, DAPPER is notably slower due to its dependence on the Python
 	language for its core numerical techniques.  This can make the wide hyper-parameter search
@@ -84,39 +85,15 @@ are differentiated primarily in that:
 
 ## Validated methods currently in use
 
-<table>
-<tr>
-	<th>Estimator / implemented techniques</th>
-	<th>Tuned multiplicative inflation</th>
-	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</th>
-	<th>Linesearch</th>
-	<th>Multiple data assimilation (general shift and lag)</th>
-</tr>
-<tr>
-  <td>EnKF, perturbed obs.</td><td>X</td><td>X</td><td>NA</td><td>NA</td>
-</tr>
-<tr>
-  <td>ETKF</td><td>X</td><td>X</td><td>NA</td><td>NA</td>
-</tr>
-<tr>
-  <td>MLEF, transform / bundle variants</td><td>X</td><td>X</td><td>X</td><td>NA</td>
-</tr>
-<tr>
-  <td>EnKS, perturbed obs.</td><td>X</td><td>X</td><td>NA</td><td>NA</td>
-</tr>
-<tr>
-  <td>ETKS</td><td>X</td><td>X</td><td>NA</td><td>NA</td>
-</tr>
-<tr>
-  <td>MLES, transform / bundle variants</td><td>X</td><td>X</td><td>X</td><td>NA</td>
-</tr>
-<tr>
-  <td>SIEnKS, perturbed obs / ETKF / MLEF variants</td><td>X</td><td>X</td><td>X</td><td>X</td>
-</tr>
-<tr>
-  <td>Gauss-Newton IEnKS, transform / bundle variants</td><td>X</td><td>X</td><td></td><td>X</td>
-</tr>
-</table>
+| Estimator / implemented techniques | Tuned multiplicative inflation | Adaptive inflation, finite-size formalism (perfect model dual / primal) | Linesearch | Multiple data assimilation (general shift and lag) | 
+| EnKF, perturbed obs.               | X                              | X                                                                       | NA         | NA                                                 |
+| ETKF                               | X                              | X                                                                       | NA         | NA                                                 |
+|MLEF, transform / bundle variants   | X                              | X                                                                       | X          | NA                                                 |
+| EnKS, perturbed obs.               | X                              | X                                                                       | NA         | NA                                                 |
+| ETKS                               | X                              | X                                                                       | NA         | NA                                                 |
+| MLES, transform / bundle variants  | X                              | X                                                                       | X          | NA                                                 |
+| SIEnKS                             | X                              | X                                                                       | X          | X                                                  |
+| Gauss-Newton IEnKS                 | X                              | X                                                                       |            | X                                                  |
 
 The future development of the DataAssimilationBenchmarks.jl package is inteneded to expand upon
 the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
