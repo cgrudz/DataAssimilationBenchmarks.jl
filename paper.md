@@ -63,24 +63,24 @@ following an ensemble Kalman filter (EnKF)-based analysis.
 ## Comparison with similar projects
 
 Similar projects to DataAssimlationBenchmarks.jl include the DAPPER Python library
-[@patrick_n_raanes_2018_2029296], DataAssim.jl used by [@vetra2018state4e], and
+[@patrick_n_raanes_2018_2029296], DataAssim.jl used by [@vetra2018state], and
 EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.  These alternatives
 are differentiated primarily in that:
-<ul>
-	<li>DAPPER is a Python-based library which is well-established, and includes many of the same
+  * DAPPER is a Python-based library which is well-established, and includes many of the same
 	estimators and models. However, DAPPER is notably slower due to its dependence on the Python
 	language for its core numerical techniques.  This can make the wide hyper-parameter search
-	intended above computationally challenging.</li>
-	<li>DataAssim.jl is another established Julia library, but notably lacks an implementation
+	intended above computationally challenging.
+	
+  * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of ensemble-variational techniques which were the focus of the initial development of
 	DataAssimilationBenchmkarks.jl.  For this reason, this package was not selected for the 
 	development and intercomparison of the SIEnKS, though this package does have implementations
-	of a variety of standard stochastic filtering schemes.</li>
-	<li>EnsembleKalmanProcesses.jl is another established Julia library, but notably lacks
+	of a variety of standard stochastic filtering schemes.
+	
+  * EnsembleKalmanProcesses.jl is another established Julia library, but notably lacks
 	traditional DA approaches such as the classic, perturbed observation EnKF and the classic
 	ETKF.  For this reason, this package was not selected for the development and intercomparison
-	of the SIEnKS.</li>
-</ul>
+	of the SIEnKS.
 
 ## Validated methods currently in use
 
