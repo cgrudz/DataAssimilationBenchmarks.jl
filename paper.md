@@ -86,6 +86,7 @@ are differentiated primarily in that:
 ## Validated methods currently in use
 
 | Estimator / implemented techniques | Tuned multiplicative inflation | Adaptive inflation, finite-size formalism (perfect model dual / primal) | Linesearch | Multiple data assimilation (general shift and lag) | 
+| ---------------------------------- | ------------------------------ | ----------------------------------------------------------------------- | ---------- | -------------------------------------------------- |
 | EnKF, perturbed obs.               | X                              | X                                                                       | NA         | NA                                                 |
 | ETKF                               | X                              | X                                                                       | NA         | NA                                                 |
 |MLEF, transform / bundle variants   | X                              | X                                                                       | X          | NA                                                 |
