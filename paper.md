@@ -6,7 +6,7 @@ tags:
   - Optimization
   - ensemble Kalman filter
   - ensemble Kalman smoother
-	- ensemble-variational
+  - ensemble-variational
 authors:
   - name: Colin Grudzien
     orcid: 0000-0002-3084-3178
