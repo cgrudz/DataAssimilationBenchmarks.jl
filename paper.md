@@ -87,12 +87,12 @@ are differentiated primarily in that:
 
 | Estimator / implemented techniques | Tuned inflation | Adaptive inflation | Linesearch | Multiple data assimilation | 
 | ---------------------------------- | --------------- | ------------------ | ---------- | -------------------------- |
-| EnKF, perturbed obs.               | X               | X                  | NA         | NA                         |
+| EnKF                               | X               | X                  | NA         | NA                         |
 | ETKF                               | X               | X                  | NA         | NA                         |
-|MLEF, transform / bundle variants   | X               | X                  | X          | NA                         |
-| EnKS, perturbed obs.               | X               | X                  | NA         | NA                         |
+| MLEF                               | X               | X                  | X          | NA                         |
+| EnKS                               | X               | X                  | NA         | NA                         |
 | ETKS                               | X               | X                  | NA         | NA                         |
-| MLES, transform / bundle variants  | X               | X                  | X          | NA                         |
+| MLES                               | X               | X                  | X          | NA                         |
 | SIEnKS                             | X               | X                  | X          | X                          |
 | Gauss-Newton IEnKS                 | X               | X                  |            | X                          |
 
