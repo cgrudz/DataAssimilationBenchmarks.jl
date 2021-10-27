@@ -27,41 +27,49 @@ bibliography: paper.bib
 Data assimilation (DA) refers to techniques used to combine the data from physics-based,
 numerical models and real-world observations to produce an estimate for the state of a
 time-evolving random process and the parameters that govern its evolution [@asch2016data]. 
-Owing to their history in numerical weather prediction, DA systems are designed to operate
-in an extremely large dimension of model variables and observations, often with
-sequential-in-time observational data. As a long-studied "big-data" problem, DA has
-benefited from the fusion of a variety of techniques, including methods from Bayesian
-inference, dynamical systems, numerical analysis, optimization, control theory and
-machine learning. DA techniques are widely used in many
+Owing to their history in numerical weather prediction, full-scale DA systems are designed
+to operate in an extremely large dimension of model variables and observations, often with
+sequential-in-time observational data [@carrassi2018data]. As a long-studied "big-data"
+problem, DA has benefited from the fusion of a variety of techniques, including methods
+from Bayesian inference, dynamical systems, numerical analysis, optimization, control
+theory and machine learning. DA techniques are widely used in many
 areas of geosciences, neurosciences, biology, autonomous vehicle guidance and various
 engineering applications requiring dynamic state estimation and control.
 
-# Statement of need
-
+The purpose of this package is to provide a research framework for the theoretical
+development and empirical validation of novel data assimlation techniques.
 While analytical proofs can be derived for classical methods such as the Kalman filter
-in linear-Gaussian dynamics, most DA techniques are designed for estimation in nonlinear,
-non-Gaussian models where no analytical solution may exist.  Similar to nonlinear optimization,
-DA methods, therefore, must be studied with rigorous numerical simulation in standard test-cases
-to demonstrate the effectiveness and computational performance of novel algorithms.  Pursuant
-to proposing a novel DA method, one should likewise compare the performance of a proposed scheme
-with other standard methods within the same class of estimators.
+in linear-Gaussian dynamics [@jazwinski2007stochastic], most currently developed DA
+techniques are designed for estimation in nonlinear, non-Gaussian models where no
+analytical solution may exist.  Similar to nonlinear optimization, DA methods,
+therefore, must be studied with rigorous numerical simulation in standard test-cases
+to demonstrate the effectiveness and computational performance of novel algorithms.
+Pursuant to proposing a novel DA method, one should likewise compare the performance
+of a proposed scheme with other standard methods within the same class of estimators.
+
+This package implements several standard data assimilation algorithms, including
+widely used performance modifications that are used in practice to tune these estimators.
+This software framework was written specifically to support the development and intercomparison
+of the novel single-iteration ensemble Kalman smoother (SIEnKS) [@grudzien2021fast].
+Details of the DA schemes, including pseudo-code for the methods and model benchmark
+configurations in this release of the software package, can be found in the above
+pricipal reference.
+
+# Statement of need
 
 Standard libraries exist for full-scale DA system research and development, e.g.,
 the Data Assimilation Research Testbed (DART)[@anderson2009data], but
-there are fewer standard options for low-dimensional model demonstration and theoretical
-research.  DataAssimilationBenchmarks.jl provides one framework for studying ensemble-based
-filters and sequential smoothers that are commonly used in online, geoscientific prediction
-settings.  Validated methods and methods in development focus on evaluating the performance
-and the stuctural stability of techniques over wide ranges of hyper-parameters that are
-commonly used to tune estimators in practice.  Specifically, this is designed to run naively
-parallel experiment configurations over independent parameters such as ensemble size, static
-covariance inflation, observation operator / network designs that affect the estimator
-stability and performance.  Templates for running naively parallel experiments using Juila's
-core parallelism, or using Slurm to load experiments in parallel in a queueing system are
-provided.  This software framework was written to support the development and intercomparison
-of the novel single-iteration ensemble Kalman smoother (SIEnKS) [@grudzien2021fast], including
-the inter-comparison with other popular ensemble-variational, maximum-a-posteriori estimators
-following an ensemble Kalman filter (EnKF)-based analysis.
+there are fewer standard options for theoretical research and algorithm development in
+simple test systems. DataAssimilationBenchmarks.jl provides one framework for studying
+ensemble-based filters and sequential smoothers that are commonly used in online,
+geoscientific prediction settings.  Validated methods and methods in development focus
+on evaluating the performance and the stuctural stability of techniques over wide ranges
+of hyper-parameters that are commonly used to tune estimators in practice.  Specifically,
+this is designed to run naively parallel experiment configurations over independent
+parameters such as ensemble size, static covariance inflation, observation
+operator / network designs that affect the estimator stability and performance.
+Templates for running naively parallel experiments using Juila's core parallelism,
+or using Slurm to load experiments in parallel in a queueing system are provided.
 
 ## Comparison with similar projects
 
@@ -116,8 +124,8 @@ stand-alone in other programs by calling these functions from the DeSolvers, Ens
 L96 sub-modules from this library. Future solvers and models will be added as sub-modules in the methods
 and models directories respectively. 
 
-In order to get the full functionality of this package one needs to 
-need to install the dev version.  This provides the access to edit all of the outer-loop routines for 
+In order to get the full functionality of this package one needs to install the dev version.
+This provides the access to edit all of the outer-loop routines for 
 setting up twin experiments. These routines are defined in the modules in the "experiments" directory.
 The "slurm_submit_scripts" directory includes routines for parallel submission of experiments in Slurm.
 Data processing scripts and visualization scripts (written in Python with Matplotlib and Seaborn) are 
@@ -144,6 +152,7 @@ pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 ```
 
 # Acknowledgements
+
 Colin Grudzien wrote all core numerical code in the DataAssmilationBenchmarks.jl package.  Sukhreen
 Sandhu supported development of the package by building and validating code test cases, and supporting
 the development of the package structure and organization.  This work
