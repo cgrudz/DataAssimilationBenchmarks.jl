@@ -12,10 +12,12 @@ authors:
     orcid: 0000-0002-3084-3178
     affiliation: 1 
   - name: Sukhreen Sandhu 
-    affiliation: 1
+    affiliation: 2
 affiliations:
- - name: University of Nevada, Reno
+ - name: Department of Mathematics and Statistics, University of Nevada, Reno
    index: 1
+ - name: Department of Computer Science and Engineering, University of Nevada, Reno
+   index: 2
 date: 30 November 2021
 bibliography: paper.bib
 ---
