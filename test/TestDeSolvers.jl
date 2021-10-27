@@ -92,7 +92,7 @@ end
 # Wrapper function to be supplied to runtests
 
 function testRKExponential()
-    slope = calculateOrderConvergence(em_step!)
+    slope = calculateOrderConvergence(rk_step!)
     
     if abs(slope - 4.0) > 0.1
         false
