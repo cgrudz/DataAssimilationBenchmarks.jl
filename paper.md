@@ -37,7 +37,7 @@ areas of geosciences, neurosciences, biology, autonomous vehicle guidance and va
 engineering applications requiring dynamic state estimation and control.
 
 The purpose of this package is to provide a research framework for the theoretical
-development and empirical validation of novel data assimlation techniques.
+development and empirical validation of novel data assimilation techniques.
 While analytical proofs can be derived for classical methods such as the Kalman filter
 in linear-Gaussian dynamics [@jazwinski2007stochastic], most currently developed DA
 techniques are designed for estimation in nonlinear, non-Gaussian models where no
@@ -53,7 +53,7 @@ This software framework was written specifically to support the development and 
 of the novel single-iteration ensemble Kalman smoother (SIEnKS) [@grudzien2021fast].
 Details of the DA schemes, including pseudo-code for the methods and model benchmark
 configurations in this release of the software package, can be found in the above
-pricipal reference.
+principal reference.
 
 # Statement of need
 
@@ -63,7 +63,7 @@ there are fewer standard options for theoretical research and algorithm developm
 simple test systems. DataAssimilationBenchmarks.jl provides one framework for studying
 ensemble-based filters and sequential smoothers that are commonly used in online,
 geoscientific prediction settings.  Validated methods and methods in development focus
-on evaluating the performance and the stuctural stability of techniques over wide ranges
+on evaluating the performance and the structural stability of techniques over wide ranges
 of hyper-parameters that are commonly used to tune estimators in practice.  Specifically,
 this is designed to run naively parallel experiment configurations over independent
 parameters such as ensemble size, static covariance inflation, observation
@@ -73,7 +73,7 @@ or using Slurm to load experiments in parallel in a queueing system are provided
 
 ## Comparison with similar projects
 
-Similar projects to DataAssimlationBenchmarks.jl include the DAPPER Python library
+Similar projects to DataAssimilationBenchmarks.jl include the DAPPER Python library
 [@patrick_n_raanes_2018_2029296], DataAssim.jl used by [@vetra2018state], and
 EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.  These alternatives
 are differentiated primarily in that:
@@ -85,7 +85,7 @@ are differentiated primarily in that:
 	
   * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of ensemble-variational techniques which were the focus of the initial development of
-	DataAssimilationBenchmkarks.jl.  For this reason, this package was not selected for the 
+	DataAssimilationBenchmarks.jl.  For this reason, this package was not selected for the 
 	development and intercomparison of the SIEnKS, though this package does have implementations
 	of a variety of standard stochastic filtering schemes.
 	
@@ -107,7 +107,7 @@ are differentiated primarily in that:
 | SIEnKS                             | X               | X                  | X          | X                          |
 | Gauss-Newton IEnKS                 | X               | X                  |            | X                          |
 
-The future development of the DataAssimilationBenchmarks.jl package is inteneded to expand upon
+The future development of the DataAssimilationBenchmarks.jl package is intended to expand upon
 the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
 novel schemes and the further development of the SIEnKS scheme.  Likewise, novel mechanistic models
 for the DA system are currently in development. Currently, this supports state and joint
@@ -153,7 +153,7 @@ pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 
 # Acknowledgements
 
-Colin Grudzien wrote all core numerical code in the DataAssmilationBenchmarks.jl package.  Sukhreen
+Colin Grudzien wrote all core numerical code in the DataAssimilationBenchmarks.jl package.  Sukhreen
 Sandhu supported development of the package by building and validating code test cases, and supporting
 the development of the package structure and organization.  This work
 was supported by the University of Nevada, Reno, Office of Undergraduate Research's
