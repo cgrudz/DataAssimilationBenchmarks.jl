@@ -158,7 +158,7 @@ Sandhu supported development of the package by building and validating code test
 the development of the package structure and organization.  This work
 was supported by the University of Nevada, Reno, Office of Undergraduate Research's
 Pack Research Experience Program (PREP) which supported Sukhreen Sandhu as a research assistant.
-This work benefitted from the DAPPER library which was referenced at times for the development
+This work benefited from the DAPPER library which was referenced at times for the development
 of DA schemes.
 
 # References
