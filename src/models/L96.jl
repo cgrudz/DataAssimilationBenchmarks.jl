@@ -42,14 +42,14 @@ function dx_dt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
     F = dx_params["F"][1]::Float64
     x_dim = length(x)
     dx = Vector{Float64}(undef, x_dim)
-	
+
     for j in 1:x_dim
         # index j minus 2, modulo the system dimension
         j_m_2 = mod_indx!(j - 2, x_dim)
-        
+
         # index j minus 1, modulo the system dimension
         j_m_1 = mod_indx!(j - 1, x_dim)
-        
+
         # index j plus 1, modulo the system dimension
         j_p_1 = mod_indx!(j + 1, x_dim)
 
@@ -85,7 +85,7 @@ end
 
 function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
     """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the state x.
-    
+
     Note that this has been designed to load the entries in a standard zeros array but return a sparse array after
     to make a compromise between memory and computational resources."""
 
@@ -97,16 +97,16 @@ function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
 
         # index j minus 2, modulo the system dimension
         j_m_2 = mod_indx!(j - 2, x_dim)
-        
+
         # index j minus 1, modulo the system dimension
         j_m_1 = mod_indx!(j - 1, x_dim)
-        
+
         # index j plus 1, modulo the system dimension
         j_p_1 = mod_indx!(j + 1, x_dim)
-        
+
         # index j plus 2, modulo the system dimension
         j_p_2 = mod_indx!(j + 2, x_dim)
-        
+
         # load the jacobian entries in corresponding rows
         dxF[j_p_2, j] = -x[j_p_1]
         dxF[j_p_1, j] = x[j_p_2] - x[j_m_1]
@@ -117,7 +117,7 @@ function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
 end
 
 ########################################################################################################################
-# Auxiliary functions for the 2nd order Taylor-Stratonovich expansion below. These need to be computed once, only as 
+# Auxiliary functions for the 2nd order Taylor-Stratonovich expansion below. These need to be computed once, only as
 # a function of the order of truncation of the fourier series, p for full timeseries.
 
 function ρ(p::Int64)
@@ -131,7 +131,7 @@ end
 ########################################################################################################################
 # 2nd order strong taylor SDE step
 # This method is derived in
-# Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model, with scalar additive noise, for benchmark 
+# Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model, with scalar additive noise, for benchmark
 # twin experiments, Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
 # This depends on rho and alpha as above
 # NOTE: this still needs to be debugged
@@ -139,13 +139,13 @@ end
 function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """One step of integration rule for l96 second order taylor rule
 
-    The rho and alpha are to be computed by the auxiliary functions, depending only on p, and supplied for all steps.  
-    This is the general formulation which includes, eg. dependence on the truncation of terms in the auxilliary 
+    The rho and alpha are to be computed by the auxiliary functions, depending only on p, and supplied for all steps.
+    This is the general formulation which includes, eg. dependence on the truncation of terms in the auxilliary
     function C with respect to the parameter p.  In general, truncation at p=1 is all that is necessary for order
-    2.0 convergence, and in this case C below is identically equal to zero.  This auxilliary function can be removed 
+    2.0 convergence, and in this case C below is identically equal to zero.  This auxilliary function can be removed
     (and is removed) in other implementations for simplicity."""
 
-    # Infer model and parameters 
+    # Infer model and parameters
     sys_dim = length(x)
     dx_params = kwargs["dx_params"]::ParamDict
     h = kwargs["h"]::Float64
@@ -159,29 +159,29 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
     Jac_x = jacobian(x, 0.0, dx_params)
 
     ## random variables
-    # Vectors ξ, μ, ϕ are sys_dim X 1 vectors of iid standard normal variables, 
+    # Vectors ξ, μ, ϕ are sys_dim X 1 vectors of iid standard normal variables,
     # ζ and η are sys_dim X p matrices of iid standard normal variables. Functional relationships describe each
     # variable W_j as the transformation of ξ_j to be of variace given by the length of the time step h. The functions
     # of random Fourier coefficients a_i, b_i are given in terms μ / η and ϕ / ζ respectively.
-    
+
     # draw standard normal samples
     rndm = rand(Normal(), sys_dim, 2*p + 3)
     ξ = rndm[:, 1]
-    
+
     μ = rndm[:, 2]
     ϕ = rndm[:, 3]
 
     ζ = rndm[:, 4: p+3]
     η = rndm[:, p+4: end]
-    
+
     ### define the auxiliary functions of random fourier coefficients, a and b
-    
+
     # denominators for the a series
     denoms = repeat((1.0 ./ Vector{Float64}(1:p)), 1, sys_dim)
 
     # vector of sums defining a terms
     a = -2.0 * sqrt(h * ρ) * μ - sqrt(2.0*h) * sum(ζ' .* denoms, dims=1)' / π
-    
+
     # denominators for the b series
     denoms = repeat((1.0 ./ Vector{Float64}(1:p).^2.0), 1, sys_dim)
 
@@ -190,12 +190,12 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
 
     # vector of first order Stratonovich integrals
     J_pdelta = (h / 2.0) * (sqrt(h) * ξ + a)
-    
+
     ### auxiliary functions for higher order stratonovich integrals ###
     # C function is optional for higher precision but does not change order of convergence to leave out
     function C(l, j)
         if p == 1
-            return 0.0 
+            return 0.0
         end
         c = zeros(p, p)
         # define the coefficient as a sum of matrix entries where r and k do not agree
@@ -230,7 +230,7 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
 
     # the final vectorized step forward is given as
     x .= collect(Iterators.flatten(
-            x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step 
+            x + dx * h + h^2.0 * 0.5 * Jac_x * dx +  # deterministic taylor step
             diffusion * sqrt(h) * ξ +                # stochastic euler step
             diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
             diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
@@ -240,4 +240,3 @@ end
 ########################################################################################################################
 
 end
-
