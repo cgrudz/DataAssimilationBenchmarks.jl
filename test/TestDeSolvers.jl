@@ -7,18 +7,19 @@ using DataAssimilationBenchmarks.DeSolvers
 using DataAssimilationBenchmarks.L96
 using LsqFit
 using Test
+
 ########################################################################################################################
 ########################################################################################################################
 # Define test function for analytical verification of discretization error
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
-function exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
-    # fill in exponential function here in the form of the other time derivatives
-    # like L96.dx_dt, where the function is in terms of dx/dt=e^(t) so that we can
-    # compute the answer analytically for comparision
+########################################################################################################################
+########################################################################################################################
 
-    return [exp(t)]
+function exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
+    # Wrapper for making a vector form of the exponential function for the DE solvers
+    [exp(t)]
 end
 
 
@@ -50,8 +51,8 @@ function expDiscretizationError(step_model!, h)
         step_model!(x, time_steps[i], kwargs)
     end
 
+    # find the absolute difference of the apprximate integral from the built-in exponential
     abs(x[1] - exp(tanl))
-
 end
 
 
@@ -60,29 +61,26 @@ end
 
 function calculateOrderConvergence(step_model!)
     # set step sizes in increasing order for log-10 log-10 analysis
-    h_range = [0.0001, 0.001, 0.01]
-    error_range = Vector{Float64}(undef, 3)
+    h_range = [0.005, 0.01, 0.05, 0.1]
+    error_range = Vector{Float64}(undef, length(h_range))
 
     # loop the discretization and calculate the errors
     for i in 1:length(h_range)
         error_range[i] = expDiscretizationError(step_model!, h_range[i])
     end
 
+    # convert the error and the step sizes to log-10
     h_range_log10 = log10.(h_range)
     error_range_log10 = log10.(error_range)
 
     function model_lsq_squares(x,p)
-        @.p[1] + p[2]*x
+        # define a function object to vary parameters p
+        @. p[1] + p[2]*x
     end
 
-    fit = curve_fit(model_lsq_squares, h_range_log10, error_range_log10, [1.0,1.0])
-    return coef(fit)
-    # Set the least squares estimate for the line in log-10 log-10 scale using LsqFit
-    # where we have the h_range in the x-axis and the error_range in the
-    # y-axis.  The order of convergence is defined by the slope of this line
-    # whereas the intercept is a constant factor (not necessary to report here).
-    # Extract the slope and return the slope here, rounded to the hundredth place
-
+    # fit the best-fit line and return coefficients
+    fit = curve_fit(model_lsq_squares, h_range_log10, error_range_log10, [1.0, 1.0])
+    coef(fit)
 end
 
 
@@ -94,9 +92,9 @@ function testEMExponential()
     coef = calculateOrderConvergence(em_step!)
 
     if abs(coef[2] - 1.0) > 0.1
-        return false
+        false
     else
-        return true
+        true
     end
 end
 
@@ -108,14 +106,12 @@ function testRKExponential()
     coef = calculateOrderConvergence(rk4_step!)
 
     if abs(coef[2] - 4.0) > 0.1
-        return false
+        false
     else
-        return true
+        true
     end
 end
 
-
-testRKExponential()
 
 ########################################################################################################################
 
