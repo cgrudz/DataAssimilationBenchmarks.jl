@@ -125,7 +125,7 @@ Lorenz-96 model with additive noise, this is included separately in the `models/
 General schemes such as the four-stage Runge-Kutta and the Euler-(Maruyama) schemes are built to take in arguments of the form
 
 ```{julia}
-(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
+(x::VecA, t::Float64, kwargs::Dict{String,Any})
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
 x            -- array or sub-array of a single state possibly including parameter values
@@ -176,18 +176,18 @@ Different filter and smoothing schemes are run through the routines including
 
 ```{julia}
 ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},
-                         obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                         obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
 ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
 ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
 
 ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any};
-                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10) where {T1 <: CovM}
+                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any};
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10)
 
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 ```
