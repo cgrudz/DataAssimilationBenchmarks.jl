@@ -9,8 +9,7 @@ export dx_dt
 
 ########################################################################################################################
 ########################################################################################################################
-# Type union declarations for multiple dispatch
-# and type aliases
+# Type union declarations for multiple dispatch and type aliases
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
@@ -21,7 +20,7 @@ ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 ########################################################################################################################
 ########################################################################################################################
 
-function dx_dt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
+function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
 
     """Function defining the time derivative of the phase and fequency of the effective-network swing eq model
 

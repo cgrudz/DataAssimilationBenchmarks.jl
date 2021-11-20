@@ -13,8 +13,7 @@ export alternating_obs_operator, analyze_ensemble, analyze_ensemble_parameters, 
 
 ########################################################################################################################
 ########################################################################################################################
-# Type union declarations for multiple dispatch
-# and type aliases
+# Type union declarations for multiple dispatch and type aliases
 
 # covariance matrix types
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
@@ -225,7 +224,7 @@ end
 ########################################################################################################################
 # auxiliary function for square roots of multiple types of covariance matrices wrapped 
 
-function square_root(M::T) where {T <: CovM}
+function square_root(M::CovM)
     
     if T <: UniformScaling
         M^0.5
@@ -242,7 +241,7 @@ end
 ########################################################################################################################
 # auxiliary function for square root inverses of multiple types of covariance matrices wrapped 
 
-function square_root_inv(M::T; sq_rt::Bool=false, inverse::Bool=false, full::Bool=false) where {T <: CovM}
+function square_root_inv(M::CovM; sq_rt::Bool=false, inverse::Bool=false, full::Bool=false)
     # if sq_rt=true will return the square root additionally for later use
     # as part of the calculation, if full, will make a computation of the inverse
     # simultaneously and return the square root inverse, square root, and inverse all
@@ -303,11 +302,11 @@ end
 # transform auxilliary function for EnKF, ETKF(-N), EnKS, ETKS(-N), IEnKS(-N)
 
 function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
-                   obs_cov::T1, kwargs::Dict{String,Any}; conditioning::T2=1000.0I, 
+                   obs_cov::CovM, kwargs::Dict{String,Any}; conditioning::ConM=1000.0I, 
                    m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
                    tol::Float64 = 0.0001,
                    j_max::Int64=40,
-                   Q::T1=1.0I) where {T1 <: CovM, T2 <: ConM}
+                   Q::T1=1.0I)
     """Computes transform and related values for various flavors of ensemble Kalman schemes below.
 
     "analysis" is a string which determines the type of transform update.  The observation error 
@@ -407,7 +406,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         cost_w = 0.0
 
         # step 2: define the cost / gradient / hessian function to avoid repeated computations
-        function fgh!(G, H, C, T::T1, T_inv::T1, w::Vector{Float64}) where {T1 <: ConM}
+        function fgh!(G, H, C, T::ConM, T_inv::ConM, w::Vector{Float64})
             # step 2a: define the linearization of the observation operator 
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * T 
@@ -450,8 +449,8 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
             end
             nothing
         end
-        function newton_ls!(grad_w, hess_w, T::T1, T_inv::T1, w::Vector{Float64}, 
-                          linesearch) where {T1 <: ConM}
+        function newton_ls!(grad_w, hess_w, T::ConM, T_inv::ConM, w::Vector{Float64}, 
+                          linesearch)
             # step 2e: find the Newton direction and the transform update if needed
             fx = fgh!(grad_w, hess_w, cost_w, T, T_inv, w)
             p = -hess_w \ grad_w
@@ -712,7 +711,6 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
 
             # step 2c: compute the model error adjusted anomalies
             A = A * G
-
         end
 
         # step 3: compute the ensemble in observation space
@@ -942,7 +940,6 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         N_effective = N_ens + 1.0
         
         # step 5: set up the optimization
-        
         # step 5:a the inial choice is no change to the mean state
         w = zeros(N_ens)
         
@@ -995,7 +992,6 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
 
         # step 8: package the transform output tuple
         T, w, U
-    
     
     elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
         ## This computes the primal form of the EnKF-N transform as in bocquet, raanes, hannart 2015
@@ -1100,7 +1096,6 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
 
         # return tuple of the gradient and hessian terms
         ∇J, hess_J
-
     end
 end
 
@@ -1108,7 +1103,7 @@ end
 ########################################################################################################################
 # auxilliary function for updating ensembles 
 
-function ens_update!(ens::T0, transform::T1) where {T0 <: ArView, T1 <: TransM}
+function ens_update!(ens::ArView, transform::TransM)
     """ Updates ensemble by right-transform method
 
     In the case where this follows the stochastic EnKF as in Carrassi et al. 2018,
@@ -1142,7 +1137,7 @@ end
 # general filter code 
 
 function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
-                         obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                         obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
     """General filter analysis step
 
@@ -1182,7 +1177,7 @@ end
 # classical version lag_shift_smoother
 
 function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
     """Lag-shift ensemble kalman smoother analysis step, classical version
 
@@ -1301,7 +1296,7 @@ end
 # single iteration, correlation-based lag_shift_smoother
 
 function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+                                      obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
     """Lag-shift ensemble kalman smoother analysis step, single iteration version 
 
@@ -1568,8 +1563,8 @@ end
 #########################################################################################################################
 
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any};
-                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=5) where {T1 <: CovM}
+                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any};
+                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=5)
 
 
     """Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
@@ -2126,7 +2121,7 @@ end
 # single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
 #
 #function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-#                             obs_cov::T1, state_infl::Float64, kwargs::Dict{String,Any}) where {T1 <: CovM}
+#                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 #
 #    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
 #

@@ -106,7 +106,9 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
 
 end
 
+
 ########################################################################################################################
+# generate timeseries based on the parameter tuple
 
 function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 
@@ -206,6 +208,8 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 
 end
 
+
 ########################################################################################################################
+# end module
 
 end

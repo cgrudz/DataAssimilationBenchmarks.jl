@@ -8,8 +8,7 @@ export rk4_step!, tay2_step!, em_step!
 
 ########################################################################################################################
 ########################################################################################################################
-# Type union declarations for multiple dispatch
-# and type aliases
+# Type union declarations for multiple dispatch and type aliases
 
 # vectors and ensemble members of sample
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
@@ -24,7 +23,7 @@ ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 ########################################################################################################################
 # four-stage Runge-Kutta scheme
 
-function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
+function rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
     """One step of integration rule for l96 4 stage Runge-Kutta as discussed in Grudzien et al. 2020
 
     The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
@@ -89,7 +88,6 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
 
     # load parameter values from the extended state into the derivative
     if param_est
-        @bp
         if haskey(kwargs, "dx_params")
             # extract the parameter sample and append to other derivative parameters
             for key in keys(param_sample)
@@ -126,6 +124,7 @@ function rk4_step!(x::T, t::Float64, kwargs::Dict{String,Any}) where {T <: VecA}
     x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
     x
 end
+
 
 ########################################################################################################################
 # deterministic 2nd order Taylor Method
@@ -192,6 +191,7 @@ function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     # step forward by interval h
     x .= x +  h * dx_dt(x, t, dx_params) + diffusion * W
 end
+
 
 ########################################################################################################################
 # end module
