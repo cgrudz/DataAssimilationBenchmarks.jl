@@ -165,7 +165,7 @@ The parameter sample values will remain unchanged by the time stepper when the d
 Setting `diffusion > 0.0` above introduces additive noise to the dynamical system.  The main `rk4_step!` has convergence on order 4.0
 when diffusion is equal to zero, and both strong and weak convergence on order 1.0 when stochasticity is introduced.  Nonetheless,
 this is the recommended out-of-the-box solver for any generic DA simulation for the statistically robust performance, versus Euler-(Maruyama).
-When specifically generating the truth-twin for the Lorenz96 model with additive noise, this should be performed with the
+When specifically generating the truth-twin for the Lorenz-96 model with additive noise, this should be performed with the
 `l96s_tay2_step!` in the `models/L96.jl` sub-module while the ensemble should be generated with the `rk4_step!`.
 See the benchmarks on the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) for a full discussion of
 statistically robust model configurations.
@@ -189,7 +189,19 @@ ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Flo
                              obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any};
                              ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10)
 
+# type union for multiple dispatch over specific types of covariance matrices
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+
+analysis   -- string of the DA scheme string name, given to the transform sub-routine in methods
+ens        -- ensemble matrix defined by the array with columns given by the replicates of the model state
+obs        -- observation vector for the current analysis in ensemble_filter / array with columns given
+              by the observation vectors for the ordered sequence of analysis times in the current 
+							smoothing window
+obs_cov    -- observation error covariance matrix, must be positive definite of type CovM
+state_infl -- multiplicative covariance inflation factor for the state variable covariance matrix,
+              set to one this is the standard Kalman-like update
+kwargs     -- keyword arguments for parameter estimation or other functionality, including integration
+              parameters for the state model in smoothing schemes
 ```
 
 The type of analysis to be passed to the transform step is specified with the `analysis` string.  Observations
@@ -201,7 +213,7 @@ inflation can be specified in `kwargs`.  These outer loops will pass the require
 function that generates the ensemble transform for conditioning on observations.  Different outer-loop 
 schemes can be built around the `transform` function alone in order to use validated ensemble transform 
 schemes.  Utility scripts to generate observation operators, analyze ensemble statistics, etc, are included
-in the EnsembleKalmanSchemes.jl sub-module.
+in the EnsembleKalmanSchemes.jl sub-module.  See the experiments directory discussed below for example usage.
 
 ## Using experiments in dev package
 
@@ -302,6 +314,17 @@ The `analysis` directory contains scripts for batch processing the outputs from 
 RMSE and spread and arranging these outputs in an array for plotting.  This should be modified based on the
 local paths to stored data.  This will try to load files based on parameter settings written in the name of
 the output .jld file and if this is not available, this will store `Inf` values in the place of missing data.
+
+### Validating results
+Benchmark configurations for the above filtering and smoothing experiments are available in the open access article
+[A fast, single-iteration ensemble Kalman smoother for sequential data assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/),
+with details on the algorithm and parameter specifications discussed in the experiments section.  Performance of filtering and
+smoothing schemes should be validated versus the numerical results presented there for root mean square error and ensemble spread.
+Formal test cases for the package are currently in-development.  The deterministic Runge-Kutta and Euler scheme for ODEs are
+validated in the package tests, estimating the order of convergence with the least-squares log-10 line fit between step size
+and discretization error.  Test cases for the stochastic integration schemes are in-development, but numerical results with these
+schemes can be validated versus the results in the open-access manuscript 
+[On the numerical integration of the Lorenz-96 model, with scalar additive noise, for benchmark twin experiments](https://gmd.copernicus.org/articles/13/1903/2020/).
 
 
 ## To do
