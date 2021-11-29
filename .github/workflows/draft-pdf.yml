@@ -22,5 +22,3 @@ jobs:
           # paper.md
           path: paper.pdf
 
-- name: Open Journals PDF Generator
-  uses: openjournals/openjournals-draft-action@v.1.0

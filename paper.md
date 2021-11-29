@@ -113,8 +113,8 @@ are differentiated primarily in that:
 
 The future development of the DataAssimilationBenchmarks.jl package is intended to expand upon
 the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
-novel schemes and the further development of the SIEnKS scheme.  Likewise, novel mechanistic models
-for the DA system are in development. Currently, this supports state and joint
+novel schemes and the further development of the SIEnKS scheme.  Novel mechanistic models
+for the DA system are also in development. Currently, this supports state and joint
 state-parameter estimation in the L96-s model [@grudzien2020numerical] in both ordinary
 and stochastic differential equation formulations.  Likewise, this supports a variety of observation
 operator configurations in the L96-s model, as outlined in [@grudzien2021fast].
