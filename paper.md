@@ -154,6 +154,9 @@ Alternatively, you can install this from the repository Github directly as follo
 ```{julia}
 pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 ```
+# Documentation
+Documentation on the usage of the methods in the current version of the package is included
+in the README.md for the Github package above.
 
 # Acknowledgements
 
