@@ -51,9 +51,11 @@ This package implements several standard data assimilation algorithms, including
 widely used performance modifications that are used in practice to tune these estimators.
 This software framework was written specifically to support the development and intercomparison
 of the novel single-iteration ensemble Kalman smoother (SIEnKS) [@grudzien2021fast].
-Details of the DA schemes, including pseudo-code for the methods and model benchmark
-configurations in this release of the software package, can be found in the above
-principal reference.
+Details of the primary DA schemes, including pseudo-code for the methods detailing their implementation,
+and DA experiment benchmark configurations, with root mean square error and ensemble spread diagonostics
+for estimator validation, can be found in the above principal reference.  Additional details on
+numerical integration schemes used in this work for simulating the Lorenz-96 model are found
+in the secondary reference [@grudzien2020numerical].
 
 # Statement of need
 
@@ -69,7 +71,7 @@ this is designed to run naively parallel experiment configurations over independ
 parameters such as ensemble size, static covariance inflation, observation
 operator / network designs that affect the estimator stability and performance.
 Templates for running naively parallel experiments using Juila's core parallelism,
-or using Slurm to load experiments in parallel in a queueing system are provided.
+or using Slurm to load experiments in parallel with a queueing system are provided.
 
 ## Comparison with similar projects
 
@@ -79,9 +81,11 @@ EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.  Th
 are differentiated primarily in that:
 
   * DAPPER is a Python-based library which is well-established, and includes many of the same
-	estimators and models. However, DAPPER is notably slower due to its dependence on the Python
-	language for its core numerical DA techniques.  This can make the wide hyper-parameter search
-	intended above computationally challenging.
+	estimators and models. However, numerical simulations in Python run notably slower than simulations in Julia
+	when numerical routines cannot be vectorized in Numpy [@julia].
+	Particularly, this can make the wide hyper-parameter search intended above computationally challenging
+	without utilizing additional packages such as Numba [@Numba] for code acceleration such as faster
+	for-loops.
 	
   * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of ensemble-variational techniques which were the focus of the initial development of
@@ -90,8 +94,8 @@ are differentiated primarily in that:
 	of a variety of standard stochastic filtering schemes.
 	
   * EnsembleKalmanProcesses.jl is another established Julia library, but notably lacks
-	traditional DA approaches such as the classic, perturbed observation EnKF and the classic
-	ETKF.  For this reason, this package was not selected for the development and intercomparison
+	traditional DA approaches such as the classic, perturbed observation EnKF/S and the classic
+	ETKF/S.  For this reason, this package was not selected for the development and intercomparison
 	of the SIEnKS.
 
 ## Validated methods currently in use
@@ -110,7 +114,7 @@ are differentiated primarily in that:
 The future development of the DataAssimilationBenchmarks.jl package is intended to expand upon
 the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
 novel schemes and the further development of the SIEnKS scheme.  Likewise, novel mechanistic models
-for the DA system are currently in development. Currently, this supports state and joint
+for the DA system are in development. Currently, this supports state and joint
 state-parameter estimation in the L96-s model [@grudzien2020numerical] in both ordinary
 and stochastic differential equation formulations.  Likewise, this supports a variety of observation
 operator configurations in the L96-s model, as outlined in [@grudzien2021fast].
@@ -133,7 +137,7 @@ included in the "analysis" directory.
 
 ## Installing a dev package from the Julia General registries 
 
-In order to install the dev version to your Julia environment, one can use the following commands in the REPL
+In order to install the dev version to a Julia environment, one can use the following commands in the REPL
 
 ```{julia}
 pkg> dev DataAssimilationBenchmarks
