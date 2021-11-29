@@ -323,7 +323,7 @@ smoothing schemes should be validated versus the numerical results presented the
 Formal test cases for the package are currently in-development.  The deterministic Runge-Kutta and Euler scheme for ODEs are
 validated in the package tests, estimating the order of convergence with the least-squares log-10 line fit between step size
 and discretization error.  Test cases for the stochastic integration schemes are in-development, but numerical results with these
-schemes can be validated versus the results in the open-access manuscript 
+schemes can be validated versus the results in the open-access article 
 [On the numerical integration of the Lorenz-96 model, with scalar additive noise, for benchmark twin experiments](https://gmd.copernicus.org/articles/13/1903/2020/).
 
 
