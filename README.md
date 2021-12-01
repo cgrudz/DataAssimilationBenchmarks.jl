@@ -202,9 +202,8 @@ analysis   -- string of the DA scheme string name, given to the transform sub-ro
 ens        -- ensemble matrix defined by the array with columns given by the replicates of
               the model state
 obs        -- observation vector for the current analysis in ensemble_filter / array with
-              columns
-              given by the observation vectors for the ordered sequence of analysis times in
-							the current smoothing window
+              columns given by the observation vectors for the ordered sequence of analysis
+							times in the current smoothing window
 obs_cov    -- observation error covariance matrix, must be positive definite of type CovM
 state_infl -- multiplicative covariance inflation factor for the state variable covariance
               matrix, set to one this is the standard Kalman-like update
