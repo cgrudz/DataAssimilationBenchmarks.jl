@@ -1,105 +1,63 @@
-#######################################################################################################################
+##############################################################################################
 module TestTimeSeriesGeneration
-#######################################################################################################################
+##############################################################################################
+##############################################################################################
 # imports and exports
-using DataAssimilationBenchmarks.DeSolvers
-using DataAssimilationBenchmarks.L96
-using JLD
-using Random
+using DataAssimilationBenchmarks.GenerateTimeSeries
+using JLD, Random
 
+##############################################################################################
+##############################################################################################
+# Test generation and loading of the L96 model time series in default localtion
 
-#######################################################################################################################
-# Test generation of the L96 model time series
-
-function testL96()
-    # define the model and the solver
-    dx_dt = L96.dx_dt
-    step_model! = DeSolvers.em_step!
-
-    # set model and experimental parameters
-    F = 8.0
-    h = 0.001
-    nanl = 1000
-    sys_dim = 40
-    diffusion = 0.1
-    tanl = 0.01
-    seed = 0
-    Random.seed!(seed)
-
-    # define the dx_params dict
-    dx_params = Dict{String, Array{Float64}}("F" => [F])
-    fore_steps = convert(Int64, tanl/h)
-
-    # set the kwargs for the integration scheme
-    kwargs = Dict{String, Any}(
-            "h" => h,
-            "diffusion" => diffusion,
-            "dx_params" => dx_params,
-            "dx_dt" => L96.dx_dt,
-            )
-
-    # set arbitrary initial condition
-    xt = ones(sys_dim)
-
-    # pre-allocate storage for the time series observations
-    tobs = Array{Float64}(undef,sys_dim, nanl)
-
-    # loop the experiment, taking observations at time length tanl
-    for i in 1:nanl
-        for j in 1:fore_steps
-            step_model!(xt, 0.0, kwargs)
-        end
-        tobs[:,i] = xt
+function testGenL96()
+    try
+        args = (0, 40, 0.05, 5000, 1500, 0.00, 8.0)
+        L96_time_series(args)
+        true
+    catch
+        false
     end
-
-    # define the file name for the experiment output
-    # dynamically based on experiment parameters
-    fname = "time_series_data_seed_" * lpad(seed, 4, "0") *
-            "_dim_" * lpad(sys_dim, 2, "0") *
-            "_diff_" * rpad(diffusion, 5, "0") *
-            "_F_" * lpad(F, 4, "0") *
-            "_tanl_" * rpad(tanl, 4, "0") *
-            "_nanl_" * lpad(nanl, 5, "0") *
-            "_h_" * rpad(h, 5, "0") *
-            ".jld"
-
-    # define the experimental data in a dictionary to write with JLD
-    data = Dict{String, Any}(
-        "h" => h,
-        "diffusion" => diffusion,
-        "F" => F,
-        "tanl" => tanl,
-        "nanl"  => nanl,
-        "sys_dim" => sys_dim,
-        "tobs" => tobs
-        )
-        path = "../data/time_series/"
-
-    # test to see if the data can be written to standard output directory
-    function write_file()
-        try
-            save(path * fname, data)
-            true
-        catch
-            # if not, set test case false
-            false
-        end
-    end
-
-    # test to see if the data can be read from standard output directory
-    function load_file()
-        try
-            tmp = load(path * fname)
-            true
-        catch
-            # if not, set test case false
-            false
-        end
-    end
-
-write_file() && load_file()
 end
 
+function testLoadL96()
+    try
+        path = joinpath(@__DIR__, "../src/data/time_series/") 
+        load(path * "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05" *
+             "_nanl_05000_spin_1500_h_0.010.jld2")
+        true
+    catch
+        false
+    end
+end
+
+
+##############################################################################################
+# Test generation and loading of the IEEE39 bus model time series in the default location
+
+function testGenIEEE39bus()
+    try
+        args = (0, 0.01, 5000, 1500, 0.0)
+        IEEE39bus_time_series(args)
+        true
+    catch
+        false
+    end
+end
+
+function testLoadIEEE39bus()
+    try
+        path = joinpath(@__DIR__, "../src/data/time_series/") 
+        load(path * "IEEE39bus_time_series_seed_0000_diff_0.000_tanl_0.01" *
+             "_nanl_05000_spin_1500_h_0.010.jld2")
+        true
+    catch
+        false
+    end
+end
+
+
 #######################################################################################################################
+# end module 
 
 end

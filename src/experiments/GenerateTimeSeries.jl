@@ -2,10 +2,9 @@
 module GenerateTimeSeries 
 ########################################################################################################################
 # imports and exports
-using Debugger, JLD, Distributed
+using Debugger, JLD2, Distributed
 using Random, Distributions, LinearAlgebra
-using DeSolvers
-import L96, IEEE39bus
+using ..DeSolvers, ..L96, ..IEEE39bus
 export L96_time_series, IEEE39bus_time_series
 
 ########################################################################################################################
@@ -50,11 +49,11 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
 
     # define the integration parameters in the kwargs dict
     kwargs = Dict{String, Any}(
-              "h" => h,
-              "diffusion" => diffusion,
-              "dx_params" => dx_params,
-              "dx_dt" => dx_dt,
-             )
+                               "h" => h,
+                               "diffusion" => diffusion,
+                               "dx_params" => dx_params,
+                               "dx_dt" => dx_dt,
+                              )
     if diffusion != 0.0
         kwargs["p"] = p
         kwargs["α"] = α
@@ -81,15 +80,16 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
     end
     
     data = Dict{String, Any}(
-                "h" => h,
-                "diffusion" => diffusion,
-                "dx_params" => dx_params, 
-                "tanl" => tanl,
-                "nanl" => nanl,
-                "spin" => spin,
-                "state_dim" => state_dim,
-                "obs" => obs
-               )
+                             "h" => h,
+                             "diffusion" => diffusion,
+                             "dx_params" => dx_params, 
+                             "tanl" => tanl,
+                             "nanl" => nanl,
+                             "spin" => spin,
+                             "state_dim" => state_dim,
+                             "obs" => obs,
+                             "model" => "L96"
+                            )
 
     name = "L96_time_series_seed_" * lpad(seed, 4, "0") * 
            "_dim_" * lpad(state_dim, 2, "0") * 
@@ -99,11 +99,11 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
            "_nanl_" * lpad(nanl, 5, "0") * 
            "_spin_" * lpad(spin, 4, "0") * 
            "_h_" * rpad(h, 5, "0") * 
-           ".jld"
-    path = "../data/time_series/"
+           ".jld2"
+    
+    path = joinpath(@__DIR__, "../data/time_series/") 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
-
 end
 
 
@@ -124,7 +124,8 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     state_dim = 20
 
     # define the model parameters
-    tmp = load("../models/IEEE39bus_inputs/NE_EffectiveNetworkParams.jld")
+    input_data = joinpath(@__DIR__, "../models/IEEE39bus_inputs/NE_EffectiveNetworkParams.jld2")
+    tmp = load(input_data)
     dx_params = Dict{String, Array{Float64}}(
                                              "A" => tmp["A"], 
                                              "D" => tmp["D"], 
@@ -185,15 +186,16 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
     end
     
     data = Dict{String, Any}(
-                "h" => h,
-                "diffusion" => diffusion,
-                "diff_mat" => diff_mat,
-                "dx_params" => dx_params, 
-                "tanl" => tanl,
-                "nanl" => nanl,
-                "spin" => spin,
-                "obs" => obs
-               )
+                             "h" => h,
+                             "diffusion" => diffusion,
+                             "diff_mat" => diff_mat,
+                             "dx_params" => dx_params, 
+                             "tanl" => tanl,
+                             "nanl" => nanl,
+                             "spin" => spin,
+                             "obs" => obs,
+                             "model" => "IEEE39bus"
+                            )
 
     name = "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
            "_diff_" * rpad(diffusion, 5, "0") * 
@@ -201,11 +203,11 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
            "_nanl_" * lpad(nanl, 5, "0") * 
            "_spin_" * lpad(spin, 4, "0") * 
            "_h_" * rpad(h, 5, "0") * 
-           ".jld"
-    path = "../data/time_series/"
+           ".jld2"
+    
+    path = joinpath(@__DIR__, "../data/time_series/") 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
-
 end
 
 

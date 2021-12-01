@@ -2,7 +2,7 @@
 module SlurmParallelSubmitIEEE
 ########################################################################################################################
 # imports and exports
-using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
+using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD2, Debugger
 
 ########################################################################################################################
 ########################################################################################################################
@@ -12,7 +12,7 @@ using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debu
 # time series are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld"
+ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld2"
 ########################################################################################################################
 
 ########################################################################################################################
@@ -105,7 +105,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #                                                "_nens_" * lpad(N, 3,"0") *
 #                                                "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
 #                                                "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
-#                                                ".jld"
+#                                                ".jld2"
 #
 #                                    fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "-classic/"
 #                                    try
@@ -127,7 +127,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_param_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_param_smoother_input_args.jld2"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -232,7 +232,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #                                                    "_nens_" * lpad(N, 3,"0") *
 #                                                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
 #                                                    "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
-#                                                    ".jld"
+#                                                    ".jld2"
 #
 #                                        fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "-single-iteration/"
 #                                        try
@@ -255,7 +255,7 @@ ts01 = "../data/time_series/IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_param_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_param_smoother_input_args.jld2"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -361,7 +361,7 @@ for ts in time_series
                                                     "_nens_" * lpad(N, 3,"0") *
                                                     "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
                                                     "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") *
-                                                    ".jld"
+                                                    ".jld2"
 
                                         fpath = "/x/capa/scratch/cgrudzien/power_grid_data/" * method * "/"
                                         try
@@ -384,7 +384,7 @@ for ts in time_series
     end
 end
 
-name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_param_smoother_input_args.jld"
+name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_param_smoother_input_args.jld2"
 save(name, "experiments", args)
 
 for j in 1:length(args) 

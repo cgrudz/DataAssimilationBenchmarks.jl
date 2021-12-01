@@ -6,7 +6,7 @@ using Random, Distributions
 using Debugger
 using Distributed
 using LinearAlgebra
-using JLD
+using JLD2
 using DeSolvers
 using L96 
 using EnsembleKalmanSchemes
@@ -20,7 +20,7 @@ using SmootherExps
 # Filters 
 ########################################################################################################################
 function filter_state_exp(j)
-    f = load("../data/input_data/filter_state_input_args.jld")
+    f = load("../data/input_data/filter_state_input_args.jld2")
     args = f["experiments"][j]
     filter_state(args)
 end
@@ -30,13 +30,13 @@ end
 # Classic smoothers
 ########################################################################################################################
 function classic_smoother_state_exp(j)
-    f = load("../data/input_data/classic_state_smoother_input_args.jld")
+    f = load("../data/input_data/classic_state_smoother_input_args.jld2")
     args = f["experiments"][j]
     classic_state(args)
 end
 
 function classic_smoother_param_exp(j)
-    f = load("../data/input_data/classic_param_smoother_input_args.jld")
+    f = load("../data/input_data/classic_param_smoother_input_args.jld2")
     args = f["experiments"][j]
     classic_param(args)
 end
@@ -46,13 +46,13 @@ end
 # Single-iteration smoothers
 ########################################################################################################################
 function single_iteration_smoother_state_exp(j)
-    f = load("../data/input_data/single_iteration_state_smoother_input_args.jld")
+    f = load("../data/input_data/single_iteration_state_smoother_input_args.jld2")
     args = f["experiments"][j]
     single_iteration_state(args)
 end
 
 function single_iteration_smoother_param_exp(j)
-    f = load("../data/input_data/single_iteration_param_smoother_input_args.jld")
+    f = load("../data/input_data/single_iteration_param_smoother_input_args.jld2")
     args = f["experiments"][j]
     single_iteration_param(args)
 end
@@ -63,13 +63,13 @@ end
 # Iterative smoothers
 ########################################################################################################################
 function iterative_smoother_state_exp(j)
-    f = load("../data/input_data/iterative_state_smoother_input_args.jld")
+    f = load("../data/input_data/iterative_state_smoother_input_args.jld2")
     args = f["experiments"][j]
     iterative_state(args)
 end
 
 function iterative_smoother_param_exp(j)
-    f = load("../data/input_data/iterative_param_smoother_input_args.jld")
+    f = load("../data/input_data/iterative_param_smoother_input_args.jld2")
     args = f["experiments"][j]
     iterative_param(args)
 end

@@ -2,7 +2,7 @@
 module SlurmParallelSubmit 
 ########################################################################################################################
 # imports and exports
-using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debugger
+using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD2, Debugger
 
 ########################################################################################################################
 ########################################################################################################################
@@ -12,18 +12,18 @@ using FilterExps, SmootherExps, EnsembleKalmanSchemes, DeSolvers, L96, JLD, Debu
 # time series are named by the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts01 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld"
-ts02 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld"
-ts03 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld"
-ts04 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld"
-ts05 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.25_nanl_50000_spin_5000_h_0.010.jld"
-ts06 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.30_nanl_50000_spin_5000_h_0.010.jld"
-ts07 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.35_nanl_50000_spin_5000_h_0.010.jld"
-ts08 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.40_nanl_50000_spin_5000_h_0.010.jld"
-ts09 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.45_nanl_50000_spin_5000_h_0.010.jld"
-ts10 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.50_nanl_50000_spin_5000_h_0.010.jld"
-ts11 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.55_nanl_50000_spin_5000_h_0.010.jld"
-ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.60_nanl_50000_spin_5000_h_0.010.jld"
+ts01 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld2"
+ts02 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld2"
+ts03 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld2"
+ts04 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld2"
+ts05 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.25_nanl_50000_spin_5000_h_0.010.jld2"
+ts06 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.30_nanl_50000_spin_5000_h_0.010.jld2"
+ts07 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.35_nanl_50000_spin_5000_h_0.010.jld2"
+ts08 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.40_nanl_50000_spin_5000_h_0.010.jld2"
+ts09 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.45_nanl_50000_spin_5000_h_0.010.jld2"
+ts10 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.50_nanl_50000_spin_5000_h_0.010.jld2"
+ts11 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.55_nanl_50000_spin_5000_h_0.010.jld2"
+ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.60_nanl_50000_spin_5000_h_0.010.jld2"
 ########################################################################################################################
 
 ########################################################################################################################
@@ -59,7 +59,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/filter_state_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/filter_state_input_args.jld2"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -152,7 +152,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #                                            "_mda_false" *
 #                                            "_N_ens_" * lpad(N, 3,"0") *
 #                                            "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                                            ".jld"
+#                                            ".jld2"
 #
 #                                fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "_classic/"
 #                                try
@@ -173,7 +173,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #    end
 #end
 #
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/classic_state_smoother_input_args.jld2"
 #save(name, "experiments", args)
 #
 #for j in 1:length(args) 
@@ -265,7 +265,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #                                                "_mda_" * string(mda) *
 #                                                "_N_ens_" * lpad(N, 3,"0") *
 #                                                "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-#                                                ".jld"
+#                                                ".jld2"
 #
 #                                    fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/all_ens/" * method * "_single_iteration/"
 #                                    try
@@ -288,7 +288,7 @@ ts12 = "../data/time_series/l96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_ta
 #end
 #
 ## save the input data to be looped over in the next stage
-#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld"
+#name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/single_iteration_state_smoother_input_args.jld2"
 #save(name, "experiments", args)
 #
 ## the loop will sequentially write and submit different experiments based on the parameter combinations
@@ -388,7 +388,7 @@ for mda in mdas
                                                 "_mda_" * string(mda) *
                                                 "_N_ens_" * lpad(N, 3,"0") *
                                                 "_state_inflation_" * rpad(round(s_infl, digits=2), 4, "0") *
-                                                ".jld"
+                                                ".jld2"
 
                                     fpath = "/x/capa/scratch/cgrudzien/final_experiment_data/versus_tanl/" * method * "/"
                                     try
@@ -412,7 +412,7 @@ for mda in mdas
 end
 
 
-name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_state_smoother_input_args.jld"
+name = "/home/cgrudzien/DataAssimilationBenchmarks/data/input_data/iterative_state_smoother_input_args.jld2"
 save(name, "experiments", args)
 
 for j in 1:length(args) 

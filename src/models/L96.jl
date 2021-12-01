@@ -1,15 +1,13 @@
-########################################################################################################################
+##############################################################################################
 module L96
-########################################################################################################################
+##############################################################################################
 # imports and exports
-using Debugger
 using Random, Distributions
-using LinearAlgebra
-using SparseArrays
+using LinearAlgebra, SparseArrays
 export dx_dt, jacobian, l96s_tay_2_step!, ρ, α
 
-########################################################################################################################
-########################################################################################################################
+##############################################################################################
+##############################################################################################
 # Type union declarations for multiple dispatch
 # and type aliases
 
@@ -19,8 +17,8 @@ VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 # dictionary for model parameters
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
-########################################################################################################################
-########################################################################################################################
+##############################################################################################
+##############################################################################################
 # auxiliary function to return modular indices for the lorenz model
 
 function mod_indx!(indx::Int64, dim::Int64)
@@ -32,11 +30,11 @@ function mod_indx!(indx::Int64, dim::Int64)
 end
 
 
-########################################################################################################################
+##############################################################################################
 # time derivative
 
-function dx_dt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
-	"""Time derivative for the Lorenz-96 model, x is a single model state of size state_dim."""
+function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
+	"""Time derivative for Lorenz-96 model, x is a single model state of size state_dim."""
 
     # unpack the (only) derivative parameter for l96
     F = dx_params["F"][1]::Float64
@@ -59,18 +57,18 @@ function dx_dt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
 end
 
 
-########################################################################################################################
-# vectorized time derivative for demonstration purposes only, note this is much less efficient in speed
-# and in memory than the above version
+##############################################################################################
+# vectorized time derivative for demonstration purposes only,
+# note this is much less efficient in speed and in memory than the above version
 
-function dx_dt_alt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
+function dx_dt_alt(x::VecA, t::Float64, dx_params::ParamDict)
 
     # unpack the (only) derivative parameter for l96
     F = dx_params["F"][1]::Float64
     x_dim = length(x)
     dx = Vector{Float64}(undef, x_dim)
 
-    # shift minus and plus indices with concatenate, array compute the derivative over arbitrary ensemble sizes
+    # shift minus and plus indices, array compute the derivative over arbitrary ensemble sizes
     x_m_2 = [x[end-1:end]; x[1:end-2]]
     x_m_1 = [x[end:end]; x[1:end-1]]
     x_p_1 = [x[2:end]; x[1:1]]
@@ -80,13 +78,13 @@ function dx_dt_alt(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
 end
 
 
-########################################################################################################################
+##############################################################################################
 # linearized time derivative
 
 function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
-    """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the state x.
+    """"Computes the Jacobian of Lorenz-96 about the state x.
 
-    Note that this has been designed to load the entries in a standard zeros array but return a sparse array after
+    Note that this is designed to load entries in a zeros array and return a sparse array
     to make a compromise between memory and computational resources."""
 
     x_dim = length(x)
@@ -116,9 +114,10 @@ function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
     return sparse(dxF)
 end
 
-########################################################################################################################
-# Auxiliary functions for the 2nd order Taylor-Stratonovich expansion below. These need to be computed once, only as
-# a function of the order of truncation of the fourier series, p for full timeseries.
+##############################################################################################
+# Auxiliary functions for the 2nd order Taylor-Stratonovich expansion below. These need
+# to be computed once, only as a function of the order of truncation of the Fourier
+# series, p for full timeseries.
 
 function ρ(p::Int64)
     1.0/12.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^2.0)
@@ -128,22 +127,25 @@ function α(p::Int64)
     (π^2.0) / 180.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^4.0)
 end
 
-########################################################################################################################
+##############################################################################################
 # 2nd order strong taylor SDE step
 # This method is derived in
-# Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model, with scalar additive noise, for benchmark
-# twin experiments, Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
+# Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
+# with scalar additive noise, for benchmark twin experiments,
+# Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
 # This depends on rho and alpha as above
-# NOTE: this still needs to be debugged
+# NOTE: this Julia version still pending validation as in the above manuscript
 
 function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     """One step of integration rule for l96 second order taylor rule
 
-    The rho and alpha are to be computed by the auxiliary functions, depending only on p, and supplied for all steps.
-    This is the general formulation which includes, eg. dependence on the truncation of terms in the auxilliary
-    function C with respect to the parameter p.  In general, truncation at p=1 is all that is necessary for order
-    2.0 convergence, and in this case C below is identically equal to zero.  This auxilliary function can be removed
-    (and is removed) in other implementations for simplicity."""
+    The ρ and α are to be computed by the auxiliary functions, depending only on p,
+    and supplied for all steps. This is the general formulation which includes,
+    eg. dependence on the truncation of terms in the auxilliary function C with
+    respect to the parameter p.  In general, truncation at p=1 is all that is
+    necessary for order 2.0 convergence, and in this case C below is identically
+    equal to zero.  This auxilliary function can be removed (and is removed) in other
+    implementations for simplicity."""
 
     # Infer model and parameters
     sys_dim = length(x)
@@ -160,9 +162,10 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
 
     ## random variables
     # Vectors ξ, μ, ϕ are sys_dim X 1 vectors of iid standard normal variables,
-    # ζ and η are sys_dim X p matrices of iid standard normal variables. Functional relationships describe each
-    # variable W_j as the transformation of ξ_j to be of variace given by the length of the time step h. The functions
-    # of random Fourier coefficients a_i, b_i are given in terms μ / η and ϕ / ζ respectively.
+    # ζ and η are sys_dim X p matrices of iid standard normal variables.
+    # Functional relationships describe each variable W_j as the transformation of
+    # ξ_j to be of variace given by the length of the time step h. Functions of random
+    # Fourier coefficients a_i, b_i are given in terms μ / η and ϕ / ζ respectively.
 
     # draw standard normal samples
     rndm = rand(Normal(), sys_dim, 2*p + 3)
@@ -192,7 +195,7 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
     J_pdelta = (h / 2.0) * (sqrt(h) * ξ + a)
 
     ### auxiliary functions for higher order stratonovich integrals ###
-    # C function is optional for higher precision but does not change order of convergence to leave out
+    # C function is optional for higher precision but does not change order of convergence
     function C(l, j)
         if p == 1
             return 0.0
@@ -206,7 +209,8 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
             vals = setdiff(indx, Set(r))
             for k in vals
                 # and for column r, define all row entries below, with zeros on diagonal
-                c[k, r] = (r / (r^2 - k^2)) * ((1.0 / k) * ζ[l, r] * ζ[j, k] + (1.0 / r) * η[l, r] * η[j, k])
+                c[k, r] = (r / (r^2 - k^2)) * ((1.0 / k) * ζ[l, r] * ζ[j, k] + (1.0 / r) *
+                                               η[l, r] * η[j, k])
             end
         end
 
@@ -216,8 +220,9 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
 
     function Ψ(l, j)
         # Ψ - generic function of the indicies l and j, define Ψ plus and Ψ minus index-wise
-        h^2.0 * ξ[l] * ξ[j] / 3.0 + h * a[l] * a[j] / 2.0 + h^(1.5) * (ξ[l] * a[j] + ξ[j] * a[l]) / 4.0 -
-              h^(1.5) * (ξ[l] * b[j] + ξ[j] * b[l]) / (2.0 * π) - h^2.0 * (C(l,j) + C(j,l))
+        h^2.0 * ξ[l] * ξ[j] / 3.0 + h * a[l] * a[j] / 2.0 + 
+        h^(1.5) * (ξ[l] * a[j] + ξ[j] * a[l]) / 4.0 -
+        h^(1.5) * (ξ[l] * b[j] + ξ[j] * b[l]) / (2.0 * π) - h^2.0 * (C(l,j) + C(j,l))
     end
 
     # define the approximations of the second order Stratonovich integral
@@ -237,7 +242,7 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
            ))
 end
 
-########################################################################################################################
+##############################################################################################
 # end module
 
 end
