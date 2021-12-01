@@ -192,15 +192,16 @@ ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Flo
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 
 analysis   -- string of the DA scheme string name, given to the transform sub-routine in methods
-ens        -- ensemble matrix defined by the array with columns given by the replicates of the model state
-obs        -- observation vector for the current analysis in ensemble_filter / array with columns given
-              by the observation vectors for the ordered sequence of analysis times in the current 
-							smoothing window
+ens        -- ensemble matrix defined by the array with columns given by the replicates of the
+              model state
+obs        -- observation vector for the current analysis in ensemble_filter / array with columns
+              given by the observation vectors for the ordered sequence of analysis times in
+							the current smoothing window
 obs_cov    -- observation error covariance matrix, must be positive definite of type CovM
 state_infl -- multiplicative covariance inflation factor for the state variable covariance matrix,
               set to one this is the standard Kalman-like update
-kwargs     -- keyword arguments for parameter estimation or other functionality, including integration
-              parameters for the state model in smoothing schemes
+kwargs     -- keyword arguments for parameter estimation or other functionality, including
+              integration parameters for the state model in smoothing schemes
 ```
 
 The type of analysis to be passed to the transform step is specified with the `analysis` string.  Observations
