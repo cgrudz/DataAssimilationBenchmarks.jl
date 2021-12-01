@@ -198,8 +198,8 @@ obs        -- observation vector for the current analysis in ensemble_filter / a
               given by the observation vectors for the ordered sequence of analysis times in
 							the current smoothing window
 obs_cov    -- observation error covariance matrix, must be positive definite of type CovM
-state_infl -- multiplicative covariance inflation factor for the state variable covariance matrix,
-              set to one this is the standard Kalman-like update
+state_infl -- multiplicative covariance inflation factor for the state variable covariance
+              matrix, set to one this is the standard Kalman-like update
 kwargs     -- keyword arguments for parameter estimation or other functionality, including
               integration parameters for the state model in smoothing schemes
 ```
