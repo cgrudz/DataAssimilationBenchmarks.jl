@@ -1,7 +1,7 @@
 language: julia
 julia:
   - 1.6
-coveralls: true
+codecov: true
 after_success:
 - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 
