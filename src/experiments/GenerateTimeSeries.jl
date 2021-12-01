@@ -28,7 +28,7 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
         step_model! = DeSolvers.rk4_step!
 
         # parameters for the Runge-Kutta scheme
-        h = 0.01
+        h = 0.05
 
     else
         # generate the observations with the strong Taylor scheme

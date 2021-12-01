@@ -30,7 +30,7 @@ export filter_state_exp, filter_param_exp, classic_smoother_state_exp,
 # seed, state_dim, tanl, nanl, spin, diffusion, F = args
 
 function L96_time_series_exp()
-    args = (0, 40, 0.05, 500, 50, 0.00, 8.0)
+    args = (0, 40, 0.05, 50000, 5000, 0.00, 8.0)
     L96_time_series(args)
 end
 
@@ -63,15 +63,22 @@ end
 path = joinpath(@__DIR__, "../data/time_series/") 
 
 # file names
-#fname = "IEEE39bus_time_series_seed_0000_diff_0.000_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld2"
-#fname = "IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_h_0.010.jld2"
-fname = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld2"
-#fname = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld2"
-#fname = "L96_time_series_seed_0000_dim_40_diff_0.100_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.005.jld2"
-#fname = "L96_time_series_seed_0000_dim_40_diff_0.100_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.005.jld2"
+#fname = "IEEE39bus_time_series_seed_0000_diff_0.000_tanl_0.01_nanl_50000_spin_5000_" * 
+#        "h_0.010.jld2"
+#fname = "IEEE39bus_time_series_seed_0000_diff_0.012_tanl_0.01_nanl_50000_spin_5000_" * 
+#        "h_0.010.jld2"
+fname = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_50000_" * 
+        "spin_5000_h_0.050.jld2"
+#fname = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.10_nanl_50000_" *
+#        "spin_5000_h_0.050.jld2"
+#fname = "L96_time_series_seed_0000_dim_40_diff_0.100_F_08.0_tanl_0.05_nanl_50000_" *
+#         "spin_5000_h_0.005.jld2"
+#fname = "L96_time_series_seed_0000_dim_40_diff_0.100_F_08.0_tanl_0.10_nanl_50000_" *
+#        "spin_5000_h_0.005.jld2"
 
 # load the file name with the path
 time_series = path * fname 
+
 
 ##############################################################################################
 
@@ -86,12 +93,6 @@ function filter_state_exp()
     filter_state(args)
 end
 
-# static version for test cases
-function filter_state_IEEE39bus_test()
-    args = (path * IEEE39bus_test_ts, "etkf", 0, 3500, 0.1, 20, 1.00, 21, 1.02)
-    filter_state(args)
-end
-
 
 ##############################################################################################
 # filter joint state-parameter estimation, arguments are
@@ -100,19 +101,6 @@ end
 
 function filter_param_exp()
     args = (time_series, "etkf", 0, 2500, 1.0, 40, 1.0, 0.10, 0.0010, 21, 1.02, 1.0)
-    filter_param(args)
-end
-
-# static version for test cases
-function filter_param_L96_test()
-    args = (path * L96_test_ts, "etkf", 0, 3500, 1.0, 40, 1.0, 0.10, 0.0010, 21, 1.02, 1.0)
-    filter_param(args)
-end
-
-# static version for test cases
-function filter_param_IEEE39bus_test()
-    args = (path * IEEE39bus_test_ts, 
-            "etkf", 0, 3500, 0.1, 20, 1.0, 0.10, 0.0010, 21, 1.02, 1.0)
     filter_param(args)
 end
 
@@ -181,6 +169,7 @@ function iterative_smoother_state_exp()
     iterative_state(args)
 end
 
+
 ##############################################################################################
 # IEnKS style iterative smoothing for joint state-parameter estmation, arugments are
 # time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim, γ,
@@ -191,6 +180,7 @@ function iterative_smoother_param_exp()
             0, 2500, 10, 1, true, 1.0, 20, 1.0, 0.03, 0.0001,  21, 1.02, 1.0)
     iterative_param(args)
 end
+
 
 ##############################################################################################
 # end module

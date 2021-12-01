@@ -24,7 +24,7 @@ function testLoadL96()
     try
         path = joinpath(@__DIR__, "../src/data/time_series/") 
         load(path * "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05" *
-             "_nanl_05000_spin_1500_h_0.010.jld2")
+             "_nanl_05000_spin_1500_h_0.050.jld2")
         true
     catch
         false

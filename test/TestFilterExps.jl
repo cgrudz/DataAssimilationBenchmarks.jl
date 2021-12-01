@@ -14,7 +14,7 @@ function run_filter_state_L96()
     try
         path = joinpath(@__DIR__, "../src/data/time_series/") 
         L96_test_ts = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0" *
-                      "_tanl_0.05_nanl_05000_spin_1500_h_0.010.jld2"
+                      "_tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2"
         
         args = (path * L96_test_ts, "etkf", 0, 3500, 1.0, 40, 1.00, 21, 1.02)
         filter_state(args)
@@ -29,7 +29,7 @@ function analyze_filter_state_L96()
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = joinpath(@__DIR__, "../src/data/etkf/") 
         rmse = load(path * "etkf_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40" * 
-                    "_obsU_1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.01_nens_021" *
+                    "_obsU_1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_nens_021" *
                     "_stateInfl_1.02.jld2")
         rmse = rmse["filt_rmse"]
 
@@ -52,7 +52,7 @@ function run_filter_param_L96()
     try
         path = joinpath(@__DIR__, "../src/data/time_series/") 
         L96_test_ts = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0" *
-                      "_tanl_0.05_nanl_05000_spin_1500_h_0.010.jld2"
+                      "_tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2"
         
         args = (path * L96_test_ts, "etkf", 0, 3500, 1.0, 40, 1.0, 0.10, 0.0010, 21, 1.02, 1.0)
         filter_param(args)
@@ -68,7 +68,7 @@ function analyze_filter_param_L96()
         path = joinpath(@__DIR__, "../src/data/etkf/") 
         rmse = load(path * "etkf_L96_param_seed_0000_diff_0.000_sysD_41_stateD_40_obsD_40_" *
                     "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" *
-                    "h_0.01_nens_021_stateInfl_1.02_paramInfl_1.00.jld2")
+                    "h_0.05_nens_021_stateInfl_1.02_paramInfl_1.00.jld2")
         filt_rmse = rmse["filt_rmse"]
         para_rmse = rmse["param_rmse"]
 

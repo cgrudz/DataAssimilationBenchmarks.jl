@@ -48,8 +48,15 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+   
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"
@@ -251,8 +258,15 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"
@@ -505,8 +519,15 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Int6
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+ 
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"
@@ -791,8 +812,15 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"
@@ -1134,8 +1162,15 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"
@@ -1453,8 +1488,15 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
     dx_params = ts["dx_params"]::ParamDict
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
-    h = 0.01
-    
+
+    # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
+    # simply use the same step size as the observation model
+    if diffusion > 0.0
+        h = 0.01
+    else
+        h = ts["h"]
+    end
+
     # define the dynamical model derivative for this experiment from the name
     # supplied in the time series
     if model == "L96"

@@ -252,7 +252,7 @@ filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Int64,F
 time_series, method, seed, nanl, obs_un, obs_dim, γ, N_ens, infl = args
 ```
 where `time_series` specifies the path to the .jld2 truth twin, `method` specifies the filter scheme, `seed` specifies
-the pseudo-random seed, nanl is the number of observation / analysis times to produce a posterior estimate for, 
+the pseudo-random seed, `nanl` is the number of observation / analysis times to produce a posterior estimate for, 
 `obs_un` specifies the observation error standard deviation, assuming a uniform scaling observation
 error covariance, `obs_dim` specifies the dimension of the observation vector, `γ` specifies the level of the nonliearity
 in the `alternating_obs_operator`, `N_ens` specifies the ensemble size and `infl` specifies the (static) multiplicative inflation.
