@@ -131,19 +131,25 @@ x            -- array or sub-array of a single state possibly including paramete
 t            -- time point
 kwargs       -- this should include dx_dt, the paramters for the dx_dt and optional arguments
 dx_dt        -- time derivative function with arguments x and dx_params
-dx_params    -- ParamDict of parameters necessary to resolve dx_dt, not including those in the extended state vector
+dx_params    -- ParamDict of parameters necessary to resolve dx_dt, not including those in the
+                extended state vector
 h            -- numerical discretization step size
-diffusion    -- tunes the standard deviation of the Wiener process, equal to sqrt(h) * diffusion
-diff_mat     -- structure matrix for the diffusion coefficients, replaces the default uniform scaling
-state_dim    -- keyword for parameter estimation, dimension of the dynamic state < dimension of full extended state
+diffusion    -- tunes the standard deviation of the Wiener process, equal to
+                sqrt(h) * diffusion
+diff_mat     -- structure matrix for the diffusion coefficients, replaces the default
+                uniform scaling
+state_dim    -- keyword for parameter estimation, dimension of the dynamic state < dimension
+                of full extended state
 param_sample -- ParamSample dictionary for merging extended state with dx_params
-ξ            -- random array size state_dim, can be defined in kwargs to provide a particular realization of the Wiener process
+ξ            -- random array size state_dim, can be defined in kwargs to provide a
+                particular realization of the Wiener process
 
 
 # dictionary for model parameters
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
-# dictionary containing key and index pairs to subset the state vector and merge with dx_params
+# dictionary containing key and index pairs to subset the state vector
+# and merge with dx_params
 ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 ```
@@ -191,10 +197,12 @@ ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Flo
 # type union for multiple dispatch over specific types of covariance matrices
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 
-analysis   -- string of the DA scheme string name, given to the transform sub-routine in methods
-ens        -- ensemble matrix defined by the array with columns given by the replicates of the
-              model state
-obs        -- observation vector for the current analysis in ensemble_filter / array with columns
+analysis   -- string of the DA scheme string name, given to the transform sub-routine in
+              methods
+ens        -- ensemble matrix defined by the array with columns given by the replicates of
+              the model state
+obs        -- observation vector for the current analysis in ensemble_filter / array with
+              columns
               given by the observation vectors for the ordered sequence of analysis times in
 							the current smoothing window
 obs_cov    -- observation error covariance matrix, must be positive definite of type CovM
@@ -252,8 +260,10 @@ in the `alternating_obs_operator`, `N_ens` specifies the ensemble size and `infl
 
 Similar conventions follow for parameter estimation experiments
 ```{julia}
-filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,Float64,Int64,Float64,Float64})
-time_series, method, seed, nanl, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
+filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,
+                         Float64,Float64,Float64,Int64,Float64,Float64})
+time_series, method, seed, nanl, obs_un, obs_dim,
+γ, param_err, param_wlk, N_ens, state_infl, param_infl = args
 ```
 with the exception of including the standard deviation, `param_err`, of the initial iid Gaussian draw of the parameter sample
 centered at the true value, the standard deviation, `param_wlk`, of the random walk applied to the parameter sample
