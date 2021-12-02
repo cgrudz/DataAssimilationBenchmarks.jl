@@ -16,6 +16,7 @@ include("TestIEEE39bus.jl")
 include("TestFilterExps.jl")
 include("TestClassicSmootherExps.jl")
 include("TestIterativeSmootherExps.jl")
+include("TestSingleIterationSmootherExps.jl")
 
 ##############################################################################################
 ##############################################################################################
@@ -64,18 +65,29 @@ end
     @test TestClassicSmootherExps.analyze_smoother_param_L96()
 end
 
-# test set 7: test classic smoother state and parameter experiments
+# test set 7: test IEnKS smoother state and parameter experiments
 @testset "Iterative Smoother Experiments" begin
     @test TestIterativeSmootherExps.run_sda_smoother_state_L96()
     @test TestIterativeSmootherExps.analyze_sda_smoother_state_L96()
     @test TestIterativeSmootherExps.run_sda_smoother_param_L96()
     @test TestIterativeSmootherExps.analyze_sda_smoother_param_L96()
-    @test TestIterativeSmootherExps.run_mda_smoother_state_L96()
-    @test TestIterativeSmootherExps.analyze_mda_smoother_state_L96()
-    @test TestIterativeSmootherExps.run_mda_smoother_param_L96()
-    @test TestIterativeSmootherExps.analyze_mda_smoother_param_L96()
+    @test TestIterativeSmootherExps.run_sda_smoother_state_L96()
+    @test TestIterativeSmootherExps.analyze_sda_smoother_state_L96()
+    @test TestIterativeSmootherExps.run_sda_smoother_param_L96()
+    @test TestIterativeSmootherExps.analyze_sda_smoother_param_L96()
 end
 
+# test set 8: test SIEnKS smoother state and parameter experiments
+@testset "Single Iteration Smoother Experiments" begin
+    @test TestSingleIterationSmootherExps.run_sda_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.analyze_sda_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.run_sda_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.analyze_sda_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.run_mda_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.analyze_mda_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.run_mda_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.analyze_mda_smoother_param_L96()
+end
 
 ##############################################################################################
 # end module
