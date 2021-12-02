@@ -1,7 +1,7 @@
 name = "DataAssimilationBenchmarks"
 uuid = "7c720533-a3c7-49b7-973c-85ef17efca74"
 authors = ["Colin Grudzien <cgrudz@mailbox.org> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438"

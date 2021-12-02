@@ -64,7 +64,7 @@ the Data Assimilation Research Testbed (DART)[@anderson2009data], but
 there are fewer standard options for theoretical research and algorithm development in
 simple test systems. DataAssimilationBenchmarks.jl provides one framework for studying
 ensemble-based filters and sequential smoothers that are commonly used in online,
-geoscientific prediction settings.  Validated methods and methods in development focus
+geoscientific prediction settings.  Validated methods, and methods in development, focus
 on evaluating the performance and the structural stability of techniques over wide ranges
 of hyper-parameters that are commonly used to tune estimators in practice.  Specifically,
 this is designed to run naively parallel experiment configurations over independent
