@@ -1831,7 +1831,7 @@ end
 
 end
 
-#########################################################################################################################
+##############################################################################################
 # NOTE STILL DEBUGGING THIS EXPERIMENT
 #function single_iteration_adaptive_state(args::Tuple{String,String,Int64,Int64,Int64,Bool,Float64,Int64,
 #                                                     Float64,Int64,Float64};tail::Int64=3)

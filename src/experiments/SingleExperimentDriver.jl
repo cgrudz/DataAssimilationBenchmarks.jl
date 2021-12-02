@@ -114,7 +114,7 @@ end
 # time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, N_ens, infl = args
 
 function classic_smoother_state_exp()
-    args = (time_series, "etks", 0, 2500, 10, 1, 0.1, 20, 1.0, 21, 1.03)
+    args = (time_series, "etks", 0, 2500, 10, 1, 1.0, 40, 1.0, 21, 1.02)
     classic_state(args)
 end
 
@@ -125,7 +125,7 @@ end
 # param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function classic_smoother_param_exp()
-    args = (time_series, "etks", 0, 2500, 10, 1, 0.1, 20, 1.0, 0.03, 0.005, 21, 1.03, 1.0)
+    args = (time_series, "etks", 0, 2500, 10, 1, 1.0, 40, 1.0, 0.03, 0.001, 21, 1.02, 1.0)
     classic_param(args)
 end
 

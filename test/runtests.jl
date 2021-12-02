@@ -14,6 +14,7 @@ include("TestL96.jl")
 include("TestTimeSeriesGeneration.jl")
 include("TestIEEE39bus.jl")
 include("TestFilterExps.jl")
+include("TestClassicSmootherExps.jl")
 
 ##############################################################################################
 ##############################################################################################
@@ -52,6 +53,14 @@ end
     @test TestFilterExps.analyze_filter_param_L96()
     @test TestFilterExps.run_filter_state_IEEE39bus()
     @test TestFilterExps.analyze_filter_state_IEEE39bus()
+end
+
+# test set 6: test classic smoother state and parameter experiments
+@testset "Classic Smoother Experiments" begin
+    @test TestClassicSmootherExps.run_smoother_state_L96()
+    @test TestClassicSmootherExps.analyze_smoother_state_L96()
+    @test TestClassicSmootherExps.run_smoother_param_L96()
+    @test TestClassicSmootherExps.analyze_smoother_param_L96()
 end
 
 

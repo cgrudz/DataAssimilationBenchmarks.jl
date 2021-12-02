@@ -20,11 +20,16 @@ using Distributed
 # the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts1 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05_nanl_50000_spin_5000_h_0.010.jld2"
-ts2 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10_nanl_50000_spin_5000_h_0.010.jld2"
-ts3 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15_nanl_50000_spin_5000_h_0.010.jld2"
-ts4 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20_nanl_50000_spin_5000_h_0.010.jld2"
-ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25_nanl_50000_spin_5000_h_0.010.jld2"
+ts1 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05" * 
+      "_nanl_50000_spin_5000_h_0.050.jld2"
+ts2 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10" *
+      "_nanl_50000_spin_5000_h_0.050.jld2"
+ts3 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15" *
+      "_nanl_50000_spin_5000_h_0.050.jld2"
+ts4 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20" *
+      "_nanl_50000_spin_5000_h_0.050.jld2"
+ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25" *
+      "_nanl_50000_spin_5000_h_0.050.jld2"
 ##############################################################################################
 
 ##############################################################################################
