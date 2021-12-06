@@ -3,6 +3,7 @@
 ![DataAssimilationBenchmarks.jl logo](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/assets/dabenchmarks.png)
 
 [![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+[![status](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736/status.svg)](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 [![codecov](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl/branch/master/graph/badge.svg?token=3XLYTH8YSZ)](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl)
 
