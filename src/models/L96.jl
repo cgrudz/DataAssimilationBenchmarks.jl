@@ -33,9 +33,15 @@ end
 ##############################################################################################
 # time derivative
 
-function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
-	"""Time derivative for Lorenz-96 model, x is a single model state of size state_dim."""
 
+"""
+    dx_dt(x, t, dx_params)
+
+    Time derivative for Lorenz-96 model, x is a single model state of size state_dim, t
+    is a dummy time argument for consistency with integration methods, dx_params is a 
+    parameter dictionary which is called for the forcing parameter.
+"""
+function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the (only) derivative parameter for l96
     F = dx_params["F"][1]::Float64
     x_dim = length(x)

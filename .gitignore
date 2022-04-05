@@ -55,3 +55,7 @@ Thumbs.db
 *.h5
 *.png
 *.eps
+
+# no document files
+docs/build/
+
