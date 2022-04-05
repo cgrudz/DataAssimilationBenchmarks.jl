@@ -2,6 +2,12 @@
 
 Documentation for DataAssimilationBenchmarks.jl
 
+```@meta
+CurrentModule = L96
+```
+
 ```@docs
-DataAssimilationBenchmarks.L96.dx_dt
+dx_dt
+jacobian
+l96s_tay2_step!
 ```

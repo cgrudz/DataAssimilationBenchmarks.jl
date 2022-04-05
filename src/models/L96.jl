@@ -35,7 +35,7 @@ end
 
 
 """
-    dx_dt(x, t, dx_params)
+    dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
 
     Time derivative for Lorenz-96 model, x is a single model state of size state_dim, t
     is a dummy time argument for consistency with integration methods, dx_params is a 
@@ -87,11 +87,14 @@ end
 ##############################################################################################
 # linearized time derivative
 
-function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
-    """"Computes the Jacobian of Lorenz-96 about the state x.
-
+"""
+    jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict) 
+    
+    Computes the Jacobian of Lorenz-96 about the state x.
     Note that this is designed to load entries in a zeros array and return a sparse array
-    to make a compromise between memory and computational resources."""
+    to make a compromise between memory and computational resources.
+"""
+function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
 
     x_dim = length(x)
     dxF = zeros(x_dim, x_dim)
@@ -142,16 +145,19 @@ end
 # This depends on rho and alpha as above
 # NOTE: this Julia version still pending validation as in the above manuscript
 
-function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
-    """One step of integration rule for l96 second order taylor rule
-
+"""
+    l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
+    
+    One step of integration rule for l96 second order taylor rule
     The ρ and α are to be computed by the auxiliary functions, depending only on p,
     and supplied for all steps. This is the general formulation which includes,
     eg. dependence on the truncation of terms in the auxilliary function C with
     respect to the parameter p.  In general, truncation at p=1 is all that is
     necessary for order 2.0 convergence, and in this case C below is identically
     equal to zero.  This auxilliary function can be removed (and is removed) in other
-    implementations for simplicity."""
+    implementations for simplicity.
+"""
+function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
     # Infer model and parameters
     sys_dim = length(x)
