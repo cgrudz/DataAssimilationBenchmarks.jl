@@ -5,3 +5,8 @@ codecov: true
 after_success:
 - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 
+os: linux
+arch:
+  - arm64
+  - ppc64le
+  - s390x
