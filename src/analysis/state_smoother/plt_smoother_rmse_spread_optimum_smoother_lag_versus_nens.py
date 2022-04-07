@@ -108,7 +108,7 @@ for meth in method_list:
             stat_name = 'forecast'
 
         if meth == "etks_classic":
-            meth_name = "ETKS"
+            meth_name = "EnKS"
         elif meth == "etks_single_iteration":
             meth_name = "SIEnKS"
         elif meth == "enks-n-primal_classic":

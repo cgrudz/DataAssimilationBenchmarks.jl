@@ -64,35 +64,16 @@ end
 
 
 ##############################################################################################
-# vectorized time derivative for demonstration purposes only,
-# note this is much less efficient in speed and in memory than the above version
-
-function dx_dt_alt(x::VecA, t::Float64, dx_params::ParamDict)
-
-    # unpack the (only) derivative parameter for l96
-    F = dx_params["F"][1]::Float64
-    x_dim = length(x)
-    dx = Vector{Float64}(undef, x_dim)
-
-    # shift minus and plus indices, array compute the derivative over arbitrary ensemble sizes
-    x_m_2 = [x[end-1:end]; x[1:end-2]]
-    x_m_1 = [x[end:end]; x[1:end-1]]
-    x_p_1 = [x[2:end]; x[1:1]]
-
-    # compute the vectorized derivative
-    dx .= (x_p_1-x_m_2) .* x_m_1 - x .+ F
-end
-
-
-##############################################################################################
 # linearized time derivative
 
 """
     jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict) 
     
-    Computes the Jacobian of Lorenz-96 about the state x.
-    Note that this is designed to load entries in a zeros array and return a sparse array
-    to make a compromise between memory and computational resources.
+    Computes the Jacobian of Lorenz-96 about the state x. The time variable t is a dummy
+    variable for consistency with integration methods, dx_params is a parameter dictionary
+    which is called for the forcing parameter. Note that this is designed to load entries in
+    a zeros array and return a sparse array to make a compromise between memory
+    and computational resources.
 """
 function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
 
@@ -138,24 +119,24 @@ end
 
 ##############################################################################################
 # 2nd order strong taylor SDE step
-# This method is derived in
-# Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
-# with scalar additive noise, for benchmark twin experiments,
-# Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
-# This depends on rho and alpha as above
-# NOTE: this Julia version still pending validation as in the above manuscript
 
 """
     l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
     
     One step of integration rule for l96 second order taylor rule
-    The ρ and α are to be computed by the auxiliary functions, depending only on p,
-    and supplied for all steps. This is the general formulation which includes,
+    The ρ and α are to be computed by the auxiliary functions in the L96 submodule, depending
+    only on p, and supplied for all steps. This is the general formulation which includes,
     eg. dependence on the truncation of terms in the auxilliary function C with
     respect to the parameter p.  In general, truncation at p=1 is all that is
     necessary for order 2.0 convergence, and in this case C below is identically
     equal to zero.  This auxilliary function can be removed (and is removed) in other
     implementations for simplicity.
+    
+    This method is derived in
+    Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
+    with scalar additive noise, for benchmark twin experiments,
+    Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
+    NOTE: this Julia version still pending validation as in the above manuscript
 """
 function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 

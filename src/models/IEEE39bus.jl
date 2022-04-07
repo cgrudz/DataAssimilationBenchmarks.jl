@@ -19,15 +19,16 @@ ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 ##############################################################################################
 ##############################################################################################
 
-function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
-
-    """Time derivative of the phase and fequency of the effective-network swing eq model
-
+"""
+    dx_dt(x::VecA, t::Float64, dx_params::ParamDict) 
+    
+    Time derivative of the phase and fequency of the effective-network swing equation model.
     Input x is a 2 n_g vector of the phase and fequency at each of the n_g generator buses.
     The input dx_params is a ParamDict of all system parameters to be passed to the
     integration scheme.  The system is currenty defined autonomously to be run as an SDE,
-    noise perturbed steady state."""
-
+    noise perturbed steady state.
+"""
+function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the system parameters effective network of
     # Nishikawa, T., & Motter, A. E. (2015). Comparative analysis of existing
     # models for power-grid synchronization.

@@ -1,7 +1,6 @@
 ##############################################################################################
 module FilterExps
 ##############################################################################################
-##############################################################################################
 # imports and exports
 using JLD2
 using Random, Distributions, Statistics
@@ -10,17 +9,22 @@ using ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
 export filter_state, filter_param
 
 ##############################################################################################
-##############################################################################################
 # Type union declarations for multiple dispatch
 
 # dictionaries of parameters
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
 ##############################################################################################
-##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ##############################################################################################
+"""
+    filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64, 
+                             Int64,Float64})
 
+Filter state estimation twin experiment.  Twin experiment parameters such as the observation
+dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size 
+etc. are specified in the arguments.
+"""
 function filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,
                                   Int64,Float64})
 
@@ -174,8 +178,14 @@ end
 
 
 ##############################################################################################
+"""
+    filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64, 
+                             Float64,Int64,Float64,Float64})
 
-
+Filter joint state-parameter estimation twin experiment.  Twin experiment parameters such as
+the observation dimension, observation uncertainty, data assimilation method, number of
+cycles, ensemble size etc. are specified in the arguments.
+"""
 function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
                                   Float64,Int64,Float64,Float64})
     # time the experiment

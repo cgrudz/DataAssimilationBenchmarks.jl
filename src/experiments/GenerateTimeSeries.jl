@@ -1,17 +1,21 @@
-########################################################################################################################
+##############################################################################################
 module GenerateTimeSeries 
-########################################################################################################################
+##############################################################################################
 # imports and exports
 using Debugger, JLD2, Distributed
 using Random, Distributions, LinearAlgebra
 using ..DeSolvers, ..L96, ..IEEE39bus
 export L96_time_series, IEEE39bus_time_series
 
-########################################################################################################################
-# generate timeseries based on the model, solver and parameters
+##############################################################################################
+"""
+    L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64}) 
 
+Simulate a "free run" time series of the Lorenz-96 model for generating an observation process
+and truth twin for data assimilation twin experiments.  Time stepping parameters,
+stochasticity of the dynamics, and system parameters are specified in the arguments.
+"""
 function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
-
     # time the experiment
     t1 = time()
 
@@ -107,11 +111,16 @@ function L96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Flo
 end
 
 
-########################################################################################################################
-# generate timeseries based on the parameter tuple
+##############################################################################################
+"""
+    IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64}) 
 
+Simulate a "free run" time series of the IEEE 39 bus swing equation model for generating an
+observation process and truth twin for data assimilation twin experiments. Time stepping
+parameters, stochasticity of the dynamics, and system parameters are specified in the
+arguments.
+"""
 function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
-
     # time the experiment
     t1 = time()
 
@@ -211,7 +220,7 @@ function IEEE39bus_time_series(args::Tuple{Int64,Float64,Int64,Int64,Float64})
 end
 
 
-########################################################################################################################
+##############################################################################################
 # end module
 
 end

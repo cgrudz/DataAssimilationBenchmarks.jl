@@ -9,25 +9,38 @@ export rk4_step!, tay2_step!, em_step!
 ##############################################################################################
 # Type union declarations for multiple dispatch and type aliases
 
-# vectors and ensemble members of sample
+"""
+    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+Type union of vectors and ensemble members of sample for using in integration schemes and
+related array operations.
+"""
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
-# dictionary for model parameters
+"""
+    ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
+Dictionary for model parameters to be passed to derivative functions by name.
+"""
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
-# dictionary containing key and index pairs to subset the state vector and
-# merge with dx_params
+"""
+    ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+
+Dictionary containing key and index pairs to subset the state vector and
+then merge with dx_params in parameter estimation problems.
+"""
 ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 ##############################################################################################
 ##############################################################################################
-# four-stage Runge-Kutta scheme
+"""
+    rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any}) 
 
-function rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
-    """Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020
+Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020.
+The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
+Arguments are given as:
 
-    The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
-    Arguments are given as
     x            -- array or sub-array of a single state possibly including parameter values
     t            -- time point
     kwargs       -- should include dx_dt, the paramters for the dx_dt and optional arguments
@@ -44,8 +57,8 @@ function rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
     param_sample -- ParamSample dictionary for merging extended state with dx_params
     ξ            -- random array size state_dim, can be defined in kwargs
                     to provide a particular realization for method validation
-    """
-
+"""
+function rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
     # unpack the integration scheme arguments and the parameters of the derivative
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
@@ -132,20 +145,20 @@ end
 
 
 ##############################################################################################
-# deterministic 2nd order Taylor Method
+"""
+    tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
 
-function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
-    """Second order Taylor method for step size h and state vector x.
-
-    Arguments are given as
+Deterministic second order (autonomous) Taylor method for step size h and state vector x.
+Time variable t is just a dummy variable, where this method is not defined for non-autonomous
+dynamics.  Arguments are given as
     x          -- array of a single state possibly including parameter values
     kwargs     -- should include dx_dt, the paramters for the dx_dt and optional arguments
     dx_dt      -- time derivative function with arguments x and dx_params
     dx_params  -- parameters necessary to resolve dx_dt, not including
                   parameters to be estimated in the extended state vector 
     h          -- numerical discretization step size
-    """
-
+"""
+function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     # unpack dx_params
     h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict
@@ -162,13 +175,13 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 end
 
 ##############################################################################################
-# Euler-Murayama step
+"""
+    em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
 
+This will propagate the state x one step forward by Euler-Murayama scheme.
+Step size is h, the Wiener process is assumed to have a scalar diffusion coefficient.
+"""
 function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
-    """This will propagate the state x one step forward by Euler-Murayama
-
-    Step size is h, the Wiener process is assumed to have a scalar diffusion coefficient"""
-
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
     dx_params = kwargs["dx_params"]::ParamDict

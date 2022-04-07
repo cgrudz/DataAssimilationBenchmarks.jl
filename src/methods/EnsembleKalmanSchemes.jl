@@ -15,39 +15,66 @@ export alternating_obs_operator, analyze_ens, analyze_ens_para, rand_orth,
 ##############################################################################################
 # Type union declarations for multiple dispatch and type aliases
 
-# covariance matrix types
+"""
+    CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+
+Type union of covariance matrix types, for optimized computation based on characteristics.
+"""
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 
-# conditioning matrix types
+"""
+    ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
+
+Type union of conditioning matrix types, which will be used for optimization routines in the
+transform method.
+"""
 ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
 
-# right transform types, including soley a transform, or transform, weights rotation package
+"""
+    TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
+                   Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
+                   Array{Float64,2}}
+
+Type union of right transform types, including soley a transform, or a transform, weights
+and rotation package.
+"""
 TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
                Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
                Array{Float64,2}}
 
-# vectors and ensemble members of sample
+"""
+    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+Type union of vectors and ensemble members of sample for using in integration schemes and
+related array operations.
+"""
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
-# arrays and views of arrays
+"""
+    ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
+
+Type union of arrays and views of arrays for use within ensemble conditioning operations,
+integration schemes and other array operations.
+"""
 ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
 
 ##############################################################################################
 ##############################################################################################
 # Main methods, debugged and validated
 ##############################################################################################
-# alternating id obs
+"""
+    alternating_obs_operator(ens::Array{Float64,2}, obs_dim::Int64, 
+                             kwargs::Dict{String,Any})
 
+Observation of alternating state vector components, possibly nonlinear transformation.
+This selects components to observe based on the observation dimension and if
+parameter estimation is being performed.  Parameters are always unobservable,
+and even states will be removed from the state vector until the observation dimension
+is appropriate.  Nonlinear observations are optional, as described for the
+Lorenz-96 model by Asch, Bocquet, Nodet pg. 181.
+"""
 function alternating_obs_operator(ens::Array{Float64,2}, obs_dim::Int64,
                                   kwargs::Dict{String,Any})
-    """Observation of alternating state vector components, possibly nonlinear transformation.
-
-    This selects components to observe based on the observation dimension and if
-    parameter estimation is being performed.  Parameters are always unobservable,
-    and even states will be removed from the state vector until the observation dimension
-    is appropriate.  Nonlinear observations are optional, as described for the
-    Lorenz-96 model by Asch, Bocquet, Nodet pg. 181 """
-
     sys_dim, N_ens = size(ens)
 
     if haskey(kwargs, "state_dim")
@@ -109,10 +136,12 @@ end
 
 
 ##############################################################################################
-# ensemble state statistics
+"""
+    analyze_ens(ens::ArView, truth::Vector{Float64}) 
 
+Computes the ensemble RMSE as compared with truth twin, and the ensemble spread.
+"""
 function analyze_ens(ens::ArView, truth::Vector{Float64})
-    """Computes the ensemble RMSE as compared with truth twin, and the ensemble spread."""
 
     # infer the shapes
     sys_dim, N_ens = size(ens)
@@ -133,10 +162,12 @@ end
 
 
 ##############################################################################################
-# ensemble parameter statistics
+"""
+    analyze_ens_para(ens::ArView, truth::Vector{Float64}) 
 
+Computes the ensemble RMSE as compared with truth twin, and the ensemble spread.
+"""
 function analyze_ens_para(ens::ArView, truth::Vector{Float64})
-    """Computes the ensemble RMSE as compared with truth twin, and the ensemble spread."""
 
     # infer the shapes
     param_dim, N_ens = size(ens)
@@ -160,11 +191,12 @@ end
 
 
 ##############################################################################################
-# random mean preserving orthogonal matrix, auxilliary function for determinstic EnKF schemes
+"""
+    rand_orth(N_ens::Int64)
 
+This generates a random. mean preserving, orthogonal matrix as in Sakov & Oke 2008.
+"""
 function rand_orth(N_ens::Int64)
-    """This generates a mean preserving random orthogonal matrix as in sakov oke 08"""
-    
     # generate the random, mean preserving orthogonal transformation within the 
     # basis given by the B matrix
     Q = rand(Normal(), N_ens - 1, N_ens - 1)
@@ -186,15 +218,17 @@ end
 
 
 ##############################################################################################
-# dynamic state variable inflation
+"""
+    inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64, 
+                   state_dim::Int64)
 
+
+Dynamic state variable multiplicative covariance inflation.  State variables are assumed to
+be in the leading rows, while extended state variables, parameter variables are after.
+Multiplicative inflation is performed only in the leading components.
+"""
 function inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64,
                         state_dim::Int64)
-    """State variables are assumed to be in the leading rows, while extended
-    state variables, parameter variables are after.
-    
-    Multiplicative inflation is performed only in the leading components."""
-
     if inflation != 1.0
         x_mean = mean(ens, dims=2)
         X = ens .- x_mean
@@ -206,15 +240,15 @@ end
 
 
 ##############################################################################################
-# parameter multiplicative inflation
+"""
+    inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64, 
+                   state_dim::Int64)
 
+Parameter variable multiplicative covariance inflation. State variables are assumed to
+be in the leading rows, while extended state, parameter variables are after. Multiplicative
+inflation is performed only in the trailing components."""
 function inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64,
                         state_dim::Int64)
-    """State variables are assumed to be in the leading rows, while extended
-    state, parameter variables are after.
-    
-    Multiplicative inflation is performed only in the trailing components."""
-
     if inflation == 1.0
         return ens
     else
@@ -228,8 +262,12 @@ end
 
 
 ##############################################################################################
-# auxiliary function for square roots of multiple types of covariance matrices wrapped 
+"""
+    square_root(M::T) where {T <: CovM} 
 
+Auxiliary function for computing the square roots of multiple types of covariance matrices,
+with the subroutines defined according to the sub-type.
+"""
 function square_root(M::T) where {T <: CovM}
     
     if T <: UniformScaling
@@ -245,8 +283,14 @@ end
 
 
 ##############################################################################################
-# auxiliary function for square root inverses of multiple types of covariance matrices wrapped
+"""
+    square_root_inv(M::T) where {T <: CovM} 
 
+Auxiliary function for computing the square root inverse of multiple types of covariance
+matrices, with the subroutines defined according to the sub-type. This will optionally return
+a computation of the inverse and the square root itself all as a byproduct of the singular
+value decomposition computation.
+"""
 function square_root_inv(M::T; sq_rt::Bool=false, inverse::Bool=false,
                          full::Bool=false) where {T <: CovM}
     # if sq_rt=true will return the square root additionally for later use
@@ -306,19 +350,25 @@ end
 
 
 ##############################################################################################
-# transform auxilliary function for EnKF, ETKF(-N), EnKS, ETKS(-N), IEnKS(-N)
+"""
+    transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},        
+           obs_cov::CovM, kwargs::Dict{String,Any}; conditioning::ConM=1000.0I, 
+           m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
+           tol::Float64 = 0.0001,
+           j_max::Int64=40,
+           Q::CovM=1.0I)
 
+Computes transform and related values for various flavors of ensemble Kalman schemes.
+Serves as an auxilliary function for EnKF, ETKF(-N), EnKS, ETKS(-N), IEnKS(-N), where
+"analysis" is a string which determines the type of transform update.  The observation
+error covariance should be of UniformScaling, Diagonal or Symmetric type.
+"""
 function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
                    obs_cov::CovM, kwargs::Dict{String,Any}; conditioning::ConM=1000.0I, 
                    m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
                    tol::Float64 = 0.0001,
                    j_max::Int64=40,
                    Q::CovM=1.0I)
-    """Computes transform and related values for various flavors of ensemble Kalman schemes.
-
-    "analysis" is a string which determines the type of transform update.  The observation
-    error covariance should be of UniformScaling, Diagonal or Symmetric type."""
-
     if analysis=="enkf" || analysis=="enks"
         ## This computes the stochastic transform for the EnKF/S as in Carrassi, et al. 2018
         # step 0: infer the ensemble, obs, and state dimensions
@@ -962,16 +1012,15 @@ end
 
 
 ##############################################################################################
-# auxilliary function for updating ensembles 
+""" 
+    ens_update!(ens::ArView, transform::T1) where {T1 <: TransM} 
 
+Updates ensemble by right-transform method. In the case where this follows the stochastic EnKF
+as in Carrassi et al. 2018, this simply performs right mutliplication.  All other cases use
+the 3-tuple including the right transform for the anomalies, the weights for the mean and the
+random, mean-preserving orthogonal matrix.
+"""
 function ens_update!(ens::ArView, transform::T1) where {T1 <: TransM}
-    """ Updates ensemble by right-transform method
-
-    In the case where this follows the stochastic EnKF as in Carrassi et al. 2018,
-    this simply performs right mutliplication.  All other cases use the 3-tuple including
-    the right transform for the anomalies, the weights for the mean and the random, mean-
-    preserving orthogonal matrix."""
-
     if T1 <: Array{Float64,2}
         # step 1: update the ensemble with right transform
         ens .= ens * transform 
@@ -995,16 +1044,17 @@ end
 
 
 ##############################################################################################
-# general filter code 
+"""
+    ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},  
+                    obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
+General filter analysis step, wrapping the transform / update, and inflation steps.
+Optional keyword argument includes state_dim for extended state including parameters.
+In this case, a value for the parameter covariance inflation should be included
+in addition to the state covariance inflation.
+"""
 function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
                          obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
-
-    """General filter analysis step
-
-    Optional keyword argument includes state_dim for extended state including parameters.
-    In this case, a value for the parameter covariance inflation should be included
-    in addition to the state covariance inflation."""
 
     # step 0: infer the system, observation and ensemble dimensions 
     sys_dim, N_ens = size(ens)
@@ -1035,21 +1085,21 @@ end
 
 
 ##############################################################################################
-# classical version lag_shift_smoother
+"""
+    ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},  
+                        obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
 
+Lag-shift ensemble kalman smoother analysis step, classical version.
+Classic enks uses the last filtered state for the forecast, different from the 
+iterative schemes which use the once or multiple-times re-analized posterior for
+the initial condition for the forecast of the states to the next shift.
+
+Optional argument includes state dimension for extended state including parameters.
+In this case, a value for the parameter covariance inflation should be included
+in addition to the state covariance inflation.
+"""    
 function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
                              obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
-
-    """Lag-shift ensemble kalman smoother analysis step, classical version
-
-    Classic enks uses the last filtered state for the forecast, different from the 
-    iterative schemes which use the once or multiple-times re-analized posterior for
-    the initial condition for the forecast of the states to the next shift.
-
-    Optional argument includes state dimension for extended state including parameters.
-    In this case, a value for the parameter covariance inflation should be included
-    in addition to the state covariance inflation."""
-    
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]
@@ -1159,20 +1209,21 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
 end
 
 ##############################################################################################
-# single iteration, correlation-based lag_shift_smoother
+"""
+    ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},       
+                                 obs::Array{Float64,2}, obs_cov::CovM,
+                                 state_infl::Float64, kwargs::Dict{String,Any})
 
+Lag-shift ensemble kalman smoother analysis step, single iteration version.
+Single-iteration enks uses the final re-analyzed posterior initial state for the forecast,
+which is pushed forward in time to shift-number of observation times.
+Optional argument includes state dimension for an extended state including parameters.
+In this case, a value for the parameter covariance inflation should be included in
+addition to the state covariance inflation.
+"""
 function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
                                       obs::Array{Float64,2}, obs_cov::CovM,
                                       state_infl::Float64, kwargs::Dict{String,Any})
-
-    """Lag-shift ensemble kalman smoother analysis step, single iteration version 
-
-    Single-iteration enks uses the final re-analyzed posterior initial state for the forecast,
-    which is pushed forward in time to shift-number of observation times.
-    Optional argument includes state dimension for an extended state including parameters.
-    In this case, a value for the parameter covariance inflation should be included in
-    addition to the state covariance inflation."""
-    
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
@@ -1443,23 +1494,23 @@ end
 
 
 ##############################################################################################
+"""
+    ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},                   
+                             obs::Array{Float64,2}, obs_cov::CovM, state_infl::Float64,
+                             kwargs::Dict{String,Any}; ϵ::Float64=0.0001,
+                             tol::Float64=0.001, max_iter::Int64=5)
 
+Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
+ienks uses the final re-analyzed posterior initial state for the forecast, 
+which is pushed forward in time from the initial conidtion to shift-number of observation
+times. Optional argument includes state dimension for an extended state including parameters.
+In this case, a value for the parameter covariance inflation should be included
+in addition to the state covariance inflation.
+"""
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
                                   obs::Array{Float64,2}, obs_cov::CovM, state_infl::Float64,
                                   kwargs::Dict{String,Any}; ϵ::Float64=0.0001,
                                   tol::Float64=0.001, max_iter::Int64=5)
-
-
-    """Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
-
-    ienks uses the final re-analyzed posterior initial state for the forecast, 
-    which is pushed forward in time from the initial conidtion to shift-number of observation
-    times.
-
-    Optional argument includes state dimension for an extended state including parameters.
-    In this case, a value for the parameter covariance inflation should be included
-    in addition to the state covariance inflation."""
-    
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
