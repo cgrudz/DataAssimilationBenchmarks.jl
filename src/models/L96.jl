@@ -2,22 +2,9 @@
 module L96
 ##############################################################################################
 # imports and exports
-using Random, Distributions
-using LinearAlgebra, SparseArrays
+using ..DataAssimilationBenchmarks 
 export dx_dt, jacobian, l96s_tay_2_step!, ρ, α
 
-##############################################################################################
-##############################################################################################
-# Type union declarations for multiple dispatch
-# and type aliases
-
-# vectors and ensemble members of sample
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-# dictionary for model parameters
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-##############################################################################################
 ##############################################################################################
 # auxiliary function to return modular indices for the lorenz model
 

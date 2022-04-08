@@ -2,37 +2,9 @@
 module DeSolvers
 ##############################################################################################
 # imports and exports
-using Random, Distributions
+using ..DataAssimilationBenchmarks
 export rk4_step!, tay2_step!, em_step!
 
-##############################################################################################
-##############################################################################################
-# Type union declarations for multiple dispatch and type aliases
-
-"""
-    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-Type union of vectors and ensemble members of sample for using in integration schemes and
-related array operations.
-"""
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-"""
-    ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-Dictionary for model parameters to be passed to derivative functions by name.
-"""
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-"""
-    ParamSample = Dict{String, Vector{UnitRange{Int64}}}
-
-Dictionary containing key and index pairs to subset the state vector and
-then merge with dx_params in parameter estimation problems.
-"""
-ParamSample = Dict{String, Vector{UnitRange{Int64}}}
-
-##############################################################################################
 ##############################################################################################
 """
     rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any}) 

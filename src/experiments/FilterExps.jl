@@ -2,17 +2,11 @@
 module FilterExps
 ##############################################################################################
 # imports and exports
-using JLD2
-using Random, Distributions, Statistics
+using Random, Distributions
 using LinearAlgebra
-using ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
+using JLD2, HDF5
+using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
 export filter_state, filter_param
-
-##############################################################################################
-# Type union declarations for multiple dispatch
-
-# dictionaries of parameters
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
 ##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory

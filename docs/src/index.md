@@ -1,6 +1,3 @@
-# DataAssimilationBenchmarks.jl
+# Home
 
-Documentation for DataAssimilationBenchmarks.jl
 
-```@contents
-```

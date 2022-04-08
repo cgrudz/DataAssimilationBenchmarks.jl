@@ -7,12 +7,11 @@ using Distributed
 @everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/methods")
 @everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/models")
 @everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/experiments")
-@everywhere using JLD, ..FilterExps, ..SmootherExps, ..EnsembleKalmanSchemes, ..DeSolvers,
-                  ..L96, ..ParallelExperimentDriver
+@everywhere using JLD2, ..DataAssimilationBenchmarks, ..FilterExps, ..SmootherExps,
+                  ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..ParallelExperimentDriver
 @everywhere export experiment 
 #@everywhere export wrap_exp
 
-##############################################################################################
 ##############################################################################################
 ## Timeseries data 
 ##############################################################################################
@@ -30,19 +29,16 @@ ts4 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tan
       "_nanl_50000_spin_5000_h_0.050.jld2"
 ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25" *
       "_nanl_50000_spin_5000_h_0.050.jld2"
-##############################################################################################
 
 ##############################################################################################
 ## Experiment parameter generation 
-##############################################################################################
 ##############################################################################################
 
 ##############################################################################################
 # Filters
 ##############################################################################################
-##############################################################################################
-# filter_state 
-##############################################################################################
+## filter_state 
+#
 ## [time_series, scheme, seed, nanl, obs_un, obs_dim, N_ens, infl] = args
 #
 #schemes = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
@@ -69,7 +65,6 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
 #
 ##############################################################################################
 # filter_param 
-##############################################################################################
 ## [time_series, scheme, seed, nanl, obs_un, obs_dim, param_err, param_wlk, N_ens,
 ##  state_infl, param_infl] = args
 #
@@ -103,7 +98,6 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
 #experiment = FilterExps.filter_param
 #
 #
-##############################################################################################
 ##############################################################################################
 # Classic smoothers
 ##############################################################################################
@@ -204,8 +198,6 @@ experiment = SmootherExps.classic_state
 #experiment = SmootherExps.classic_param
 #
 #
-##############################################################################################
-
 ##############################################################################################
 # Single iteration smoothers
 ##############################################################################################

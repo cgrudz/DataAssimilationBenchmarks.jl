@@ -1,64 +1,16 @@
 ##############################################################################################
 module EnsembleKalmanSchemes
 ##############################################################################################
-##############################################################################################
 # imports and exports
 using Random, Distributions, Statistics
 using LinearAlgebra, SparseArrays
+using ..DataAssimilationBenchmarks
 using Optim, LineSearches
 export alternating_obs_operator, analyze_ens, analyze_ens_para, rand_orth, 
        inflate_state!, inflate_param!, transform, square_root, square_root_inv, 
        ensemble_filter, ls_smoother_classic,
        ls_smoother_single_iteration, ls_smoother_gauss_newton
 
-##############################################################################################
-##############################################################################################
-# Type union declarations for multiple dispatch and type aliases
-
-"""
-    CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
-
-Type union of covariance matrix types, for optimized computation based on characteristics.
-"""
-CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
-
-"""
-    ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
-
-Type union of conditioning matrix types, which will be used for optimization routines in the
-transform method.
-"""
-ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
-
-"""
-    TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
-                   Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
-                   Array{Float64,2}}
-
-Type union of right transform types, including soley a transform, or a transform, weights
-and rotation package.
-"""
-TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
-               Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
-               Array{Float64,2}}
-
-"""
-    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-Type union of vectors and ensemble members of sample for using in integration schemes and
-related array operations.
-"""
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-"""
-    ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
-
-Type union of arrays and views of arrays for use within ensemble conditioning operations,
-integration schemes and other array operations.
-"""
-ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
-
-##############################################################################################
 ##############################################################################################
 # Main methods, debugged and validated
 ##############################################################################################

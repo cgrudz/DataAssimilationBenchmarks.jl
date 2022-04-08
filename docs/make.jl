@@ -7,18 +7,26 @@ makedocs(
     modules = [DataAssimilationBenchmarks],
     pages = [
              "Home" => "index.md",
-             "Models" => Any[
-                "L96" => "models/L96.md",
-                "IEEE39bus" => "models/IEEE39bus.md"
+             "DataAssimilationBenchmarks" => Any[
+                "Introduction" => "home/Introduction.md",
+                "Getting Started" => "home/Getting Started.md",
+                "Types" => "home/DataAssimilationBenchmarks.md",
                 ],
-             "Methods" => Any[
-                "DeSolvers" => "methods/DeSolvers.md",
-                "EnsembleKalmanSchemes" => "methods/EnsembleKalmanSchemes.md"
-               ],
-             "Experiments" => Any[
-                "GenerateTimeSeries" => "experiments/GenerateTimeSeries.md",
-                "FilterExperiments" => "experiments/FilterExps.md",
-               ]
+             "Submodules" => Any[
+                 "Models" => Any[
+                    "L96" => "submodules/models/L96.md",
+                    "IEEE39bus" => "submodules/models/IEEE39bus.md"
+                    ],
+                 "Methods" => Any[
+                    "DeSolvers" => "submodules/methods/DeSolvers.md",
+                    "EnsembleKalmanSchemes" => "submodules/methods/EnsembleKalmanSchemes.md"
+                   ],
+                 "Experiments" => Any[
+                    "GenerateTimeSeries" => "submodules/experiments/GenerateTimeSeries.md",
+                    "FilterExps" => "submodules/experiments/FilterExps.md",
+                    "SmootherExps" => "submodules/experiments/SmootherExps.md",
+                   ]
+                ]
             ]
 )
 

@@ -1,8 +1,76 @@
 ##############################################################################################
 module DataAssimilationBenchmarks
 ##############################################################################################
-##############################################################################################
 # imports and exports
+using LinearAlgebra
+export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM
+
+##############################################################################################
+# Global type union declarations for multiple dispatch and type aliases
+
+"""
+    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+Type union of vectors and ensemble members of sample for using in integration schemes and
+related array operations.
+"""
+VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+
+"""
+    ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
+
+Type union of arrays and views of arrays for use within ensemble conditioning operations,
+integration schemes and other array operations.
+"""
+ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
+
+"""
+    ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
+Dictionary for model parameters to be passed to derivative functions by name.
+"""
+ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+
+"""
+    ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+
+Dictionary containing key and index pairs to subset the state vector and
+then merge with dx_params in parameter estimation problems.
+"""
+ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+
+
+"""
+    CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+
+Type union of covariance matrix types, for optimized computation based on characteristics.
+"""
+CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+
+"""
+    ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
+
+Type union of conditioning matrix types, which will be used for optimization routines in the
+transform method.
+"""
+ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
+
+"""
+    TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
+                   Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
+                   Array{Float64,2}}
+
+Type union of right transform types, including soley a transform, or a transform, weights
+and rotation package.
+"""
+TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
+               Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
+               Array{Float64,2}}
+
+
+
+##############################################################################################
+# imports and exports of sub-modules
 include("methods/DeSolvers.jl")
 include("methods/EnsembleKalmanSchemes.jl")
 include("models/L96.jl")
@@ -17,13 +85,13 @@ using .L96
 using .IEEE39bus
 using .GenerateTimeSeries
 using .FilterExps
+using .SmootherExps
 using .SingleExperimentDriver
 export DeSolvers, EnsembleKalmanSchemes, L96, IEEE39bus, GenerateTimeSeries, FilterExps,
        SingleExperimentDriver
 
-
 ##############################################################################################
-##############################################################################################
+# info
 
 function Info()
     print("  _____        _                         ")
@@ -57,7 +125,7 @@ function Info()
 
     print("\n")
     printstyled(" Welcome to DataAssimilationBenchmarks!\n", bold=true)
-    print(" Version 0.10, Copyright 2021 Colin James Grudzien (cgrudz@mailbox.org)\n")
+    print(" Version 0.20, Copyright 2021 Colin James Grudzien (cgrudz@mailbox.org)\n")
     print(" Licensed under the Apache License, Version 2.0 \n")
     print(" https://github.com/cgrudz/DataAssimilationBenchmarks/blob/master/LICENSE.md\n")
     print("\n")

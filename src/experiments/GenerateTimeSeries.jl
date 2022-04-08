@@ -2,9 +2,10 @@
 module GenerateTimeSeries 
 ##############################################################################################
 # imports and exports
-using Debugger, JLD2, Distributed
-using Random, Distributions, LinearAlgebra
-using ..DeSolvers, ..L96, ..IEEE39bus
+using Random, Distributions
+using LinearAlgebra
+using JLD2, HDF5
+using ..DataAssimilationBenchmarks, ..DeSolvers, ..L96, ..IEEE39bus
 export L96_time_series, IEEE39bus_time_series
 
 ##############################################################################################

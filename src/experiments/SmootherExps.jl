@@ -1,34 +1,25 @@
 ##############################################################################################
-##############################################################################################
 module SmootherExps
 ##############################################################################################
-##############################################################################################
 # imports and exports
-using Random, Distributions, Statistics
-using JLD2
+using Random, Distributions
 using LinearAlgebra
-using ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
+using JLD2, HDF5
+using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
 export classic_state, classic_param, single_iteration_state, single_iteration_param,
        iterative_state, iterative_param
 
 ##############################################################################################
-##############################################################################################
-# Type union declarations for multiple dispatch
-
-# vectors and ensemble members of sample
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-# dictionary for model parameters
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-##############################################################################################
+## Type union declarations for multiple dispatch
+#
+## vectors and ensemble members of sample
+#VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+#
+## dictionary for model parameters
+#ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+#
 ##############################################################################################
 # Main smoothing experiments, debugged and validated for use with schemes in methods directory
-##############################################################################################
-# All experiments are funcitonalized so that they can be called from an array of parameter
-# values which will typically be varied with naive parallelism.  Relevant arguments and
-# experimental results are dumped as a side effect to a dictionary in a JLD.
-# Returns runtime in minutes.
 ##############################################################################################
 
 function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,

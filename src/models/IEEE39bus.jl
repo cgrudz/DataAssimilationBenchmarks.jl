@@ -2,31 +2,18 @@
 module IEEE39bus
 ##############################################################################################
 # imports and exports
-using Random, Distributions
-using LinearAlgebra
+using ..DataAssimilationBenchmarks
 export dx_dt
 
 ##############################################################################################
-##############################################################################################
-# Type union declarations for multiple dispatch and type aliases
-
-# vectors and ensemble members of sample
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-
-# dictionary for model parameters
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-##############################################################################################
-##############################################################################################
-
 """
     dx_dt(x::VecA, t::Float64, dx_params::ParamDict) 
     
-    Time derivative of the phase and fequency of the effective-network swing equation model.
-    Input x is a 2 n_g vector of the phase and fequency at each of the n_g generator buses.
-    The input dx_params is a ParamDict of all system parameters to be passed to the
-    integration scheme.  The system is currenty defined autonomously to be run as an SDE,
-    noise perturbed steady state.
+Time derivative of the phase and fequency of the effective-network swing equation model.
+Input x is a 2 n_g vector of the phase and fequency at each of the n_g generator buses.
+The input dx_params is a ParamDict of all system parameters to be passed to the
+integration scheme.  The system is currenty defined autonomously to be run as an SDE,
+noise perturbed steady state.
 """
 function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the system parameters effective network of
