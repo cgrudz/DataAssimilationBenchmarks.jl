@@ -10,7 +10,7 @@ makedocs(
              "DataAssimilationBenchmarks" => Any[
                 "Introduction" => "home/Introduction.md",
                 "Getting Started" => "home/Getting Started.md",
-                "Types" => "home/DataAssimilationBenchmarks.md",
+                "Global Types" => "home/DataAssimilationBenchmarks.md",
                 ],
              "Submodules" => Any[
                  "Models" => Any[
@@ -25,6 +25,11 @@ makedocs(
                     "GenerateTimeSeries" => "submodules/experiments/GenerateTimeSeries.md",
                     "FilterExps" => "submodules/experiments/FilterExps.md",
                     "SmootherExps" => "submodules/experiments/SmootherExps.md",
+                    "Slurm" => "submodules/experiments/Slurm.md",
+                   ],
+                 "Analysis" => Any[
+                    "ProcessExperimentData" => "submodules/analysis/ProcessExperimentData.md",
+                    "PlotExperimentData" => "submodules/analysis/PlotExperimentData.md",
                    ]
                 ]
             ]

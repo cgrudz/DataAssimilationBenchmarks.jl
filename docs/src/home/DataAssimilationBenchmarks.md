@@ -1,4 +1,4 @@
-# DataAssimilationBenchmarks.jl
+# Global Types 
 
 ```@autodocs
 Modules = [DataAssimilationBenchmarks]
