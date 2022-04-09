@@ -1,7 +1,5 @@
 # Description
 
-![DataAssimilationBenchmarks.jl logo](assets/dabenchmarks.png)
-
 This is my personal data assimilation benchmark research code with an emphasis on testing and validation
 of ensemble-based filters and sequential smoothers in chaotic toy models.  The code is meant to be performant,
 in the sense that large hyper-parameter discretizations can be explored to determine structural sensitivity
