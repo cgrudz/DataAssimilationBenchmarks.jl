@@ -8,27 +8,31 @@ using JLD2, HDF5
 using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
 export classic_state, classic_param, single_iteration_state, single_iteration_param,
        iterative_state, iterative_param
-
-##############################################################################################
-## Type union declarations for multiple dispatch
-#
-## vectors and ensemble members of sample
-#VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-#
-## dictionary for model parameters
-#ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-#
 ##############################################################################################
 # Main smoothing experiments, debugged and validated for use with schemes in methods directory
 ##############################################################################################
+"""
+    classic_state((time_series::String, method::String, seed::Int64, nanl::Int64, lag::Int64,
+                   shift::Int64, obs_un::Float64, obs_dim::Int64, γ::Float64, N_ens::Int64, 
+                   s_infl::Float64)::NamedTuple)
 
-function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,
-                                   Float64,Int64,Float64})
+Classic ensemble Kalman smoother state estimation twin experiment.  Twin experiment parameters
+such as the observation dimension, observation uncertainty, data assimilation method, number
+of cycles, ensemble size etc. are specified in the arguments. NOTE: the classic scheme does
+not use multiple data assimilation and we hard code `mda=false` in the function for
+consistency with other methods.
+"""
+function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs_dim,
+                        γ, N_ens, s_infl)::NamedTuple{
+                      (:time_series,:method,:seed,:nanl,:lag,:shift,:obs_un,:obs_dim,  
+                       :γ,:N_ens,:s_infl),
+                      <:Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,
+                              Float64,Int64,Float64}})
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
+    
 
     # define static mda parameter, not used for classic smoother 
     mda = false
@@ -123,7 +127,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
         kwargs["posterior"] = post
         # observations indexed in absolute time
         analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov,
-                                       state_infl, kwargs)
+                                       s_infl, kwargs)
         ens = analysis["ens"]
         fore = analysis["fore"]
         filt = analysis["filt"]
@@ -198,14 +202,14 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                             "h" => h,
                             "N_ens" => N_ens, 
                             "mda"  => mda,
-                            "state_infl" => round(state_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2)
                            )
     
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]
     end
     
-    path = joinpath(@__DIR__, "../data/", method * "-classic/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "-classic/"
     name = method * "-classic_" * model *
                     "_state_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -220,7 +224,7 @@ function classic_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                     "_shift_" * lpad(shift, 3, "0") *
                     "_mda_" * string(mda) * 
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
                     ".jld2"
 
     save(path * name, data)
@@ -230,15 +234,26 @@ end
 
 
 ##############################################################################################
+"""
+    classic_param((time_series::String, method::String, seed::Int64, nanl::Int64, lag::Int64,
+                   shift::Int64, obs_un::Float64, obs_dim::Int64, γ::Float64, p_err::Float64,
+                   p_wlk::Float64, N_ens::Int64, s_infl::Float64,
+                   s_infl::Float64})::NamedTuple)
 
-function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,
-                                   Float64,Float64,Float64,Int64,Float64,Float64})
+Classic ensemble Kalman smoother joint state-parameter estimation twin experiment.  Twin
+experiment parameters such as the observation dimension, observation uncertainty, data
+assimilation method, number of cycles, ensemble size etc. are specified in the arguments.
+NOTE: the classic scheme does not use multiple data assimilation and we hard code `mda=false`
+in the function for consistency with other methods.
+"""
+function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ,  
+                        p_err, p_wlk, N_ens, s_infl, p_infl)::NamedTuple{
+                      (:time_series,:method,:seed,:nanl,:lag,:shift,:obs_un,:obs_dim,:γ,   
+                       :p_err,:p_wlk,:N_ens,:s_infl,:p_infl),
+                      <:Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,
+                                  Float64,Float64,Float64,Int64,Float64,Float64}})
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, 
-    param_err, param_wlk, N_ens, state_infl, param_infl = args
 
     # define static mda parameter, not used for classic smoother 
     mda=false
@@ -295,7 +310,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
     # note here the covariance is supplied such that the standard deviation is a percent
     # of the parameter value
     param_ens = rand(MvNormal(param_truth[:],
-                              diagm(param_truth[:] * param_err).^2.0), 
+                              diagm(param_truth[:] * p_err).^2.0), 
                               N_ens
                     )
     
@@ -317,8 +332,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                               "dx_params" => dx_params,
                               "gamma" => γ,
                               "state_dim" => state_dim,
-                              "param_wlk" => param_wlk,
-                              "param_infl" => param_infl,
+                              "p_wlk" => p_wlk,
+                              "p_infl" => p_infl,
                               "shift" => shift,
                               "mda" => mda 
                              )
@@ -365,7 +380,7 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
         # observations indexed in absolute time
         analysis = ls_smoother_classic(
                                        method, ens, obs[:, i: i + shift - 1],
-                                       obs_cov, state_infl, kwargs
+                                       obs_cov, s_infl, kwargs
                                       )
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -452,8 +467,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                             "obs_dim" => obs_dim, 
                             "obs_un" => obs_un,
                             "gamma" => γ,
-                            "param_err" => param_err,
-                            "param_wlk" => param_wlk,
+                            "p_err" => p_err,
+                            "p_wlk" => p_wlk,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "lag" => lag,
@@ -461,11 +476,11 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                             "mda" => mda,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2),
-                            "param_infl"  => round(param_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2),
+                            "p_infl"  => round(p_infl, digits=2)
                            )
     
-    path = joinpath(@__DIR__, "../data/", method * "-classic/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "-classic/"
     name = method * "-classic_" * model *
                     "_param_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -473,8 +488,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                     "_obsD_" * lpad(obs_dim, 2, "0") * 
                     "_obsU_" * rpad(obs_un, 4, "0") *
                     "_gamma_" * lpad(γ, 5, "0") *
-                    "_paramE_" * rpad(param_err, 4, "0") * 
-                    "_paramW_" * rpad(param_wlk, 6, "0") * 
+                    "_paramE_" * rpad(p_err, 4, "0") * 
+                    "_paramW_" * rpad(p_wlk, 6, "0") * 
                     "_nanl_" * lpad(nanl, 5, "0") * 
                     "_tanl_" * rpad(tanl, 4, "0") * 
                     "_h_" * rpad(h, 4, "0") *
@@ -482,8 +497,8 @@ function classic_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Float64
                     "_shift_" * lpad(shift, 3, "0") *
                     "_mda_" * string(mda) *
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
-                    "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
+                    "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
                     ".jld2"
 
     save(path * name, data)
@@ -493,16 +508,25 @@ end
 
 
 ##############################################################################################
+"""
+    single_iteration_state((time_series::String, method::String, seed::Int64, nanl::Int64,
+                            lag::Int64, shift::Int64, mda::Bool, obs_un::Float64,
+                            obs_dim::Int64, γ::Float64, N_ens::Int64,
+                            s_infl::Float64})::NamedTuple)
 
-function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
-                                            Float64,Int64,Float64,Int64,Float64})
+SIEnKS state estimation twin experiment.  Twin experiment parameters
+such as the observation dimension, observation uncertainty, data assimilation method, number
+of cycles, ensemble size etc. are specified in the arguments.
+"""
+function single_iteration_state((time_series, method, seed, nanl, lag, shift, mda, obs_un,
+                                 obs_dim, γ, N_ens, s_infl)::NamedTuple{
+                               (:time_series,:method,:seed,:nanl,:lag,:shift,:mda,:obs_un,
+                                :obs_dim,:γ,:N_ens,:s_infl),
+                               <:Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
+                                       Float64,Int64,Float64,Int64,Float64}})
     
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim, γ, N_ens,
-    state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -658,7 +682,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Int6
         # peform the analysis
         analysis = ls_smoother_single_iteration(
                                                 method, ens, obs[:, i: i + lag - 1], 
-                                                obs_cov, state_infl, kwargs
+                                                obs_cov, s_infl, kwargs
                                                )
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -753,14 +777,14 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Int6
                             "mda" => mda,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2)
                            )
     
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]
     end
         
-    path = joinpath(@__DIR__, "../data/", method * "-single-iteration/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "-single-iteration/"
     name = method * "-single-iteration_" * model *
                     "_state_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -775,7 +799,7 @@ function single_iteration_state(args::Tuple{String,String,Int64,Int64,Int64,Int6
                     "_shift_" * lpad(shift, 3, "0") * 
                     "_mda_" * string(mda) *
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
                     ".jld2"
 
     save(path * name, data)
@@ -785,17 +809,26 @@ end
 
 
 ##############################################################################################
+"""
+    single_iteration_param((time_series::String, method::String, seed:Int64, nanl::Int64,
+                            lag::Int64, shift::Int64, mda::Bool, obs_un::Float64,
+                            obs_dim::Int64, γ::Float64, p_err::Float64, p_wlk::Float64,
+                            N_ens::Int64, s_infl::Float64, p_infl::Float64)::NamedTuple)
 
-function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
-                                            Float64,Int64,Float64,Float64,Float64,Int64,
-                                            Float64,Float64})
+SIEnKS joint state-parameter estimation twin experiment.  Twin experiment parameters
+such as the observation dimension, observation uncertainty, data assimilation method, number
+of cycles, ensemble size etc. are specified in the arguments.
+"""
+function single_iteration_param((time_series, method, seed, nanl, lag, shift, mda, obs_un,
+                                 obs_dim, γ, p_err, p_wlk, N_ens, s_infl, p_infl)::NamedTuple{
+                               (:time_series,:method,:seed,:nanl,:lag,:shift,:mda,:obs_un,
+                                :obs_dim,:γ,:p_err,:p_wlk,:N_ens,:s_infl,:p_infl),
+                               <:Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
+                                       Float64,Int64,Float64,Float64,Float64,Int64,
+                                       Float64,Float64}})
     
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim, γ, param_err,
-    param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -852,7 +885,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
     # note here the covariance is supplied such that the standard deviation is a percent
     # of the parameter value
     param_ens = rand(MvNormal(param_truth[:], 
-                              diagm(param_truth[:] * param_err).^2.0), N_ens)
+                              diagm(param_truth[:] * p_err).^2.0), N_ens)
     
     # define the extended state ensemble
     ens = [ens; param_ens]
@@ -871,8 +904,8 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                               "gamma" => γ,
                               "state_dim" => state_dim,
                               "shift" => shift,
-                              "param_wlk" => param_wlk,
-                              "param_infl" => param_infl,
+                              "p_wlk" => p_wlk,
+                              "p_infl" => p_infl,
                               "mda" => mda 
                              )
 
@@ -981,7 +1014,7 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                                                 ens, 
                                                 obs[:, i: i + lag - 1], 
                                                 obs_cov, 
-                                                state_infl, 
+                                                s_infl, 
                                                 kwargs
                                                )
         ens = analysis["ens"]
@@ -1093,8 +1126,8 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                             "obs_dim" => obs_dim, 
                             "obs_un" => obs_un,
                             "gamma" => γ,
-                            "param_wlk" => param_wlk,
-                            "param_infl" => param_infl,
+                            "p_wlk" => p_wlk,
+                            "p_infl" => p_infl,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "lag" => lag,
@@ -1102,12 +1135,12 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                             "mda" => mda,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2),
-                            "param_infl" => round(param_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2),
+                            "p_infl" => round(p_infl, digits=2)
                            )
     
 
-    path = joinpath(@__DIR__, "../data/", method * "-single-iteration/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "-single-iteration/"
     name = method * "-single-iteration_" * model *
                     "_param_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -1115,8 +1148,8 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                     "_obsD_" * lpad(obs_dim, 2, "0") * 
                     "_obsU_" * rpad(obs_un, 4, "0") *
                     "_gamma_" * lpad(γ, 5, "0") *
-                    "_paramE_" * rpad(param_err, 4, "0") * 
-                    "_paramW_" * rpad(param_wlk, 6, "0") * 
+                    "_paramE_" * rpad(p_err, 4, "0") * 
+                    "_paramW_" * rpad(p_wlk, 6, "0") * 
                     "_nanl_" * lpad(nanl, 5, "0") * 
                     "_tanl_" * rpad(tanl, 4, "0") * 
                     "_h_" * rpad(h, 4, "0") *
@@ -1124,8 +1157,8 @@ function single_iteration_param(args::Tuple{String,String,Int64,Int64,Int64,Int6
                     "_shift_" * lpad(shift, 3, "0") * 
                     "_mda_" * string(mda) *
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
-                    "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
+                    "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
                     ".jld2"
 
 
@@ -1136,16 +1169,23 @@ end
 
 
 ##############################################################################################
+"""
+    iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,Float64, 
+                                Int64,Float64,Int64,Float64})
 
-function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,Float64,
-                                     Int64,Float64,Int64,Float64})
+4DEnVAR state estimation twin experiment.  Twin experiment parameters
+such as the observation dimension, observation uncertainty, data assimilation method, number
+of cycles, ensemble size etc. are specified in the arguments.
+"""
+function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim,
+                          γ, N_ens, s_infl)::NamedTuple{
+                        (:time_series,:method,:seed,:nanl,:lag,:shift,:mda,:obs_un,:obs_dim,
+                         :γ,:N_ens,:s_infl),
+                        <:Tuple{String,String,Int64,Int64,Int64,Int64,Bool,Float64,
+                                Int64,Float64,Int64,Float64}})
     
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, mda, obs_un,
-    obs_dim, γ, N_ens, state_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1315,15 +1355,15 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                 # on the spin cycle, there are the standard number of iterations allowed
                 # to warm up
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, state_infl, kwargs)
+                                                 obs_cov, s_infl, kwargs)
             else
                 # after this, the number of iterations allowed is set to one
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, state_infl, kwargs, max_iter=1)
+                                                 obs_cov, s_infl, kwargs, max_iter=1)
             end
         else
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
-                                             obs_cov, state_infl, kwargs)
+                                             obs_cov, s_infl, kwargs)
         end
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -1429,14 +1469,14 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                             "mda" => mda,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2)
                            )
     
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]
     end
 
-    path = joinpath(@__DIR__, "../data/", method * "/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
     name = method * "_" * model *
                     "_state_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -1451,7 +1491,7 @@ function iterative_state(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                     "_shift_" * lpad(shift, 3, "0") * 
                     "_mda_" * string(mda) *
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
                     ".jld2"
 
 
@@ -1462,16 +1502,25 @@ end
 
 
 ##############################################################################################
+"""
+    iterative_param((time_series:String, method:String, seed::Int64, nanl::Int64, lag::Int64,
+                     shift::Int64, mda::Bool, obs_un::Float64, obs_dim::Int64, γ::Float64,
+                     p_err::Float64, p_wlk::Float64, N_ens::Int64,
+                     s_infl::Float64, p_infl::Float64})
 
-function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,Float64,
-                                     Int64,Float64,Float64,Float64,Int64,Float64,Float64})
+4DEnVAR joint state-parameter estimation twin experiment.  Twin experiment parameters
+such as the observation dimension, observation uncertainty, data assimilation method, number
+of cycles, ensemble size etc. are specified in the arguments.
+"""
+function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim,
+                          γ, p_err, p_wlk, N_ens, s_infl, p_infl)::NamedTuple{
+                        (:time_series,:method,:seed,:nanl,:lag,:shift,:mda,:obs_un,:obs_dim, 
+                         :γ,:p_err,:p_wlk,:N_ens,:s_infl,:p_infl),
+                        <:Tuple{String,String,Int64,Int64,Int64,Int64,Bool,Float64,
+                                Int64,Float64,Float64,Float64,Int64,Float64,Float64}})
     
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, lag, shift, mda, obs_un, obs_dim, γ, param_err,
-    param_wlk, N_ens, state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -1530,7 +1579,7 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
     # extend this by the parameter ensemble    
     # note here the covariance is supplied such that the standard deviation is a
     # percent of the parameter value
-    param_ens = rand(MvNormal(param_truth[:], diagm(param_truth[:] * param_err).^2.0), N_ens)
+    param_ens = rand(MvNormal(param_truth[:], diagm(param_truth[:] * p_err).^2.0), N_ens)
     
     # define the extended state ensemble
     ens = [ens; param_ens]
@@ -1550,8 +1599,8 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                               "gamma" => γ,
                               "state_dim" => state_dim,
                               "shift" => shift,
-                              "param_wlk" => param_wlk,
-                              "param_infl" => param_infl,
+                              "p_wlk" => p_wlk,
+                              "p_infl" => p_infl,
                               "mda" => mda 
                              )
 
@@ -1664,15 +1713,15 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
             if spin
                 # on the spin cycle, a standard number of iterations allowed to warm up
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, state_infl, kwargs)
+                                                 obs_cov, s_infl, kwargs)
             else
                 # after this, the number of iterations allowed is set to one
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, state_infl, kwargs, max_iter=1)
+                                                 obs_cov, s_infl, kwargs, max_iter=1)
             end
         else
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
-                                             obs_cov, state_infl, kwargs)
+                                             obs_cov, s_infl, kwargs)
         end
         ens = analysis["ens"]
         fore = analysis["fore"]
@@ -1777,8 +1826,8 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                             "obs_dim" => obs_dim, 
                             "obs_un" => obs_un,
                             "gamma" => γ,
-                            "param_wlk" => param_wlk,
-                            "param_infl" => param_infl,
+                            "p_wlk" => p_wlk,
+                            "p_infl" => p_infl,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "lag" => lag,
@@ -1786,11 +1835,11 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                             "mda" => mda,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2),
-                            "param_infl" => round(param_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2),
+                            "p_infl" => round(p_infl, digits=2)
                            )
     
-    path = joinpath(@__DIR__, "../data/", method * "/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
     name = method * "_" * model *
                     "_param_seed_" * lpad(seed, 4, "0") * 
                     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -1798,8 +1847,8 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                     "_obsD_" * lpad(obs_dim, 2, "0") * 
                     "_obsU_" * rpad(obs_un, 4, "0") *
                     "_gamma_" * lpad(γ, 5, "0") *
-                    "_paramE_" * rpad(param_err, 4, "0") * 
-                    "_paramW_" * rpad(param_wlk, 6, "0") * 
+                    "_paramE_" * rpad(p_err, 4, "0") * 
+                    "_paramW_" * rpad(p_wlk, 6, "0") * 
                     "_nanl_" * lpad(nanl, 5, "0") * 
                     "_tanl_" * rpad(tanl, 4, "0") * 
                     "_h_" * rpad(h, 4, "0") *
@@ -1807,8 +1856,8 @@ function iterative_param(args::Tuple{String,String,Int64,Int64,Int64,Int64,Bool,
                     "_shift_" * lpad(shift, 3, "0") * 
                     "_mda_" * string(mda) *
                     "_nens_" * lpad(N_ens, 3,"0") * 
-                    "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") * 
-                    "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+                    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
+                    "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
                     ".jld2"
 
 
@@ -1831,7 +1880,7 @@ end
 #    t1 = time()
 #
 #    # Define experiment parameters
-#    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, state_infl = args
+#    time_series, method, seed, lag, shift, mda, obs_un, obs_dim, γ, N_ens, s_infl = args
 #
 #    # load the timeseries and associated parameters
 #    ts = load(time_series)::Dict{String,Any}
@@ -1969,7 +2018,7 @@ end
 #
 #        # peform the analysis
 #        analysis = ls_smoother_single_iteration(method, ens, obs[:, i: i + lag - 1], 
-#                                                obs_cov, state_infl, kwargs)
+#                                                obs_cov, s_infl, kwargs)
 #        ens = analysis["ens"]
 #        fore = analysis["fore"]
 #        filt = analysis["filt"]
@@ -2058,7 +2107,7 @@ end
 #            "mda" => mda,
 #            "h" => h,
 #            "N_ens" => N_ens, 
-#            "state_infl" => round(state_infl, digits=2)
+#            "s_infl" => round(s_infl, digits=2)
 #           )
 #    
 #    if method == "etks_adaptive"
@@ -2080,7 +2129,7 @@ end
 #            "_shift_" * lpad(shift, 3, "0") * 
 #            "_mda_" * string(mda) *
 #            "_N_ens_" * lpad(N_ens, 3,"0") * 
-#            "_state_infl_" * rpad(round(state_infl, digits=2), 4, "0") * 
+#            "_s_infl_" * rpad(round(s_infl, digits=2), 4, "0") * 
 #            ".jld2"
 #
 #

@@ -1,30 +1,31 @@
 ##############################################################################################
 module TestDeSolvers
 ##############################################################################################
-##############################################################################################
 # imports and exports
+using DataAssimilationBenchmarks
 using DataAssimilationBenchmarks.DeSolvers, DataAssimilationBenchmarks.L96
 using LsqFit
+##############################################################################################
+"""
+    exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA} 
 
-##############################################################################################
-##############################################################################################
-# Define test function for analytical verification of discretization error
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
-
-##############################################################################################
-##############################################################################################
-
+Wrapper for making a vectorized output of the exponential function for the DE solvers.  This
+is used to verify the order of convergence for integration methods versus an analytical
+solution.
+"""
 function exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
-    # Wrapper for making a vector form of the exponential function for the DE solvers
     [exp(t)]
 end
 
 
 ##############################################################################################
-# Define auxiliary function to compute the difference of the simulated integral versus
-# the analytical value
+"""
+    expDiscretizationError(step_model!, h) 
 
+Auxiliary function to compute the difference of the numerically simulated integral versus
+the analytical value.  This is a function of the time step and integration method, for
+varying the approximations to demonstrate the correct reduction in discretization errors.
+"""
 function expDiscretizationError(step_model!, h)
     # continuous time length of the integration
     tanl = 0.1
@@ -56,8 +57,14 @@ end
 
 
 ##############################################################################################
-# Define auxiliary function to compute the least-squares estimated order of convergence
+"""
+    calculateOrderConvergence(step_model!) 
 
+Auxiliary function to compute the least-squares estimated order of convergence for the
+numerical integration schemes.  This ranges over step sizes as a function of the integration
+method, and calculates the log-10 / log-10 slope and intercept for change in error with
+respect to step size.
+"""
 function calculateOrderConvergence(step_model!)
     # set step sizes in increasing order for log-10 log-10 analysis
     h_range = [0.005, 0.01, 0.05, 0.1]
@@ -83,10 +90,7 @@ function calculateOrderConvergence(step_model!)
 end
 
 
-
 ##############################################################################################
-# Wrapper function to be supplied to runtests
-
 function testEMExponential()
     coef = calculateOrderConvergence(em_step!)
 
@@ -99,8 +103,6 @@ end
 
 
 ##############################################################################################
-# Wrapper function to be supplied to runtests
-
 function testRKExponential()
     coef = calculateOrderConvergence(rk4_step!)
 

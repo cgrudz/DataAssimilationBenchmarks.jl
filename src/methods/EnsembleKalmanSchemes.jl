@@ -10,7 +10,6 @@ export alternating_obs_operator, analyze_ens, analyze_ens_para, rand_orth,
        inflate_state!, inflate_param!, transform, square_root, square_root_inv, 
        ensemble_filter, ls_smoother_classic,
        ls_smoother_single_iteration, ls_smoother_gauss_newton
-
 ##############################################################################################
 # Main methods, debugged and validated
 ##############################################################################################
@@ -998,7 +997,7 @@ end
 ##############################################################################################
 """
     ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},  
-                    obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
+                    obs_cov::CovM, s_infl::Float64, kwargs::Dict{String,Any})
 
 General filter analysis step, wrapping the transform / update, and inflation steps.
 Optional keyword argument includes state_dim for extended state including parameters.
@@ -1006,7 +1005,7 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """
 function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
-                         obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
+                         obs_cov::CovM, s_infl::Float64, kwargs::Dict{String,Any})
 
     # step 0: infer the system, observation and ensemble dimensions 
     sys_dim, N_ens = size(ens)
@@ -1014,7 +1013,7 @@ function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Fl
 
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]
-        param_infl = kwargs["param_infl"]
+        p_infl = kwargs["p_infl"]
 
     else
         state_dim = sys_dim
@@ -1024,12 +1023,12 @@ function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Fl
     ens_update!(ens, transform(analysis, ens, obs, obs_cov, kwargs)) 
 
     # step 2a: compute multiplicative inflation of state variables
-    inflate_state!(ens, state_infl, sys_dim, state_dim)
+    inflate_state!(ens, s_infl, sys_dim, state_dim)
 
     # step 2b: if including an extended state of parameter values,
     # compute multiplicative inflation of parameter values
     if state_dim != sys_dim
-        inflate_param!(ens, param_infl, sys_dim, state_dim)
+        inflate_param!(ens, p_infl, sys_dim, state_dim)
     end
 
     Dict{String,Array{Float64,2}}("ens" => ens)
@@ -1039,7 +1038,7 @@ end
 ##############################################################################################
 """
     ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},  
-                        obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
+                        obs_cov::CovM, s_infl::Float64, kwargs::Dict{String,Any})
 
 Lag-shift ensemble kalman smoother analysis step, classical version.
 Classic enks uses the last filtered state for the forecast, different from the 
@@ -1051,7 +1050,7 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """    
 function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
+                             obs_cov::CovM, s_infl::Float64, kwargs::Dict{String,Any})
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]
@@ -1075,8 +1074,8 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        param_infl = kwargs["param_infl"]::Float64
-        param_wlk = kwargs["param_wlk"]::Float64
+        p_infl = kwargs["p_infl"]::Float64
+        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1124,12 +1123,12 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         ens_update!(ens, trans)
 
         # compute multiplicative inflation of state variables
-        inflate_state!(ens, state_infl, sys_dim, state_dim)
+        inflate_state!(ens, s_infl, sys_dim, state_dim)
 
         # if including an extended state of parameter values,
         # compute multiplicative inflation of parameter values
         if state_dim != sys_dim
-            inflate_param!(ens, param_infl, sys_dim, state_dim)
+            inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
         # store the filtered states and posterior states
@@ -1148,7 +1147,7 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
         param_ens = ens[state_dim + 1:end , :]
         param_mean = mean(param_ens, dims=2)
         param_ens .= param_ens + 
-                     param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
+                     p_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
         ens[state_dim + 1:end, :] = param_ens
     end
     
@@ -1160,11 +1159,12 @@ function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array
                                ) 
 end
 
+
 ##############################################################################################
 """
     ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},       
                                  obs::Array{Float64,2}, obs_cov::CovM,
-                                 state_infl::Float64, kwargs::Dict{String,Any})
+                                 s_infl::Float64, kwargs::Dict{String,Any})
 
 Lag-shift ensemble kalman smoother analysis step, single iteration version.
 Single-iteration enks uses the final re-analyzed posterior initial state for the forecast,
@@ -1175,7 +1175,7 @@ addition to the state covariance inflation.
 """
 function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
                                       obs::Array{Float64,2}, obs_cov::CovM,
-                                      state_infl::Float64, kwargs::Dict{String,Any})
+                                      s_infl::Float64, kwargs::Dict{String,Any})
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
@@ -1190,8 +1190,8 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        param_infl = kwargs["param_infl"]::Float64
-        param_wlk = kwargs["param_wlk"]::Float64
+        p_infl = kwargs["p_infl"]::Float64
+        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1276,12 +1276,12 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
 
                     if spin 
                         # compute multiplicative inflation of state variables
-                        inflate_state!(ens, state_infl, sys_dim, state_dim)
+                        inflate_state!(ens, s_infl, sys_dim, state_dim)
 
                         # if including an extended state of parameter values,
                         # compute multiplicative inflation of parameter values
                         if state_dim != sys_dim
-                            inflate_param!(ens, param_infl, sys_dim, state_dim)
+                            inflate_param!(ens, p_infl, sys_dim, state_dim)
                         end
                         
                         # store all new filtered states
@@ -1354,12 +1354,12 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
                 ens_update!(ens, trans)
                 
                 # compute multiplicative inflation of state variables
-                inflate_state!(ens, state_infl, sys_dim, state_dim)
+                inflate_state!(ens, s_infl, sys_dim, state_dim)
 
                 # if including an extended state of parameter values,
                 # compute multiplicative inflation of parameter values
                 if state_dim != sys_dim
-                    inflate_param!(ens, param_infl, sys_dim, state_dim)
+                    inflate_param!(ens, p_infl, sys_dim, state_dim)
                 end
                 
                 # store all new filtered states
@@ -1392,12 +1392,12 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
 
     # step 3: propagate the posterior initial condition forward to the shift-forward time
     # step 3a: inflate the posterior covariance
-    inflate_state!(ens, state_infl, sys_dim, state_dim)
+    inflate_state!(ens, s_infl, sys_dim, state_dim)
     
     # if including an extended state of parameter values,
     # compute multiplicative inflation of parameter values
     if state_dim != sys_dim
-        inflate_param!(ens, param_infl, sys_dim, state_dim)
+        inflate_param!(ens, p_infl, sys_dim, state_dim)
     end
 
     # step 3b: if performing parameter estimation, apply the parameter model
@@ -1405,7 +1405,7 @@ function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
         param_ens = ens[state_dim + 1:end , :]
         param_mean = mean(param_ens, dims=2)
         param_ens .= param_ens +
-                     param_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
+                     p_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
         ens[state_dim + 1:end , :] = param_ens
     end
 
@@ -1448,7 +1448,7 @@ end
 ##############################################################################################
 """
     ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},                   
-                             obs::Array{Float64,2}, obs_cov::CovM, state_infl::Float64,
+                             obs::Array{Float64,2}, obs_cov::CovM, s_infl::Float64,
                              kwargs::Dict{String,Any}; ϵ::Float64=0.0001,
                              tol::Float64=0.001, max_iter::Int64=5)
 
@@ -1460,7 +1460,7 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
-                                  obs::Array{Float64,2}, obs_cov::CovM, state_infl::Float64,
+                                  obs::Array{Float64,2}, obs_cov::CovM, s_infl::Float64,
                                   kwargs::Dict{String,Any}; ϵ::Float64=0.0001,
                                   tol::Float64=0.001, max_iter::Int64=5)
     # step 0: unpack kwargs, posterior contains length lag past states ending
@@ -1477,8 +1477,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        param_infl = kwargs["param_infl"]::Float64
-        param_wlk = kwargs["param_wlk"]::Float64
+        p_infl = kwargs["p_infl"]::Float64
+        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1701,7 +1701,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
                 param_ens = ens[state_dim + 1:end , :]
                 param_mean = mean(param_ens, dims=2)
                 param_ens .= param_ens +
-                             param_wlk *
+                             p_wlk *
                              param_mean .* rand(Normal(), length(param_mean), N_ens)
                 ens[state_dim + 1:end, :] = param_ens
             end
@@ -1772,12 +1772,12 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
         end
         
         # store and inflate the forward posterior at the new initial condition
-        inflate_state!(ens, state_infl, sys_dim, state_dim)
+        inflate_state!(ens, s_infl, sys_dim, state_dim)
 
         # if including an extended state of parameter values,
         # compute multiplicative inflation of parameter values
         if state_dim != sys_dim
-            inflate_param!(ens, param_infl, sys_dim, state_dim)
+            inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
         Dict{String,Array{Float64}}(
@@ -1965,7 +1965,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
         # step 3b: if performing parameter estimation, apply the parameter model
         if state_dim != sys_dim
             param_ens = ens[state_dim + 1:end , :]
-            param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+            param_ens = param_ens + p_wlk * rand(Normal(), size(param_ens))
             ens[state_dim + 1:end, :] = param_ens
         end
 
@@ -2022,12 +2022,12 @@ function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
         
         # store and inflate the forward posterior at the new initial condition
         ens = copy(new_ens)
-        inflate_state!(ens, state_infl, sys_dim, state_dim)
+        inflate_state!(ens, s_infl, sys_dim, state_dim)
 
         # if including an extended state of parameter values,
         # compute multiplicative inflation of parameter values
         if state_dim != sys_dim
-            inflate_param!(ens, param_infl, sys_dim, state_dim)
+            inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
         Dict{String,Array{Float64}}(
@@ -2051,7 +2051,7 @@ end
 # single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
 #
 #function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
-#                             obs_cov::CovM, state_infl::Float64, kwargs::Dict{String,Any})
+#                             obs_cov::CovM, s_infl::Float64, kwargs::Dict{String,Any})
 #
 #    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
 #
@@ -2088,8 +2088,8 @@ end
 #    # optional parameter estimation
 #    if haskey(kwargs, "state_dim")
 #        state_dim = kwargs["state_dim"]::Int64
-#        param_infl = kwargs["param_infl"]::Float64
-#        param_wlk = kwargs["param_wlk"]::Float64
+#        p_infl = kwargs["p_infl"]::Float64
+#        p_wlk = kwargs["p_wlk"]::Float64
 #
 #    else
 #        state_dim = sys_dim
@@ -2142,12 +2142,12 @@ end
 #            ens_update!(ens, trans)
 #            
 #            # compute multiplicative inflation of state variables
-#            inflate_state!(ens, state_infl, sys_dim, state_dim)
+#            inflate_state!(ens, s_infl, sys_dim, state_dim)
 #
 #            # if including an extended state of parameter values,
 #            # compute multiplicative inflation of parameter values
 #            if state_dim != sys_dim
-#                inflate_param!(ens, param_infl, sys_dim, state_dim)
+#                inflate_param!(ens, p_infl, sys_dim, state_dim)
 #            end
 #            
 #            # store all new filtered states
@@ -2213,18 +2213,18 @@ end
 #
 #    # step 3: propagate the posterior initial condition forward to the shift-forward time
 #    # step 3a: inflate the posterior covariance
-#    inflate_state!(ens, state_infl, sys_dim, state_dim)
+#    inflate_state!(ens, s_infl, sys_dim, state_dim)
 #    
 #    # if including an extended state of parameter values,
 #    # compute multiplicative inflation of parameter values
 #    if state_dim != sys_dim
-#        inflate_param!(ens, param_infl, sys_dim, state_dim)
+#        inflate_param!(ens, p_infl, sys_dim, state_dim)
 #    end
 #
 #    # step 3b: if performing parameter estimation, apply the parameter model
 #    if state_dim != sys_dim
 #        param_ens = ens[state_dim + 1:end , :]
-#        param_ens = param_ens + param_wlk * rand(Normal(), size(param_ens))
+#        param_ens = param_ens + p_wlk * rand(Normal(), size(param_ens))
 #        ens[state_dim + 1:end, :] = param_ens
 #    end
 #

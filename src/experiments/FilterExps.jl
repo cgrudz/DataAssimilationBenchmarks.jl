@@ -7,26 +7,27 @@ using LinearAlgebra
 using JLD2, HDF5
 using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
 export filter_state, filter_param
-
 ##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ##############################################################################################
 """
-    filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64, 
-                             Int64,Float64})
+    filter_state((time_series::String, method::String, seed::Int64, nanl::Int64,
+                  obs_un::Float64, obs_dim::Int64, γ::Float64, N_ens::Int64,
+                  s_infl::Float64)::NamedTuple)
 
 Filter state estimation twin experiment.  Twin experiment parameters such as the observation
 dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size 
-etc. are specified in the arguments.
+etc. are specified in the arguments of the NamedTuple.
 """
-function filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,
-                                  Int64,Float64})
+function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
+                       γ, N_ens, s_infl)::NamedTuple{
+                     (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim, 
+                      :γ,:N_ens,:s_infl),
+                     <:Tuple{String,String,Int64,Int64,Float64,Int64,
+                             Float64,Int64,Float64}})
 
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, obs_un, obs_dim, γ, N_ens, infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -119,7 +120,7 @@ function filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
         fore_rmse[i], fore_spread[i] = analyze_ens(ens, truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, s_infl, kwargs)
         ens = analysis["ens"]
 
         # compute the analysis statistics
@@ -143,14 +144,14 @@ function filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
                             "tanl" => tanl,
                             "h" =>  h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2)
                            ) 
     
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]
     end
         
-    path = joinpath(@__DIR__, "../data/", method * "/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
     name = method * 
             "_" * model *
             "_state_seed_" * lpad(seed, 4, "0") * 
@@ -163,7 +164,7 @@ function filter_state(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") *
             "_nens_" * lpad(N_ens, 3,"0") * 
-            "_stateInfl_" * rpad(round(infl, digits=2), 4, "0") * 
+            "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
             ".jld2"
 
     save(path * name, data)
@@ -173,21 +174,22 @@ end
 
 ##############################################################################################
 """
-    filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64, 
-                             Float64,Int64,Float64,Float64})
+    filter_param((time_series::String, method::String, seed::Int64, nanl::Int64, 
+                  obs_un::Float64, obs_dim::Int64, γ::Float64, p_err::Float64, p_wlk::Float64,
+                  N_ens::Int64, s_infl::Float64, p_infl::Float64)::NamedTuple)
 
 Filter joint state-parameter estimation twin experiment.  Twin experiment parameters such as
 the observation dimension, observation uncertainty, data assimilation method, number of
-cycles, ensemble size etc. are specified in the arguments.
+cycles, ensemble size etc. are specified in the arguments of the NamedTuple.
 """
-function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
-                                  Float64,Int64,Float64,Float64})
+function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_err, p_wlk,
+                       N_ens, s_infl, p_infl)::NamedTuple{
+                     (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim,:γ,:p_err,:p_wlk,
+                      :N_ens,:s_infl,:p_infl), 
+                     <:Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
+                             Float64,Int64,Float64,Float64}})
     # time the experiment
     t1 = time()
-
-    # Define experiment parameters
-    time_series, method, seed, nanl, obs_un, obs_dim, γ, param_err, param_wlk, N_ens, 
-    state_infl, param_infl = args
 
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
@@ -239,7 +241,7 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
     # extend this by the parameter ensemble    
     # note here the covariance is supplied such that the standard deviation is a percent
     # of the parameter value
-    param_ens = rand(MvNormal(param_truth[:], diagm(param_truth[:] * param_err).^2.0), N_ens)
+    param_ens = rand(MvNormal(param_truth[:], diagm(param_truth[:] * p_err).^2.0), N_ens)
     
     # define the extended state ensemble
     ens = [ens; param_ens]
@@ -259,7 +261,7 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
                               "diffusion" => diffusion,
                               "gamma" => γ,
                               "state_dim" => state_dim,
-                              "param_infl" => param_infl
+                              "p_infl" => p_infl
                              )
     
     # define the observation operator, observation error covariance and observations with
@@ -315,7 +317,7 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
         fore_rmse[i], fore_spread[i] = analyze_ens(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, state_infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, s_infl, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage
@@ -326,10 +328,10 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
         para_rmse[i], para_spread[i] = analyze_ens_para(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
-        # with standard deviation given by the param_wlk scaling
+        # with standard deviation given by the p_wlk scaling
         # of the mean vector
         param_mean = mean(param_ens, dims=2)
-        param_ens .= param_ens + param_wlk * param_mean .* rand(Normal(),
+        param_ens .= param_ens + p_wlk * param_mean .* rand(Normal(),
                                                                 length(param_truth), N_ens)
     end
 
@@ -350,14 +352,14 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
                             "obs_dim" => obs_dim, 
                             "obs_un" => obs_un,
                             "gamma" => γ,
-                            "param_err" => param_err,
-                            "param_wlk" => param_wlk,
+                            "p_err" => p_err,
+                            "p_wlk" => p_wlk,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "h" => h,
                             "N_ens" => N_ens, 
-                            "state_infl" => round(state_infl, digits=2),
-                            "param_infl" => round(param_infl, digits=2)
+                            "s_infl" => round(s_infl, digits=2),
+                            "p_infl" => round(p_infl, digits=2)
                            )
     
     # check if there is a diffusion structure matrix
@@ -365,7 +367,7 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
         data["diff_mat"] = ts["diff_mat"]
     end
 
-    path = joinpath(@__DIR__, "../data/", method * "/") 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
     name =  method * 
             "_" * model *
             "_param_seed_" * lpad(seed, 4, "0") * 
@@ -375,14 +377,14 @@ function filter_param(args::Tuple{String,String,Int64,Int64,Float64,Int64,Float6
             "_obsD_" * lpad(obs_dim, 2, "0") * 
             "_obsU_" * rpad(obs_un, 4, "0") * 
             "_gamma_" * lpad(γ, 5, "0") * 
-            "_paramE_" * rpad(param_err, 4, "0") * 
-            "_paramW_" * rpad(param_wlk, 6, "0") * 
+            "_paramE_" * rpad(p_err, 4, "0") * 
+            "_paramW_" * rpad(p_wlk, 6, "0") * 
             "_nanl_" * lpad(nanl, 5, "0") * 
             "_tanl_" * rpad(tanl, 4, "0") * 
             "_h_" * rpad(h, 4, "0") * 
             "_nens_" * lpad(N_ens, 3, "0") * 
-            "_stateInfl_" * rpad(round(state_infl, digits=2), 4, "0") *
-            "_paramInfl_" * rpad(round(param_infl, digits=2), 4, "0") * 
+            "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+            "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
             ".jld2"
 
     save(path * name, data)

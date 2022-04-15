@@ -1,25 +1,17 @@
 ##############################################################################################
 module TestClassicSmootherExps
 ##############################################################################################
-##############################################################################################
 # imports and exports
+using DataAssimilationBenchmarks
+using DataAssimilationBenchmarks.SingleExperimentDriver
 using DataAssimilationBenchmarks.SmootherExps
 using JLD2, Statistics
-
-##############################################################################################
 ##############################################################################################
 # run and analyze the ETKS for state estimation with the Lorenz-96 model
-# arguments are
-# time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, N_ens, infl = args
 
 function run_smoother_state_L96()
     try
-        path = joinpath(@__DIR__, "../src/data/time_series/") 
-        L96_test_ts = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0" *
-                      "_tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2"
-        
-        args = (path * L96_test_ts, "etks", 0, 3500, 10, 1, 1.0, 40, 1.00, 21, 1.02)
-        classic_state(args)
+        classic_state(exps["Classic_smoother"]["L96_ETKS_state_test"])
         true
     catch
         false
@@ -29,7 +21,7 @@ end
 function analyze_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
-        path = joinpath(@__DIR__, "../src/data/etks-classic/") 
+        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-classic/"
         data = load(path * "etks-classic_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40_" *
                     "obsU_1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_lag_010_shift_001_" *
                     "mda_false_nens_021_stateInfl_1.02.jld2")
@@ -50,18 +42,10 @@ end
 
 ##############################################################################################
 # run and analyze the ETKF for joint state-parameter estimation with the Lorenz-96 model
-# time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ,
-# param_err, param_wlk, N_ens, state_infl, param_infl = args
 
 function run_smoother_param_L96()
     try
-        path = joinpath(@__DIR__, "../src/data/time_series/") 
-        L96_test_ts = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0" *
-                      "_tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2"
-        
-        args = (path * L96_test_ts, "etks", 0, 3500, 10, 1, 1.0, 40, 1.0,
-                0.10, 0.0010, 21, 1.02, 1.0)
-        classic_param(args)
+        classic_param(exps["Classic_smoother"]["L96_ETKS_param_test"])
         true
     catch
         false
@@ -71,7 +55,7 @@ end
 function analyze_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
-        path = joinpath(@__DIR__, "../src/data/etks-classic/") 
+        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-classic/"
         data = load(path * "etks-classic_L96_param_seed_0000_diff_0.000_sysD_41_obsD_40_" * 
                     "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" * 
                     "h_0.05_lag_010_shift_001_mda_false_nens_021_stateInfl_1.02_" *

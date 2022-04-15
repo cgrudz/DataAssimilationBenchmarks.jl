@@ -3,11 +3,14 @@ module L96
 ##############################################################################################
 # imports and exports
 using ..DataAssimilationBenchmarks 
-export dx_dt, jacobian, l96s_tay_2_step!, ρ, α
-
+export dx_dt, jacobian, l96s_tay_2_step!, compute_α_ρ 
 ##############################################################################################
-# auxiliary function to return modular indices for the lorenz model
+"""
+    mod_indx!(indx::Int64, dim::Int64) 
 
+Auxiliary function to return state vector indices for the Lorenz-96 model, where `indx` is
+taken mod `dim`.  Mod zero is replaced with `dim` for indexing in Julia state vectors.
+"""
 function mod_indx!(indx::Int64, dim::Int64)
     indx = mod(indx, dim)
     if indx==0
@@ -18,15 +21,12 @@ end
 
 
 ##############################################################################################
-# time derivative
-
-
 """
     dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
 
-    Time derivative for Lorenz-96 model, x is a single model state of size state_dim, t
-    is a dummy time argument for consistency with integration methods, dx_params is a 
-    parameter dictionary which is called for the forcing parameter.
+Time derivative for Lorenz-96 model, `x` is a single model state of size `state_dim`, `t`
+is a dummy time argument for consistency with integration methods, `dx_params` is of type
+`ParaDict` which is called for the forcing parameter.
 """
 function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the (only) derivative parameter for l96
@@ -51,16 +51,14 @@ end
 
 
 ##############################################################################################
-# linearized time derivative
-
 """
     jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict) 
     
-    Computes the Jacobian of Lorenz-96 about the state x. The time variable t is a dummy
-    variable for consistency with integration methods, dx_params is a parameter dictionary
-    which is called for the forcing parameter. Note that this is designed to load entries in
-    a zeros array and return a sparse array to make a compromise between memory
-    and computational resources.
+Computes the Jacobian of Lorenz-96 about the state `x`. The time variable `t` is a dummy
+variable for consistency with integration methods, `dx_params` is of type `ParamDict`
+which is called for the forcing parameter. Note that this is designed to load entries in
+a zeros array and return a sparse array to make a compromise between memory
+and computational resources.
 """
 function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
 
@@ -91,39 +89,46 @@ function jacobian(x::Vector{Float64}, t::Float64, dx_params::ParamDict)
     return sparse(dxF)
 end
 
-##############################################################################################
-# Auxiliary functions for the 2nd order Taylor-Stratonovich expansion below. These need
-# to be computed once, only as a function of the order of truncation of the Fourier
-# series, p for full timeseries.
-
-function ρ(p::Int64)
-    1.0/12.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^2.0)
-end
-
-function α(p::Int64)
-    (π^2.0) / 180.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^4.0)
-end
 
 ##############################################################################################
-# 2nd order strong taylor SDE step
+"""
+    compute_α_ρ(p::Int64) 
 
+Computes auxiliary functions for the 2nd order Taylor-Stratonovich expansion. The constants
+`α` and `ρ` need to be computed once, only as a function of the order of truncation of the
+Fourier series, the argument `p`, for the integration method.  These constants are then
+supplied as arguments to `l96s_tay2_step!` in `kwargs`. See `l96s_tay2_step!` for the
+interpretation and usage of these constants.
+"""
+function compute_α_ρ(p::Int64)
+    function α(p::Int64)
+        (π^2.0) / 180.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^4.0)
+    end
+    function ρ(p::Int64)
+        1.0/12.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^2.0)
+    end
+    return α(p), ρ(p)
+end
+
+
+##############################################################################################
 """
     l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
     
-    One step of integration rule for l96 second order taylor rule
-    The ρ and α are to be computed by the auxiliary functions in the L96 submodule, depending
-    only on p, and supplied for all steps. This is the general formulation which includes,
-    eg. dependence on the truncation of terms in the auxilliary function C with
-    respect to the parameter p.  In general, truncation at p=1 is all that is
-    necessary for order 2.0 convergence, and in this case C below is identically
-    equal to zero.  This auxilliary function can be removed (and is removed) in other
-    implementations for simplicity.
-    
-    This method is derived in
-    Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
-    with scalar additive noise, for benchmark twin experiments,
-    Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.
-    NOTE: this Julia version still pending validation as in the above manuscript
+One step of integration rule for l96 second order taylor rule
+The constants `ρ` and `α` are to be computed with `compute_α_ρ`, depending
+only on `p`, and supplied for all steps. This is the general formulation which includes,
+e.g., dependence on the truncation of terms in the auxilliary function `C` with
+respect to the parameter `p`.  In general, truncation at `p=1` is all that is
+necessary for order 2.0 convergence, and in this case `C` below is identically
+equal to zero.  This auxilliary function can be removed (and is removed) in other
+implementations for simplicity.
+
+This method is derived in
+[Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
+with scalar additive noise, for benchmark twin experiments,
+Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+NOTE: this Julia version still pending validation as in the above manuscript
 """
 function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
 
@@ -221,6 +226,7 @@ function l96s_tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any
             diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
            ))
 end
+
 
 ##############################################################################################
 # end module

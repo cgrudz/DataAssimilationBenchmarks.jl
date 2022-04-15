@@ -1,15 +1,14 @@
 ##############################################################################################
 module TestL96
 ##############################################################################################
-##############################################################################################
-# imports and exports
 using DataAssimilationBenchmarks.DeSolvers, DataAssimilationBenchmarks.L96
-
 ##############################################################################################
-##############################################################################################
-# Test the derivative function for known behavior with Euler method,
-# the initial condiiton of zeros give back h * F in all components
+"""
+    EMZerosStep() 
 
+Tests the L96 derivative function for known behavior with Euler(-Maruyama) method.
+The initial condition of zeros returns h * F in all components
+"""
 function EMZerosStep()
     # step size
     h = 0.01
@@ -43,9 +42,13 @@ end
 
 
 ##############################################################################################
-# Test the derivative function for known behavior with Euler method,
-# the vector with all components equal to F is a fixed point for the system
+"""
+    EMFStep() 
 
+Tests the L96 derivative function for known behavior with Euler(-Maruyama) method.
+The vector with all components equal to the forcing parameter F is a fixed point for the
+system and the time derivative should be zero with this initiial condition.
+"""
 function EMFStep()
     # step size
     h = 0.01

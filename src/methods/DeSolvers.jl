@@ -4,13 +4,17 @@ module DeSolvers
 # imports and exports
 using ..DataAssimilationBenchmarks
 export rk4_step!, tay2_step!, em_step!
-
 ##############################################################################################
 """
     rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any}) 
 
 Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020.
 The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
+Details on this scheme are available in the manuscript
+[Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
+with scalar additive noise, for benchmark twin experiments,
+Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+
 Arguments are given as:
 
     x            -- array or sub-array of a single state possibly including parameter values
@@ -120,9 +124,10 @@ end
 """
     tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
 
-Deterministic second order (autonomous) Taylor method for step size h and state vector x.
-Time variable t is just a dummy variable, where this method is not defined for non-autonomous
-dynamics.  Arguments are given as
+Deterministic second order (autonomous) Taylor method for step size `h` and state vector `x`.
+Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
+dynamics.  Arguments are given as:
+
     x          -- array of a single state possibly including parameter values
     kwargs     -- should include dx_dt, the paramters for the dx_dt and optional arguments
     dx_dt      -- time derivative function with arguments x and dx_params
@@ -146,12 +151,13 @@ function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     x .= x + dx * h + 0.5 * jacobian(x, t, dx_params) * dx * h^2.0
 end
 
+
 ##############################################################################################
 """
     em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
 
-This will propagate the state x one step forward by Euler-Murayama scheme.
-Step size is h, the Wiener process is assumed to have a scalar diffusion coefficient.
+This will propagate the state `x` one step forward by Euler-Murayama scheme.
+Step size is `h`, the Wiener process is assumed to have a scalar diffusion coefficient.
 """
 function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
     # unpack the arguments for the integration step
