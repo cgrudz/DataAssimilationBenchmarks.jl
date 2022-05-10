@@ -9,10 +9,10 @@ export dx_dt
     dx_dt(x::VecA, t::Float64, dx_params::ParamDict) 
     
 Time derivative of the phase and fequency of the effective-network swing equation model.
-Input x is a 2 `n_g` vector of the phase and fequency at each of the `n_g` generator buses.
-The input `dx_params` of type `ParamDict` containing system parameters to be passed to the
-integration scheme.  The system is currenty defined autonomously to be run as an SDE,
-noise perturbed steady state.
+Input x is a 2 `n_g` [`VecA`](@ref) of the phase and fequency at each of the `n_g`
+generator buses. The input `dx_params` of type [`ParamDict`](@ref) containing system
+parameters to be passed to the integration scheme.  The system is currenty defined
+autonomously to be run as an SDE, noise perturbed steady state.
 """
 function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the system parameters effective network of

@@ -12,3 +12,4 @@ so that standard inputs can be run with the experiment called with macros.
 ```@autodocs
 Modules = [DataAssimilationBenchmarks.SingleExperimentDriver]
 ```
+

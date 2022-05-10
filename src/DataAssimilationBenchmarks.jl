@@ -11,8 +11,8 @@ export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM
 """
     VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
-Type union of vectors and ensemble members of sample for using in integration schemes and
-related array operations.
+Type union of Vectors and SubArrays in order to pass columns of an ensemble maxtrix into
+integration schemes and related array operations.
 """
 VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
 
@@ -27,7 +27,9 @@ ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
 """
     ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
-Dictionary for model parameters to be passed to derivative functions by name.
+Dictionary for model parameters to be passed to derivative functions by name.  This allows
+one to pass both vector parameters (and scalars written as vectors), as well as matrix
+valued parameters such as diffusion arrays.
 """
 ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
 
@@ -35,7 +37,8 @@ ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
     ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 Dictionary containing key and index pairs to subset the state vector and
-then merge with dx_params in parameter estimation problems.
+then merge a statistical sample of parameters that govern the equations of motion with
+the ParamDict `dx_params` in parameter estimation problems.
 """
 ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
@@ -43,25 +46,28 @@ ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 """
     CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 
-Type union of covariance matrix types, for optimized computation based on characteristics.
+Type union of covariance matrix types, for optimized computation based on their
+special characteristics as symmetric, positive definite operators.
 """
 CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
 
 """
     ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
 
-Type union of conditioning matrix types, which will be used for optimization routines in the
+Type union of conditioning matrix types, which are used for optimization routines in the
 transform method.
 """
 ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
 
 """
-    TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
-                   Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
+    TransM = Union{Tuple{Symmetric{Float64, Array{Float64,2}}, Array{Float64,2},
+                         Array{Float64,2}},
+                   Tuple{Symmetric{Float64, Array{Float64,2}},
+                         Array{Float64,1}, Array{Float64,2}},
                    Array{Float64,2}}
 
-Type union of right transform types, including soley a transform, or a transform, weights
-and rotation package.
+Type union of right ensemble transform types, including soley a transform,
+or a transform, weights and rotation package.
 """
 TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
                Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
@@ -129,24 +135,6 @@ function Info()
     print(" Licensed under the Apache License, Version 2.0 \n")
     print(" https://github.com/cgrudz/DataAssimilationBenchmarks/blob/master/LICENSE.md\n")
     print("\n")
-    printstyled(" Description\n", bold=true)
-    print(" This is my personal data assimilation benchmark research code with an emphasis on testing and validation\n")
-    print(" of ensemble-based filters and smoothers in chaotic toy models. DataAssimilationBenchmarks is a wrapper\n")
-    print(" library including the core numerical solvers for ordinary and stochastic differential  equations,\n")
-    print(" solvers for data assimilation routines and the core process model code for running twin experiments\n")
-    print(" with benchmark models. These methods can be run stand-alone in other programs by calling these\n")
-    print(" functions from the DeSolvers, EnsembleKalmanSchemes and L96 sub-modules from this library.\n")
-    print(" Future solvers and models will be added as sub-modules in the methods and models directories respectively.\n")
-    print("\n")
-    print(" In order to get the full functionality of this package you you will need to install the dev version.\n")
-    print(" This provides the access to edit all of the outer-loop routines for setting up twin experiments. \n")
-    print(" These routines are defined in the modules in the \"experiments\" directory.  The \"slurm_submit_scripts\"\n")
-    print(" directory includes routines for parallel submission of experiments in Slurm.  Data processing scripts\n")
-    print(" and visualization scripts (written in Python with Matplotlib and Seaborn) are included in the \"analysis\"\n")
-    print(" directory. \n")
-    print(" \n")
-    print(" Instructions on how to install the dev version of this package are included in the README.md\n")
-
     nothing
 
 end
