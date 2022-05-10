@@ -38,5 +38,5 @@ makedocs(
 
 
 deploydocs(
-    repo = "github.com/cgrudz/DataAssimilationBenchmarks.jl.git",
+    repo = "github.com:cgrudz/DataAssimilationBenchmarks.git",
 )
