@@ -41,9 +41,9 @@ Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al.
 The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
 Arguments are given as:
 ```
-    x            -- array or sub-array of a model states possibly including static parameter values
-    t            -- time value for present model state
-    kwargs       -- includes state time derivative dx_dt, the paramters for the dx_dt and optional arguments
+    x      -- array or sub-array of a model states possibly including static parameter values
+    t      -- time value for present model state
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
 ```
 where kwargs is type [`StepKwargs`](@ref) Details on this scheme are available in the manuscript
 [Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
@@ -144,8 +144,8 @@ Deterministic second order autonomous Taylor method for step size `h` and state 
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
 dynamics.  Arguments are given as:
 ```
-    x          -- array of a single state possibly including parameter values
-    kwargs     -- should include dx_dt, the paramters for the dx_dt and optional arguments
+    x      -- array of a single state possibly including parameter values
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
 ```
 where `kwargs` is type [`StepKwargs`](@ref).
 """
@@ -173,9 +173,9 @@ end
 This will propagate the state `x` one step forward by Euler-Murayama scheme.
 Arguments are given as:
 ```
-    x            -- array or sub-array of a model states possibly including static parameter values
-    t            -- time value for present model state
-    kwargs       -- includes state time derivative dx_dt, the paramters for the dx_dt and optional arguments
+    x      -- array or sub-array of a model states possibly including static parameter values
+    t      -- time value for present model state
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
 ```
 where kwargs is type [`StepKwargs`](@ref) Details on this scheme are available in the manuscript
 [Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
