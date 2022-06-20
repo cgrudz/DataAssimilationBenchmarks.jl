@@ -5,35 +5,6 @@ module DeSolvers
 using ..DataAssimilationBenchmarks
 export rk4_step!, tay2_step!, em_step!
 ##############################################################################################
-
-"""
-    StepKwargs = Dict{String,Any}
-
-Key word arguments for model time steppers. Arguments are given as:
-
-```
-    REQUIRED:
-    dx_dt        -- time derivative function with arguments x and dx_params
-    dx_params    -- parameters necessary to resolve dx_dt, not including
-                    parameters to be estimated in the extended state vector 
-    h            -- numerical discretization step size
-
-    OPTIONAL:
-    diffusion    -- tunes the standard deviation of the Wiener process, 
-                    equal to sqrt(h) * diffusion
-    diff_mat     -- structure matrix for the diffusion coefficients,
-                    replaces the default uniform scaling 
-    state_dim    -- keyword for parameter estimation, dimension of the
-                    dynamic state < dimension of full extended state
-    param_sample -- ParamSample dictionary for merging extended state with dx_params
-    ξ            -- random array size state_dim, can be defined in kwargs
-                    to provide a particular realization for method validation
-```
-"""
-StepKwargs = Dict{String, Any}
-
-
-##############################################################################################
 """
     rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
 
@@ -41,16 +12,17 @@ Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al.
 The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
 Arguments are given as:
 ```
-    x      -- array or sub-array of a model states possibly including static parameter values
+    x      -- array or sub-array of a model states possibly including static
+              parameter values
     t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
+              and optionals
 ```
-where kwargs is type [`StepKwargs`](@ref) Details on this scheme are available in the manuscript
-[Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
-with scalar additive noise, for benchmark twin experiments,
-Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+where `kwargs` is type [`StepKwargs`](@ref). Details on this scheme are available in the
+manuscript
+[Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 """
-function rk4_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
+function rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs)
     # unpack the integration scheme arguments and the parameters of the derivative
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
@@ -138,18 +110,20 @@ end
 
 ##############################################################################################
 """
-    tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
+    tay2_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs) 
 
 Deterministic second order autonomous Taylor method for step size `h` and state vector `x`.
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
 dynamics.  Arguments are given as:
 ```
-    x      -- array of a single state possibly including parameter values
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
+    x      -- array or sub-array of a model states possibly including static
+              parameter values
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
+              and optionals
 ```
 where `kwargs` is type [`StepKwargs`](@ref).
 """
-function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
+function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs)
     # unpack dx_params
     h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict
@@ -168,21 +142,22 @@ end
 
 ##############################################################################################
 """
-    em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any}) 
+    em_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs) 
 
 This will propagate the state `x` one step forward by Euler-Murayama scheme.
 Arguments are given as:
 ```
-    x      -- array or sub-array of a model states possibly including static parameter values
+    x      -- array or sub-array of a model states possibly including static
+              parameter values
     t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt and optionals
+    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
+              and optionals
 ```
-where kwargs is type [`StepKwargs`](@ref) Details on this scheme are available in the manuscript
-[Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
-with scalar additive noise, for benchmark twin experiments,
-Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020, 2020.](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available in the
+manuscript
+[Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 """
-function em_step!(x::Vector{Float64}, t::Float64, kwargs::Dict{String,Any})
+function em_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs)
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
     dx_params = kwargs["dx_params"]::ParamDict

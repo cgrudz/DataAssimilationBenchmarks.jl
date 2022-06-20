@@ -123,11 +123,8 @@ respect to the parameter `p`.  In general, truncation at `p=1` is all that is
 necessary for order 2.0 convergence.
 
 This method is derived in
-[Grudzien, C. et al.: On the numerical integration of the Lorenz-96 model,
-with scalar additive noise, for benchmark twin experiments,
-Geosci. Model Dev., 13, 1903–1924, https://doi.org/10.5194/gmd-13-1903-2020,
-2020.](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
-NOTE: this Julia version still pending validation as in the above manuscript
+[Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+NOTE: this Julia version still pending validation as in the manuscript
 """
 function l96s_tay2_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
 

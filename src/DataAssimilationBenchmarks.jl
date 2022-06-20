@@ -3,7 +3,7 @@ module DataAssimilationBenchmarks
 ##############################################################################################
 # imports and exports
 using LinearAlgebra
-export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM
+export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
 
 ##############################################################################################
 # Global type union declarations for multiple dispatch and type aliases
@@ -73,6 +73,34 @@ TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{
                Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
                Array{Float64,2}}
 
+"""
+    StepKwargs = Dict{String,Any}
+
+Key word arguments for twin experiment time stepping. Arguments are given as:
+
+```
+    REQUIRED:
+    dx_dt        -- time derivative function with arguments x and dx_params
+    dx_params    -- parameters necessary to resolve dx_dt, not including
+                    parameters to be estimated in the extended state vector 
+    h            -- numerical time discretization step size
+    γ            -- controls nonlinearity of the alternating_obs_operator
+
+    OPTIONAL:
+    diffusion    -- tunes the standard deviation of the Wiener process, 
+                    equal to sqrt(h) * diffusion
+    diff_mat     -- structure matrix for the diffusion coefficients,
+                    replaces the default uniform scaling 
+    state_dim    -- keyword for parameter estimation, dimension of the
+                    dynamic state < dimension of full extended state
+    param_sample -- ParamSample dictionary for merging extended state with dx_params
+    ξ            -- random array size state_dim, can be defined in kwargs
+                    to provide a particular realization for method validation
+```
+See [`DataAssimilationBenchmarks.EnsembleKalmanSchemes.alternating_obs_operator`](@ref) for
+a discusssion of the `γ` parameter.
+"""
+StepKwargs = Union{Dict{String,Any}}
 
 
 ##############################################################################################
