@@ -38,11 +38,11 @@ component-wise transformation of the remaining state vector components mapped to
 observation space.  For `γ=1`, there is no transformation applied, and the observation
 operator acts as a linear projection onto the remaining components of the state vector.
 For `γ>1.0`, the nonlinear observation operator of 
-[Asch, M., et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
+[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
 pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
-observation operator of [Hoteit, I., et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
+observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
 is applied to the remaining state components.  If `γ<0.0`, the exponential observation
-operator of [Wu, G., et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
+operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
 is applied to the remaining state vector components.
 """
 function alternating_obs_operator(ens::Array{Float64,2}, obs_dim::Int64,
@@ -370,36 +370,36 @@ Currently validated `analysis` options:
  * `analysis=="enkf" || analysis=="enks"` computes the stochastic transform for the EnKF/S
    as in [Carrassi, et al. 2018](https://wires.onlinelibrary.wiley.com/doi/10.1002/wcc.535).
  * `analysis=="etkf" || analysis=="etks"` computes the deterministic ensemble transform 
-   as in the ETKF described in [Grudzien et al.
+   as in the ETKF described in [Grudzien, et al.
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
  * `analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"` computes the maximum likelihood
-   ensemble filter transform described in [Grudzien et al. 
+   ensemble filter transform described in [Grudzien, et al. 
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/), optimizing the nonlinear
    cost function with Newton-based 
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
  * `analysis[1:4]=="mlef" || analysis[1:4]=="mles"` computes the maximum likelihood     
    ensemble filter transform described in
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
+   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
    optimizing the nonlinear
    cost function with simple Newton-based scheme. 
  * `analysis=="enkf-n-dual" || analysis=="enks-n-dual"` 
-   computes the dual form of the EnKF-N transform as in [Bocquet et al.
+   computes the dual form of the EnKF-N transform as in [Bocquet, et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/)
    Note: this cannot be used with the nonlinear observation operator.
    This uses the Brent method for the argmin problem as this
    has been more reliable at finding a global minimum than Newton optimization.
  * `analysis=="enkf-n-primal" || analysis=="enks-n-primal"`
-   computes the primal form of the EnKF-N transform as in [Bocquet et al.
+   computes the primal form of the EnKF-N transform as in [Bocquet, et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a simple Newton-based
    minimization of the cost function for the adaptive inflation.
  * `analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"`
-   computes the primal form of the EnKF-N transform as in [Bocquet et al.
+   computes the primal form of the EnKF-N transform as in [Bocquet, et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a Newton-based
@@ -409,7 +409,7 @@ Currently validated `analysis` options:
    computes the weighted observed anomalies as per the  
    bundle or transform version of the IEnKS, described in [Bocquet &
    Sakov 2013](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/qj.2236),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    Bundle versus tranform versions of the scheme are specified by the trailing
    `analysis` string as `-bundle` or `-transform`.  The bundle version uses a small uniform 
    scalar `ϵ`, whereas the transform version uses a matrix square root inverse as the
@@ -723,7 +723,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         ### NOTE: STILL DEVELOPMENT CODE, NOT DEBUGGED 
         # needs to be revised for the calculation with unweighted anomalies
         # Uses the contribution of the model error covariance matrix Q
-        # in the square root as in Raanes et al. 2015
+        # in the square root as in Raanes, et al. 2015
         # step 0: infer the system, observation and ensemble dimensions 
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -1043,9 +1043,10 @@ end
     ens_update!(ens::ArView, transform::T1) where {T1 <: TransM} 
 
 Updates ensemble by right-transform method. In the case where this follows the stochastic EnKF
-as in Carrassi et al. 2018, this simply performs right mutliplication.  All other cases use
-the 3-tuple including the right transform for the anomalies, the weights for the mean and the
-random, mean-preserving orthogonal matrix.
+as in [Carrassi, et al. 2018](https://wires.onlinelibrary.wiley.com/doi/10.1002/wcc.535),
+this simply performs right mutliplication.  All other cases use the 3-tuple including the
+right transform for the anomalies, the weights for the mean and the random, mean-preserving
+orthogonal matrix.
 """
 function ens_update!(ens::ArView, transform::T1) where {T1 <: TransM}
     if T1 <: Array{Float64,2}
@@ -1116,8 +1117,8 @@ end
     ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},  
                         obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 
-Lag-shift ensemble kalman smoother analysis step, classical version.
-Classic enks uses the last filtered state for the forecast, different from the 
+Lag-shift ensemble Kalman smoother analysis step, classical version.
+Classic EnKS uses the last filtered state for the forecast, different from the 
 iterative schemes which use the once or multiple-times re-analized posterior for
 the initial condition for the forecast of the states to the next shift.
 
@@ -1242,8 +1243,8 @@ end
                                  obs::Array{Float64,2}, obs_cov::CovM,
                                  s_infl::Float64, kwargs::StepKwargs)
 
-Lag-shift ensemble kalman smoother analysis step, single iteration version.
-Single-iteration enks uses the final re-analyzed posterior initial state for the forecast,
+Lag-shift ensemble Kalman smoother analysis step, single iteration version.
+Single-iteration EnKS uses the final re-analyzed posterior initial state for the forecast,
 which is pushed forward in time to shift-number of observation times.
 Optional argument includes state dimension for an extended state including parameters.
 In this case, a value for the parameter covariance inflation should be included in
@@ -1528,12 +1529,13 @@ end
                              kwargs::StepKwargs; ϵ::Float64=0.0001,
                              tol::Float64=0.001, max_iter::Int64=5)
 
-Lag-shift Gauss-Newton IEnKS analysis step, algorithm 4, Bocquet & Sakov 2014
-ienks uses the final re-analyzed posterior initial state for the forecast, 
-which is pushed forward in time from the initial conidtion to shift-number of observation
-times. Optional argument includes state dimension for an extended state including parameters.
-In this case, a value for the parameter covariance inflation should be included
-in addition to the state covariance inflation.
+This implements a lag-shift Gauss-Newton IEnKS analysis step as in algorithm 4 of
+[Bocquet & Sakov 2014](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.2236).
+The IEnKS uses the final re-analyzed initial state in the data assimilation window to generate
+the forecast, which is subsequently pushed forward in time from the initial conidtion to
+shift-number of observation times. Optional argument includes state dimension for an extended
+state including parameters. In this case, a value for the parameter covariance inflation
+should be included in addition to the state covariance inflation.
 """
 function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
                                   obs::Array{Float64,2}, obs_cov::CovM, s_infl::Float64,

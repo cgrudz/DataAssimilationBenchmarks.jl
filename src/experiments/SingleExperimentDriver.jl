@@ -22,6 +22,7 @@ exps = Dict{String, Any}(
           # Generates a short time series of the L96 model for testing
           "L96_deterministic_test" => (
             seed      = 0,
+            h         = 0.05,
             state_dim = 40,
             tanl      = 0.05,
             nanl      = 5000,
@@ -32,6 +33,7 @@ exps = Dict{String, Any}(
           # Generates a short time series of the IEEE39bus model for testing
           "IEEE39bus_deterministic_test" => (
             seed      = 0,
+            h         = 0.01,
             tanl      = 0.01,
             nanl      = 5000,
             spin      = 1500,

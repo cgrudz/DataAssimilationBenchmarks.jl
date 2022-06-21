@@ -1,19 +1,28 @@
-# GenerateTimeSeries
+# GenerateTimeSeries 
 
-## GenerateTimeSeries
-
-GenerateTimeSeries is a sub-module used to generate a time series for a twin experiment based on tuneable
-configuration parameters.  Currently, this only includes the L96s model, with parameters defined as
+GenerateTimeSeries is a sub-module used to generate a time series for a twin experiment based
+on tuneable model configuration parameters. Example syntax for the configuration of a time
+series is as follows, where arguments are defined in a named tuple to be passed to the
+specific experiment function:
 ```{julia}
-l96_time_series(args::Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64})
-seed, state_dim, tanl, nanl, spin, diffusion, F = args
+    (seed::Int64, h::Float64, state_dim::Int64, tanl::Float64, nanl::Int64, spin::Int64,
+     diffusion::Float64)::NamedTuple)
 ```
-The `args` tuple includes the pseudo-random seed `seed`, the size of the Lorenz system `state_dim`, the length of continuous
-time in between sequential observations / analyses `tanl`, the number of observations / analyses to be saved
-`nanl`, the length of the warm-up integration of the dynamical system solution to guarantee an observation generating
-process on the attractor `spin`, the diffusion parameter determining the intensity of the random perturbations `diffusion`
-and the forcing parameter `F`.  This automates the selection of the correct time stepper for the truth twin when using
-deterministic or stochastic integration.  Results are saved in .jld2 format in the data directory.
+The `seed` argument specifies initial condition for the pseudo-random number generator
+on which various simulation settings will depend -- simulations will be reproduceable with
+the same `seed` value.  The numerical integration step size is given by the argument `h`
+which controls the discretization error of the numerically simulated experiment.
+The size of the Lorenz-96 system scales with the `state_dim` argument, though other
+models such as the `IEEE39bus` model are of pre-defined size. The length of continuous
+time units between sequential observations is controlled with the `tanl`
+(time-between-analysis) argument which defines the frequency of pseudo data outputs.
+The number of observations / analyses to be saved is controlled with the `nanl`
+(number-of-analyses) argument.  The length of the spin-up for the integration of
+the dynamical system solution to guarantee a stationary observation generating process
+is controlled with the `spin` argument. The diffusion parameter determining the
+intensity of the random perturbations is controlled with the `diffusion` argument.
+Results are saved in .jld2 format in the data directory to be called by filter / smoother
+experiments cycling over the pseudo-observations.
 
 ## Docstrings
 

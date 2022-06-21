@@ -1,6 +1,5 @@
 # Differential Equation Solvers
 
-
 ## API for differential equation solvers
 
 Three general schemes are developed for ordinary and stochastic differential equations, the

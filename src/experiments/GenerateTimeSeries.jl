@@ -9,17 +9,42 @@ using ..DataAssimilationBenchmarks, ..DeSolvers, ..L96, ..IEEE39bus
 export L96_time_series, IEEE39bus_time_series
 ##############################################################################################
 """
-    L96_time_series((seed::Int64, state_dim::Int64, tanl::Float64, nanl::Int64, spin::Int64,
-                     diffusion::Float64, F::Float64)::NamedTuple)
+    L96_time_series((seed::Int64, h::Float64, state_dim::Int64, tanl::Float64, nanl::Int64,
+                     spin::Int64, diffusion::Float64, F::Float64)::NamedTuple)
 
-Simulate a "free run" time series of the Lorenz-96 model for generating an observation process
-and truth twin for data assimilation twin experiments.  Time stepping parameters,
-stochasticity of the dynamics, and system parameters are specified in the named tuple
-arguments.
+Simulate a "free run" time series of the [Lorenz-96 model](@ref) model 
+for generating an observation process and truth twin for data assimilation twin experiments.
+Output from the experiment is saved in a dictionary of the form,
+
+    Dict{String, Any}(
+                      "seed" => seed,
+                      "h" => h,
+                      "diffusion" => diffusion, 
+                      "dx_params" => dx_params, 
+                      "tanl" => tanl,
+                      "nanl" => nanl,
+                      "spin" => spin,
+                      "state_dim" => state_dim,
+                      "obs" => obs,
+                      "model" => "L96"
+                     )
+
+Where the file name is written dynamically according to the selected parameters as follows:
+
+    "L96_time_series_seed_" * lpad(seed, 4, "0") * 
+    "_dim_" * lpad(state_dim, 2, "0") * 
+    "_diff_" * rpad(diffusion, 5, "0") * 
+    "_F_" * lpad(F, 4, "0") * 
+    "_tanl_" * rpad(tanl, 4, "0") * 
+    "_nanl_" * lpad(nanl, 5, "0") * 
+    "_spin_" * lpad(spin, 4, "0") * 
+    "_h_" * rpad(h, 5, "0") * 
+    ".jld2"
 """
-function L96_time_series((seed, state_dim, tanl, nanl, spin, diffusion, F)::NamedTuple{ 
-                        (:seed,:state_dim,:tanl,:nanl,:spin,:diffusion,:F),
-                        <:Tuple{Int64,Int64,Float64,Int64,Int64,Float64,Float64}})
+function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::NamedTuple{ 
+                        (:seed,:h,:state_dim,:tanl,:nanl,:spin,:diffusion,:F),
+                        <:Tuple{Int64,Float64,Int64,Float64,Int64,Int64,
+                                Float64,Float64}})
     # time the experiment
     t1 = time()
     
@@ -32,15 +57,11 @@ function L96_time_series((seed, state_dim, tanl, nanl, spin, diffusion, F)::Name
         # generate the observations with the Runge-Kutta scheme
         step_model! = DeSolvers.rk4_step!
 
-        # parameters for the Runge-Kutta scheme
-        h = 0.05
-
     else
         # generate the observations with the strong Taylor scheme
         step_model! = L96.l96s_tay2_step!
         
         # parameters for the order 2.0 strong Taylor scheme
-        h = 0.005
         p = 1
         α, ρ = comput_α_ρ(p)
     end
@@ -84,6 +105,7 @@ function L96_time_series((seed, state_dim, tanl, nanl, spin, diffusion, F)::Name
     end
     
     data = Dict{String, Any}(
+                             "seed" => seed,
                              "h" => h,
                              "diffusion" => diffusion,
                              "dx_params" => dx_params, 
@@ -113,17 +135,39 @@ end
 
 ##############################################################################################
 """
-    IEEE39bus_time_series((seed::Int64, tanl::Float64, nanl::Int64, spin::Int64,
+    IEEE39bus_time_series((seed::Int64, h:Float64, tanl::Float64, nanl::Int64, spin::Int64,
                            diffusion::Float64)::NamedTuple)
 
-Simulate a "free run" time series of the IEEE 39 bus swing equation model for generating an
-observation process and truth twin for data assimilation twin experiments. Time stepping
-parameters, stochasticity of the dynamics, and system parameters are specified in the
-arguments.
+Simulate a "free run" time series of the [IEEE39 Bus Swing Equation Model](@ref) for
+generating an observation process and truth twin for data assimilation twin experiments.
+Output from the experiment is saved in a dictionary of the form,
+
+    Dict{String, Any}(
+                      "seed" => seed,
+                      "h" => h,
+                      "diffusion" => diffusion,
+                      "diff_mat" => diff_mat,
+                      "dx_params" => dx_params, 
+                      "tanl" => tanl,
+                      "nanl" => nanl,
+                      "spin" => spin,
+                      "obs" => obs,
+                      "model" => "IEEE39bus"
+                     )
+
+Where the file name is written dynamically according to the selected parameters as follows:
+
+    "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
+    "_diff_" * rpad(diffusion, 5, "0") * 
+    "_tanl_" * rpad(tanl, 4, "0") * 
+    "_nanl_" * lpad(nanl, 5, "0") * 
+    "_spin_" * lpad(spin, 4, "0") * 
+    "_h_" * rpad(h, 5, "0") * 
+    ".jld2"
 """
-function IEEE39bus_time_series((seed, tanl, nanl, spin, diffusion)::NamedTuple{
-                              (:seed,:tanl,:nanl,:spin,:diffusion),
-                              <:Tuple{Int64,Float64,Int64,Int64,Float64}})
+function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTuple{
+                              (:seed,:h,:tanl,:nanl,:spin,:diffusion),
+                              <:Tuple{Int64,Float64,Float64,Int64,Int64,Float64}})
     # time the experiment
     t1 = time()
 
@@ -197,6 +241,7 @@ function IEEE39bus_time_series((seed, tanl, nanl, spin, diffusion)::NamedTuple{
     end
     
     data = Dict{String, Any}(
+                             "seed" => seed,
                              "h" => h,
                              "diffusion" => diffusion,
                              "diff_mat" => diff_mat,
