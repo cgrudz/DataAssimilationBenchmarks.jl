@@ -2,7 +2,7 @@
 module L96
 ##############################################################################################
 # imports and exports
-using ..DataAssimilationBenchmarks 
+using ..DataAssimilationBenchmarks, SparseArrays 
 export dx_dt, jacobian, l96s_tay_2_step!, compute_α_ρ 
 ##############################################################################################
 """
