@@ -32,7 +32,7 @@ function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the (only) derivative parameter for l96
     F = dx_params["F"][1]::Float64
     x_dim = length(x)
-    dx = Vector{Float64}(undef, x_dim)
+    dx = Vector{T where T <: Real}(undef, x_dim)
 
     for j in 1:x_dim
         # index j minus 2, modulo the system dimension

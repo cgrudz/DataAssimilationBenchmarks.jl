@@ -9,29 +9,29 @@ export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
 # Global type union declarations for multiple dispatch and type aliases
 
 """
-    VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+    VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
 
 Type union of Vectors and SubArrays in order to pass columns of an ensemble maxtrix into
 integration schemes and related array operations.
 """
-VecA = Union{Vector{Float64}, SubArray{Float64, 1}}
+VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
 
 """
-    ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
+    ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
 
 Type union of arrays and views of arrays for use within ensemble conditioning operations,
 integration schemes and other array operations.
 """
-ArView = Union{Array{Float64, 2}, SubArray{Float64, 2}}
+ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
 
 """
-    ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+    ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
 
 Dictionary for model parameters to be passed to derivative functions by name.  This allows
 one to pass both vector parameters (and scalars written as vectors), as well as matrix
 valued parameters such as diffusion arrays.
 """
-ParamDict = Union{Dict{String, Array{Float64}}, Dict{String, Vector{Float64}}}
+ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
 
 """
     ParamSample = Dict{String, Vector{UnitRange{Int64}}}
@@ -44,34 +44,34 @@ ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 
 """
-    CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+    CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
 
 Type union of covariance matrix types, for optimized computation based on their
 special characteristics as symmetric, positive definite operators.
 """
-CovM = Union{UniformScaling{Float64}, Diagonal{Float64}, Symmetric{Float64}}
+CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
 
 """
-    ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
+    ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
 
 Type union of conditioning matrix types, which are used for optimization routines in the
 transform method.
 """
-ConM = Union{UniformScaling{Float64}, Symmetric{Float64}}
+ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
 
 """
-    TransM = Union{Tuple{Symmetric{Float64, Array{Float64,2}}, Array{Float64,2},
-                         Array{Float64,2}},
-                   Tuple{Symmetric{Float64, Array{Float64,2}},
-                         Array{Float64,1}, Array{Float64,2}},
-                   Array{Float64,2}}
+    TransM = Union{Tuple{Symmetric{T, Array{T,2}}, Array{T,2},
+                         Array{T,2}},
+                   Tuple{Symmetric{T, Array{T,2}},
+                         Array{T,1}, Array{T,2}},
+                   Array{T,2}} where T <: Real
 
 Type union of right ensemble transform types, including soley a transform,
 or a transform, weights and rotation package.
 """
-TransM = Union{Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,2},Array{Float64,2}},
-               Tuple{Symmetric{Float64,Array{Float64,2}},Array{Float64,1},Array{Float64,2}},
-               Array{Float64,2}}
+TransM = Union{Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}},
+               Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
+               Array{T,2}} where T <: Real
 
 """
     StepKwargs = Dict{String,Any}
