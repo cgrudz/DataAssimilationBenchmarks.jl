@@ -4,7 +4,7 @@ module TestL96
 using DataAssimilationBenchmarks.DeSolvers, DataAssimilationBenchmarks.L96
 ##############################################################################################
 
-function L96Jacobian()
+function Jacobian()
 
 
 end
