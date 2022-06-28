@@ -25,7 +25,7 @@ end
 
 # test set 2: test L96 model equations for known behavior
 @testset "Lorenz-96" begin
-    #@test TestL96.Jacobian()
+    @test TestL96.Jacobian()
     @test TestL96.EMZerosStep()
     @test TestL96.EMFStep()
 end
