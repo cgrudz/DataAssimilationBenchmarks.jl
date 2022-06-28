@@ -12,7 +12,7 @@ Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al.
 The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
 Arguments are given as:
 ```
-    x      -- array or sub-array of a model states possibly including static
+    x      -- type [`VecA`](@ref) of model states possibly including static
               parameter values
     t      -- time value for present model state
     kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
@@ -85,7 +85,7 @@ function rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs)
     end
 
     # pre-allocate storage for the Runge-Kutta scheme
-    κ = Array{Float64}(undef, state_dim, 4)
+    κ = Array{T where T <: Real}(undef, state_dim, 4)
 
     # terms of the RK scheme recursively evolve the dynamic state components alone
     if diffusion != 0.0
@@ -110,20 +110,20 @@ end
 
 ##############################################################################################
 """
-    tay2_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs) 
+    tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
 
 Deterministic second order autonomous Taylor method for step size `h` and state vector `x`.
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
 dynamics.  Arguments are given as:
 ```
-    x      -- array or sub-array of a model states possibly including static
+    x      -- type [`VecA`](@ref) of model states possibly including static
               parameter values
     kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
               and optionals
 ```
 where `kwargs` is type [`StepKwargs`](@ref).
 """
-function tay2_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs)
+function tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs)
     # unpack dx_params
     h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict
@@ -142,12 +142,12 @@ end
 
 ##############################################################################################
 """
-    em_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs) 
+    em_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
 
-This will propagate the state `x` one step forward by Euler-Murayama scheme.
+This will propagate the state `x` one step forward by Euler-Maruyama scheme.
 Arguments are given as:
 ```
-    x      -- array or sub-array of a model states possibly including static
+    x      -- type [`VecA`](@ref) of model states possibly including static
               parameter values
     t      -- time value for present model state
     kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
@@ -157,7 +157,7 @@ where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available
 manuscript
 [Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 """
-function em_step!(x::Vector{Float64}, t::Float64, kwargs::StepKwargs)
+function em_step!(x::VecA, t::Float64, kwargs::StepKwargs)
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
     dx_params = kwargs["dx_params"]::ParamDict

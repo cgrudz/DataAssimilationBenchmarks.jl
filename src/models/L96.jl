@@ -30,6 +30,7 @@ Time derivative for Lorenz-96 model, `x` is a  model state of size `state_dim` a
 """
 function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
     # unpack the (only) derivative parameter for l96
+    # NOTE: we may want to recast this type for auto-differentiation
     F = dx_params["F"][1]::Float64
     x_dim = length(x)
     dx = Vector{T where T <: Real}(undef, x_dim)
@@ -113,7 +114,7 @@ end
 
 ##############################################################################################
 """
-    l96s_tay2_step!(x::VecA, t::Float64, kwargs::Dict{String,Any}) 
+    l96s_tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
     
 One step of integration rule for l96 second order taylor rule
 The constants `ρ` and `α` are to be computed with `compute_α_ρ`, depending
@@ -126,7 +127,7 @@ This method is derived in
 [Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 NOTE: this Julia version still pending validation as in the manuscript
 """
-function l96s_tay2_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
+function l96s_tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs)
 
     # Infer model and parameters
     sys_dim = length(x)
@@ -207,8 +208,8 @@ function l96s_tay2_step!(x::VecA, t::Float64, kwargs::Dict{String,Any})
     end
 
     # define the approximations of the second order Stratonovich integral
-    Ψ_plus = Vector{Float64}(undef, sys_dim)
-    Ψ_minus = Vector{Float64}(undef, sys_dim)
+    Ψ_plus = Vector{T where T <: Real}(undef, sys_dim)
+    Ψ_minus = Vector{T where T <: Real}(undef, sys_dim)
     for i in 1:sys_dim
         Ψ_plus[i] = Ψ(mod_indx!((i-1), sys_dim), mod_indx!((i+1), sys_dim))
         Ψ_minus[i] = Ψ(mod_indx!((i-2), sys_dim), mod_indx!((i-1), sys_dim))

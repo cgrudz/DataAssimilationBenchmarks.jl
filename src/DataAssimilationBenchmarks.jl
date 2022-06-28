@@ -11,7 +11,7 @@ export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
 """
     VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
 
-Type union of Vectors and SubArrays in order to pass columns of an ensemble maxtrix into
+Type union of Vectors and 1-D SubArrays in order to pass columns of an ensemble maxtrix into
 integration schemes and related array operations.
 """
 VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
@@ -19,7 +19,7 @@ VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
 """
     ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
 
-Type union of arrays and views of arrays for use within ensemble conditioning operations,
+Type union of Arrays and SubArrays for use within ensemble conditioning operations,
 integration schemes and other array operations.
 """
 ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real

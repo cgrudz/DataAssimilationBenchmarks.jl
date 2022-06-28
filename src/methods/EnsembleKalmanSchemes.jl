@@ -14,8 +14,7 @@ export alternating_obs_operator, analyze_ens, analyze_ens_para, rand_orth,
 # Main methods, debugged and validated
 ##############################################################################################
 """
-    alternating_obs_operator(ens::Array{Float64,2}, obs_dim::Int64, 
-                             kwargs::StepKwargs)
+    alternating_obs_operator(ens::ArView, obs_dim::Int64, kwargs::StepKwargs)
 
 This produces observations of alternating state vector components for generating pseudo-data.
 
@@ -45,8 +44,7 @@ is applied to the remaining state components.  If `γ<0.0`, the exponential obse
 operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
 is applied to the remaining state vector components.
 """
-function alternating_obs_operator(ens::Array{Float64,2}, obs_dim::Int64,
-                                  kwargs::StepKwargs)
+function alternating_obs_operator(ens::ArView, obs_dim::Int64, kwargs::StepKwargs)
     sys_dim, N_ens = size(ens)
 
     if haskey(kwargs, "state_dim")
@@ -107,7 +105,7 @@ end
 
 ##############################################################################################
 """
-    analyze_ens(ens::ArView, truth::Vector{Float64}) 
+    analyze_ens(ens::ArView, truth::VecA) 
 
 Computes the ensemble state RMSE as compared with truth twin, and the ensemble spread.
 
@@ -115,7 +113,7 @@ Note: the ensemble `ens` should only include the state vector components to comp
 truth twin state vector `truth`, without replicates of the model parameters.  These can be
 passed as an [`ArView`](@ref) for efficient memory usage.
 """
-function analyze_ens(ens::ArView, truth::Vector{Float64})
+function analyze_ens(ens::ArView, truth::VecA)
 
     # infer the shapes
     sys_dim, N_ens = size(ens)
@@ -137,7 +135,7 @@ end
 
 ##############################################################################################
 """
-    analyze_ens_para(ens::ArView, truth::Vector{Float64}) 
+    analyze_ens_para(ens::ArView, truth::VecA) 
 
 Computes the ensemble parameter RMSE as compared with truth twin, and the ensemble spread.
 
@@ -145,7 +143,7 @@ Note: the ensemble `ens` should only include the extended state vector component
 parameter replicates to compare with the truth twin's governing model parameters `truth`. 
 These can be passed as an [`ArView`](@ref) for efficient memory usage.
 """
-function analyze_ens_para(ens::ArView, truth::Vector{Float64})
+function analyze_ens_para(ens::ArView, truth::VecA)
 
     # infer the shapes
     param_dim, N_ens = size(ens)
@@ -199,8 +197,7 @@ end
 
 ##############################################################################################
 """
-    inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64, 
-                   state_dim::Int64)
+    inflate_state!(ens::ArView, inflation::Float64, sys_dim::Int64, state_dim::Int64)
 
 Applies multiplicative covariance inflation to the state components of the ensemble matrix.
 
@@ -210,8 +207,7 @@ variables are assumed to be in the leading `state_dim` rows of `ens`, while exte
 parameter replicates are after. Multiplicative inflation is performed only in the leading
 components of the ensemble anomalies from the ensemble mean, in-place in memory.
 """
-function inflate_state!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64)
+function inflate_state!(ens::ArView, inflation::Float64, sys_dim::Int64, state_dim::Int64)
     if inflation != 1.0
         x_mean = mean(ens, dims=2)
         X = ens .- x_mean
@@ -224,8 +220,7 @@ end
 
 ##############################################################################################
 """
-    inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64, 
-                   state_dim::Int64)
+    inflate_param!(ens::ArView, inflation::Float64, sys_dim::Int64, state_dim::Int64)
 
 Applies multiplicative covariance inflation to parameter replicates in the ensemble matrix.
 
@@ -236,8 +231,7 @@ parameter replicates are after. Multiplicative inflation is performed only in th
 `state_dim + 1: state_dim` components of the ensemble anomalies from the ensemble mean,
 in-place in memory.
 """
-function inflate_param!(ens::Array{Float64,2}, inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64)
+function inflate_param!(ens::ArView, inflation::Float64, sys_dim::Int64, state_dim::Int64)
     if inflation == 1.0
         return ens
     else
@@ -351,9 +345,9 @@ end
 
 ##############################################################################################
 """
-    transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},        
+    transform(analysis::String, ens::ArView, obs::VecA,        
            obs_cov::CovM, kwargs::StepKwargs; conditioning::ConM=1000.0I, 
-           m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
+           m_err::ArView=(1.0 ./ zeros(1,1)),
            tol::Float64 = 0.0001,
            j_max::Int64=40,
            Q::CovM=1.0I)
@@ -419,9 +413,9 @@ Currently validated `analysis` options:
    based on the EnKF-N above, can be utilized by appending additionally a `-n` to the
    `-bundle` or `-transform` version of the IEnKS scheme specified in `analysis`.
 """
-function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
+function transform(analysis::String, ens::ArView, obs::VecA, 
                    obs_cov::CovM, kwargs::StepKwargs; conditioning::ConM=1000.0I, 
-                   m_err::Array{Float64,2}=(1.0 ./ zeros(1,1)),
+                   m_err::ArView=(1.0 ./ zeros(1,1)),
                    tol::Float64 = 0.0001,
                    j_max::Int64=40,
                    Q::CovM=1.0I)
@@ -907,7 +901,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         end
 
         # step 5d: define the primal hessian
-        function H_P!(hess::Array{Float64,2}, w::Vector{Float64})
+        function H_P!(hess::ArView, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
             hess .= transpose(S) * S + N_effective * hess
@@ -986,7 +980,7 @@ function transform(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}
         end
 
         # step 5d: define the primal hessian
-        function H_J!(hess::Array{Float64,2}, w::Vector{Float64})
+        function H_J!(hess::ArView, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
             hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
             hess .= transpose(S) * S + N_effective * hess
@@ -1050,6 +1044,7 @@ orthogonal matrix.
 """
 function ens_update!(ens::ArView, transform::T1) where {T1 <: TransM}
     if T1 <: Array{Float64,2}
+        # NOTE: this is an ugly artifact, should change this
         # step 1: update the ensemble with right transform
         ens .= ens * transform 
     
@@ -1073,7 +1068,7 @@ end
 
 ##############################################################################################
 """
-    ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},  
+    ensemble_filter(analysis::String, ens::ArView, obs::VecA,  
                     obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 
 General filter analysis step, wrapping the transform / update, and inflation steps.
@@ -1081,7 +1076,7 @@ Optional keyword argument includes state_dim for extended state including parame
 In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """
-function ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64}, 
+function ensemble_filter(analysis::String, ens::ArView, obs::VecA, 
                          obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 
     # step 0: infer the system, observation and ensemble dimensions 
@@ -1114,7 +1109,7 @@ end
 
 ##############################################################################################
 """
-    ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},  
+    ls_smoother_classic(analysis::String, ens::ArView, obs::ArView,  
                         obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 
 Lag-shift ensemble Kalman smoother analysis step, classical version.
@@ -1126,7 +1121,7 @@ Optional argument includes state dimension for extended state including paramete
 In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """    
-function ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
+function ls_smoother_classic(analysis::String, ens::ArView, obs::ArView, 
                              obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
@@ -1239,8 +1234,8 @@ end
 
 ##############################################################################################
 """
-    ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},       
-                                 obs::Array{Float64,2}, obs_cov::CovM,
+    ls_smoother_single_iteration(analysis::String, ens::ArView,       
+                                 obs::ArView, obs_cov::CovM,
                                  s_infl::Float64, kwargs::StepKwargs)
 
 Lag-shift ensemble Kalman smoother analysis step, single iteration version.
@@ -1250,8 +1245,8 @@ Optional argument includes state dimension for an extended state including param
 In this case, a value for the parameter covariance inflation should be included in
 addition to the state covariance inflation.
 """
-function ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2},
-                                      obs::Array{Float64,2}, obs_cov::CovM,
+function ls_smoother_single_iteration(analysis::String, ens::ArView,
+                                      obs::ArView, obs_cov::CovM,
                                       s_infl::Float64, kwargs::StepKwargs)
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
@@ -1524,8 +1519,8 @@ end
 
 ##############################################################################################
 """
-    ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},                   
-                             obs::Array{Float64,2}, obs_cov::CovM, s_infl::Float64,
+    ls_smoother_gauss_newton(analysis::String, ens::ArView,                   
+                             obs::ArView, obs_cov::CovM, s_infl::Float64,
                              kwargs::StepKwargs; ϵ::Float64=0.0001,
                              tol::Float64=0.001, max_iter::Int64=5)
 
@@ -1537,8 +1532,8 @@ shift-number of observation times. Optional argument includes state dimension fo
 state including parameters. In this case, a value for the parameter covariance inflation
 should be included in addition to the state covariance inflation.
 """
-function ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2},
-                                  obs::Array{Float64,2}, obs_cov::CovM, s_infl::Float64,
+function ls_smoother_gauss_newton(analysis::String, ens::ArView,
+                                  obs::ArView, obs_cov::CovM, s_infl::Float64,
                                   kwargs::StepKwargs; ϵ::Float64=0.0001,
                                   tol::Float64=0.001, max_iter::Int64=5)
     # step 0: unpack kwargs, posterior contains length lag past states ending
@@ -2128,7 +2123,7 @@ end
 ##############################################################################################
 # single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
 #
-#function ls_smoother_single_iteration_adaptive(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2}, 
+#function ls_smoother_single_iteration_adaptive(analysis::String, ens::ArView, obs::ArView, 
 #                             obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 #
 #    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
@@ -2161,7 +2156,7 @@ end
 #
 #    # analysis innovations contains the innovation statistics over the previous DAW plus a trail of
 #    # length tail * lag to ensure more robust frequentist estimates
-#    analysis_innovations = kwargs["analysis_innovations"]::Array{Float64,2}
+#    analysis_innovations = kwargs["analysis_innovations"]::ArView
 #
 #    # optional parameter estimation
 #    if haskey(kwargs, "state_dim")
