@@ -14,17 +14,104 @@ export alternating_obs_operator, analyze_ens, analyze_ens_para, rand_orth,
 # Main methods, debugged and validated
 ##############################################################################################
 """
+    alternating_obs_operator(x::VecA, obs_dim::Int64, kwargs::StepKwargs)
+
+This produces observations of alternating state vector components for generating pseudo-data.
+
+This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
+the observation space.  The operator selects components of the state dimension to observe
+based on the observation dimension, adjusting if the state vector includes parameter values.
+Model parameters are always assumed unobservable, and parameters in the state vector will
+be first truncated out of the  before mapping the state vectors to the observation
+space. States correpsonding to even state dimension indices are removed from the state
+vector until the observation dimension is appropriate.  If the observation dimension is
+less than half the state dimension, states corresponding to odd state dimension idices
+are subsequently removed until the observation dimension is appropriate.
+
+The `γ` parameter required in `kwargs` of type  [`StepKwargs`](@ref) controls the
+component-wise transformation of the remaining state vector components mapped to the
+observation space.  For `γ=1`, there is no transformation applied, and the observation
+operator acts as a linear projection onto the remaining components of the state vector.
+For `γ>1.0`, the nonlinear observation operator of 
+[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
+pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
+observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
+is applied to the remaining state components.  If `γ<0.0`, the exponential observation
+operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
+is applied to the remaining state vector components.
+"""
+function alternating_obs_operator(x::VecA, obs_dim::Int64, kwargs::StepKwargs)
+    sys_dim = length(x)
+
+    if haskey(kwargs, "state_dim")
+        # performing parameter estimation, load the dynamic state dimension
+        state_dim = kwargs["state_dim"]::Int64
+        
+        # observation operator for extended state, without observing extended state components
+        obs = copy(x[1:state_dim])
+        
+        # proceed with alternating observations of the regular state vector
+        sys_dim = state_dim
+    else
+        obs = copy(x)
+    end
+
+    if obs_dim == sys_dim
+
+    elseif (obs_dim / sys_dim) > 0.5
+        # the observation dimension is greater than half the state dimension, so we
+        # remove only the trailing odd-index rows equal to the difference
+        # of the state and observation dimension
+        R = sys_dim - obs_dim
+        indx = 1:(sys_dim - 2 * R)
+        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
+        obs = obs[indx]
+
+    elseif (obs_dim / sys_dim) == 0.5
+        # the observation dimension is equal to half the state dimension so we remove exactly
+        # half the rows, corresponding to those with even-index
+        obs = obs[1:2:sys_dim, :]
+
+    else
+        # the observation dimension is less than half of the state dimension so that we
+        # remove all even rows and then all but the remaining, leading obs_dim rows
+        obs = obs[1:2:sys_dim]
+        obs = obs[1:obs_dim]
+    end
+        
+    if haskey(kwargs, "γ")
+        γ = kwargs["γ"]::Float64
+        if γ > 1.0
+            obs = (obs / 2.0) .* ( 1.0 .+ ( abs.(obs) / 10.0 ).^(γ - 1.0) )
+
+        elseif γ == 0.0
+            obs .= 0.05*obs.^2.0
+
+        elseif γ < 0.0
+            for i in 1:N_x
+                x = obs[:, i]
+                obs[:, i] = x .* exp.(-γ * x)
+            end
+        end
+    end
+    return obs
+end
+
+
+##############################################################################################
+"""
     alternating_obs_operator(ens::ArView, obs_dim::Int64, kwargs::StepKwargs)
 
 This produces observations of alternating state vector components for generating pseudo-data.
 
-This operator can take either a truth twin, single model state or an ensemble of states, and
-map this data to the observation space.  The truth twin is assumed to be 2D, where the
-first index corresponds to the state dimension and the second index corresponds to the time
-dimension.  The ensemble is assumed to be 2D where the first index corresponds to the state
-dimension and the second index corresponds to the ensemble dimension.  The operator selects
-components of the state dimension to observe based on the observation dimension, adjusting
-if parameter estimation is being performed.  Model parameters are always assumed
+This operator takes either a truth twin time series or an ensemble of states of type
+[`ArView`](@ref), and maps this data to the observation space.  The truth twin in
+this version is assumed to be 2D, where the first index corresponds to the state dimension
+and the second index corresponds to the time dimension.  The ensemble is assumed to be
+2D where the first index corresponds to the state dimension and the second index
+corresponds to the ensemble dimension.  The operator selects components of the state
+dimension to observe based on the observation dimension,
+adjusting if parameter estimation is being performed.  Model parameters are always assumed
 unobservable, and statistical replicates of model parameters in the ensemble will be first
 truncated out of the ensemble matrix before mapping the state vectors to the observation
 space. States correpsonding to even state dimension indices are removed from the state
@@ -83,20 +170,22 @@ function alternating_obs_operator(ens::ArView, obs_dim::Int64, kwargs::StepKwarg
         obs = obs[1:obs_dim, :]
     end
         
-    γ = kwargs["gamma"]::Float64
-    if γ > 1.0
-        for i in 1:N_ens
-            x = obs[:, i]
-            obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
-        end
+    if haskey(kwargs, "γ")
+        γ = kwargs["γ"]::Float64
+        if γ > 1.0
+            for i in 1:N_ens
+                x = obs[:, i]
+                obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
+            end
 
-    elseif γ == 0.0
-        obs .= 0.05*obs.^2.0
+        elseif γ == 0.0
+            obs .= 0.05*obs.^2.0
 
-    elseif γ < 0.0
-        for i in 1:N_ens
-            x = obs[:, i]
-            obs[:, i] = x .* exp.(-γ * x)
+        elseif γ < 0.0
+            for i in 1:N_ens
+                x = obs[:, i]
+                obs[:, i] = x .* exp.(-γ * x)
+            end
         end
     end
     return obs
