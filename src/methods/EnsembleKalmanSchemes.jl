@@ -28,11 +28,11 @@ vector until the observation dimension is appropriate.  If the observation dimen
 less than half the state dimension, states corresponding to odd state dimension idices
 are subsequently removed until the observation dimension is appropriate.
 
-The `γ` parameter required in `kwargs` of type  [`StepKwargs`](@ref) controls the
+The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
 component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector.
-For `γ>1.0`, the nonlinear observation operator of 
+observation space.  For `γ=1.0`, there is no transformation applied, and the observation
+operator acts as a linear projection onto the remaining components of the state vector,
+equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
 pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
 observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
@@ -119,11 +119,11 @@ vector until the observation dimension is appropriate.  If the observation dimen
 less than half the state dimension, states corresponding to odd state dimension idices
 are subsequently removed until the observation dimension is appropriate.
 
-The `γ` parameter required in `kwargs` of type  [`StepKwargs`](@ref) controls the
+The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
 component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector.
-For `γ>1.0`, the nonlinear observation operator of 
+observation space.  For `γ=1.0`, there is no transformation applied, and the observation
+operator acts as a linear projection onto the remaining components of the state vector,
+equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
 pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
 observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
