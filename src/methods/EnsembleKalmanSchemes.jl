@@ -40,9 +40,9 @@ is applied to the remaining state components.  If `γ<0.0`, the exponential obse
 operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
 is applied to the remaining state vector components.
 """
-function alternating_obs_operator(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
+function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
+                                  kwargs::StepKwargs) where T <: Real
     sys_dim = length(x)
-
     if haskey(kwargs, "state_dim")
         # performing parameter estimation, load the dynamic state dimension
         state_dim = kwargs["state_dim"]::Int64
@@ -297,7 +297,7 @@ parameter replicates are after. Multiplicative inflation is performed only in th
 components of the ensemble anomalies from the ensemble mean, in-place in memory.
 """
 function inflate_state!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64) where T <: Real
+                        state_dim::Int64) where T <: Float64 
     if inflation != 1.0
         x_mean = mean(ens, dims=2)
         X = ens .- x_mean
@@ -322,7 +322,7 @@ parameter replicates are after. Multiplicative inflation is performed only in th
 in-place in memory.
 """
 function inflate_param!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64) where T <: Real
+                        state_dim::Int64) where T <: Float64 
     if inflation == 1.0
         return ens
     else
@@ -346,11 +346,11 @@ of `UniformScaling` and `Diagonal` covariance matrices are computed directly, wh
 square roots of  the more general class of `Symmetric` covariance matrices are computed via
 the singular value decomposition, for stability and accuracy for close-to-singular matrices.
 """
-function square_root(M::CovM(T)) where T <: Real
+function square_root(M::CovM(T)) where T <: Float64 
     
-    if typeof(M) <: UniformScaling
+    if typeof(M) <: UniformScaling{T}
         M^0.5
-    elseif typeof(M) <: Diagonal
+    elseif typeof(M) <: Diagonal{T}
         sqrt(M)
     else
         F = svd(M)
@@ -381,8 +381,8 @@ Optional keyword arguments are specified as:
 and are evaluated in the above order.
 """
 function square_root_inv(M::CovM(T); sq_rt::Bool=false, inverse::Bool=false,
-                         full::Bool=false) where T <: Real
-    if typeof(M) <: UniformScaling
+                         full::Bool=false) where T <: Float64 
+    if typeof(M) <: UniformScaling{T}
         if sq_rt
             S = M^0.5
             S^(-1.0), S
@@ -394,7 +394,7 @@ function square_root_inv(M::CovM(T); sq_rt::Bool=false, inverse::Bool=false,
         else
             M^(-0.5)
         end
-    elseif typeof(M) <: Diagonal
+    elseif typeof(M) <: Diagonal{T}
         if sq_rt 
             S = sqrt(M)
             inv(S), S
@@ -509,7 +509,7 @@ function transform(analysis::String, ens::ArView(T), obs::VecA(T),
                    m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                    tol::Float64 = 0.0001,
                    j_max::Int64=40,
-                   Q::CovM(T)=1.0I) where T <: Real
+                   Q::CovM(T)=1.0I) where T <: Float64 
     if analysis=="enkf" || analysis=="enks"
         # step 0: infer the ensemble, obs, and state dimensions
         sys_dim, N_ens = size(ens)
@@ -1133,7 +1133,7 @@ this simply performs right mutliplication.  All other cases use the 3-tuple incl
 right transform for the anomalies, the weights for the mean and the random, mean-preserving
 orthogonal matrix.
 """
-function ens_update!(ens::ArView(T), update::TransM(T)) where T <: Real
+function ens_update!(ens::ArView(T), update::TransM(T)) where T <: Float64 
     # step 0: infer dimensions and unpack the transform
     sys_dim, N_ens = size(ens)
     trans, w, U = update
@@ -1161,7 +1161,7 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """
 function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), obs_cov::CovM(T),
-                         s_infl::Float64, kwargs::StepKwargs) where T <: Real
+                         s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
 
     # step 0: infer the system, observation and ensemble dimensions 
     sys_dim, N_ens = size(ens)
@@ -1206,7 +1206,7 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 """    
 function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T), obs_cov::CovM(T),
-                             s_infl::Float64, kwargs::StepKwargs) where T <: Real
+                             s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]
@@ -1331,7 +1331,7 @@ addition to the state covariance inflation.
 """
 function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                                       obs::ArView(T), obs_cov::CovM(T),
-                                      s_infl::Float64, kwargs::StepKwargs) where T <: Real
+                                      s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
@@ -1619,7 +1619,7 @@ should be included in addition to the state covariance inflation.
 function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
                                   obs::ArView(T), obs_cov::CovM(T), s_infl::Float64,
                                   kwargs::StepKwargs; ϵ::Float64=0.0001,
-                                  tol::Float64=0.001, max_iter::Int64=5) where T <: Real
+                                  tol::Float64=0.001, max_iter::Int64=5) where T <: Float64 
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64

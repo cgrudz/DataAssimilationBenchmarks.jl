@@ -161,7 +161,7 @@ function Info()
 
     print("\n")
     printstyled(" Welcome to DataAssimilationBenchmarks!\n", bold=true)
-    print(" Version 0.20, Copyright 2021 Colin James Grudzien (cgrudz@mailbox.org)\n")
+    print(" Version 0.20, Copyright 2022 Colin James Grudzien (cgrudzien@ucsd.edu)\n")
     print(" Licensed under the Apache License, Version 2.0 \n")
     print(" https://github.com/cgrudz/DataAssimilationBenchmarks/blob/master/LICENSE.md\n")
     print("\n")

@@ -77,7 +77,7 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
             end
         else
             # set the parameter sample as the only derivative parameters
-            dx_params = Dict{String, Array{Float64}}
+            dx_params = Dict{String, Array{T}}
             for key in keys(param_sample)
                 dx_params = merge(dx_params, Dict(key => x[param_sample[key][1]]))
             end
@@ -85,7 +85,7 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     end
 
     # pre-allocate storage for the Runge-Kutta scheme
-    κ = Array{T where T <: Real}(undef, state_dim, 4)
+    κ = Array{T}(undef, state_dim, 4)
 
     # terms of the RK scheme recursively evolve the dynamic state components alone
     if diffusion != 0.0
