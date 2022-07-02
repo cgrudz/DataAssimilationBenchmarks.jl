@@ -30,10 +30,9 @@ Time derivative for Lorenz-96 model, `x` is a  model state of size `state_dim` a
 """
 function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # unpack the (only) derivative parameter for l96
-    # NOTE: we may want to recast this type for auto-differentiation
-    F = dx_params["F"][1]::Float64
+    F = dx_params["F"][1]
     x_dim = length(x)
-    dx = Vector{T}(undef, x_dim)
+    dx = copy(x)
 
     for j in 1:x_dim
         # index j minus 2, modulo the system dimension
