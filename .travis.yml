@@ -2,8 +2,9 @@ language: julia
 julia:
   - 1.7
 codecov: true
+  - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); Pkg.test("MyPkg", coverage=true)'
   after_success:
-    - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+    - julia -e 'using Codecov; Codecov.submit(Codecov.process_folder())'
 
 jobs:
   include:
