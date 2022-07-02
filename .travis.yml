@@ -2,6 +2,8 @@ language: julia
 julia:
   - 1.7
 codecov: true
+  after_success:
+    - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 
 jobs:
   include:
@@ -12,5 +14,4 @@ jobs:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
         - julia --project=docs/ docs/make.jl
-      after_success:
-        - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+      after_success: skip
