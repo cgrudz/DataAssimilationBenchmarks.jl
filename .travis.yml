@@ -14,4 +14,3 @@ jobs:
         - julia --project=docs/ docs/make.jl
       after_success:
         - julia -e 'using Pkg; cd(Pkg.dir("DataAssimilationBenchmarks")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-

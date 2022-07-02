@@ -1,0 +1,174 @@
+        - ##############################################################################################
+        - module DataAssimilationBenchmarks
+        - ##############################################################################################
+        - # imports and exports
+        - using LinearAlgebra
+        - export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
+        - 
+        - ##############################################################################################
+        - # Global type union declarations for multiple dispatch and type aliases
+        - 
+        - """
+        -     VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
+        - 
+        - Type union of Vectors and 1-D SubArrays in order to pass columns of an ensemble maxtrix into
+        - integration schemes and related array operations.
+        - """
+        2 function VecA(type)
+        2     Union{Vector{T}, SubArray{T, 1}} where T <: type
+        - end
+        - 
+        - """
+        -     ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
+        - 
+        - Type union of Arrays and SubArrays for use within ensemble conditioning operations,
+        - integration schemes and other array operations.
+        - """
+        - function ArView(type)
+        -     Union{Array{T, 2}, SubArray{T, 2}} where T <: type
+        - end
+        - 
+        - """
+        -     ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
+        - 
+        - Dictionary for model parameters to be passed to derivative functions by name.  This allows
+        - one to pass both vector parameters (and scalars written as vectors), as well as matrix
+        - valued parameters such as diffusion arrays.
+        - """
+ 17842503 function ParamDict(type)
+ 17842503     Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: type
+        - end
+        - 
+        - """
+        -     ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+        - 
+        - Dictionary containing key and index pairs to subset the state vector and
+        - then merge a statistical sample of parameters that govern the equations of motion with
+        - the ParamDict `dx_params` in parameter estimation problems.
+        - """
+        - ParamSample = Dict{String, Vector{UnitRange{Int64}}}
+        - 
+        - 
+        - """
+        -     CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
+        - 
+        - Type union of covariance matrix types, for optimized computation based on their
+        - special characteristics as symmetric, positive definite operators.
+        - """
+        - function CovM(type)
+        -     Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: type
+        - end
+        - 
+        - """
+        -     ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
+        - 
+        - Type union of conditioning matrix types, which are used for optimization routines in the
+        - transform method.
+        - """
+    45382 function ConM(type)
+    45382     Union{UniformScaling{T}, Symmetric{T}} where T <: type
+        - end
+        - 
+        - 
+        - function TransM(type)
+        -     Union{Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
+        -           Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}}} where T <: type
+        - end
+        - 
+        - """
+        -     StepKwargs = Dict{String,Any}
+        - 
+        - Key word arguments for twin experiment time stepping. Arguments are given as:
+        - 
+        - ```
+        -     REQUIRED:
+        -     dx_dt        -- time derivative function with arguments x and dx_params
+        -     dx_params    -- parameters necessary to resolve dx_dt, not including
+        -                     parameters to be estimated in the extended state vector 
+        -     h            -- numerical time discretization step size
+        -     γ            -- controls nonlinearity of the alternating_obs_operator
+        - 
+        -     OPTIONAL:
+        -     diffusion    -- tunes the standard deviation of the Wiener process, 
+        -                     equal to sqrt(h) * diffusion
+        -     diff_mat     -- structure matrix for the diffusion coefficients,
+        -                     replaces the default uniform scaling 
+        -     state_dim    -- keyword for parameter estimation, dimension of the
+        -                     dynamic state < dimension of full extended state
+        -     param_sample -- ParamSample dictionary for merging extended state with dx_params
+        -     ξ            -- random array size state_dim, can be defined in kwargs
+        -                     to provide a particular realization for method validation
+        - ```
+        - See [`DataAssimilationBenchmarks.EnsembleKalmanSchemes.alternating_obs_operator`](@ref) for
+        - a discusssion of the `γ` parameter.
+        - """
+        - StepKwargs = Union{Dict{String,Any}}
+        - 
+        - 
+        - ##############################################################################################
+        - # imports and exports of sub-modules
+        - include("methods/DeSolvers.jl")
+        - include("methods/EnsembleKalmanSchemes.jl")
+        - include("models/L96.jl")
+        - include("models/IEEE39bus.jl")
+        - include("experiments/GenerateTimeSeries.jl")
+        - include("experiments/FilterExps.jl")
+        - include("experiments/SmootherExps.jl")
+        - include("experiments/SingleExperimentDriver.jl")
+        - using .DeSolvers
+        - using .EnsembleKalmanSchemes
+        - using .L96
+        - using .IEEE39bus
+        - using .GenerateTimeSeries
+        - using .FilterExps
+        - using .SmootherExps
+        - using .SingleExperimentDriver
+        - export DeSolvers, EnsembleKalmanSchemes, L96, IEEE39bus, GenerateTimeSeries, FilterExps,
+        -        SingleExperimentDriver
+        - 
+        - ##############################################################################################
+        - # info
+        - 
+        - function Info()
+        -     print("  _____        _                         ")
+        -     printstyled("_",color=9)
+        -     print("           ")
+        -     printstyled("_",color=2)
+        -     print(" _       _   ")
+        -     printstyled("_              \n",color=13)
+        -     print(" |  __ \\      | |          /\\           ")
+        -     printstyled("(_)",color=9)
+        -     printstyled("         (_)",color=2)
+        -     print(" |     | | ")
+        -     printstyled("(_)             \n",color=13)
+        -     print(" | |  | | __ _| |_ __ _   /  \\   ___ ___ _ _ __ ___  _| | __ _| |_ _  ___  _ __   \n")
+        -     print(" | |  | |/ _` | __/ _` | / /\\ \\ / __/ __| | '_ ` _ \\| | |/ _` | __| |/ _ \\| '_ \\  \n")
+        -     print(" | |__| | (_| | || (_| |/ ____ \\\\__ \\__ \\ | | | | | | | | (_| | |_| | (_) | | | | \n")
+        -     print(" |_____/ \\__,_|\\__\\__,_/_/    \\_\\___/___/_|_| |_| |_|_|_|\\__,_|\\__|_|\\___/|_| |_| \n")
+        -     print("\n")
+        -     print("  ____                  _                          _         ")
+        -     printstyled(" _ ", color=12)
+        -     print("_\n")
+        -     print(" |  _ \\                | |                        | |        ")
+        -     printstyled("(_)",color=12)
+        -     print(" |                \n")
+        -     print(" | |_) | ___ _ __   ___| |__  _ __ ___   __ _ _ __| | _____   _| |                \n")
+        -     print(" |  _ < / _ \\ '_ \\ / __| '_ \\| '_ ` _ \\ / _` | '__| |/ / __| | | |                \n")
+        -     print(" | |_) |  __/ | | | (__| | | | | | | | | (_| | |  |   <\\__ \\_| | |                \n")
+        -     print(" |____/ \\___|_| |_|\\___|_| |_|_| |_| |_|\\__,_|_|  |_|\\_\\___(_) |_|                \n")
+        -     print("                                                            _/ |                  \n")
+        -     print("                                                           |__/                   \n")
+        - 
+        -     print("\n")
+        -     printstyled(" Welcome to DataAssimilationBenchmarks!\n", bold=true)
+        -     print(" Version 0.20, Copyright 2022 Colin James Grudzien (cgrudzien@ucsd.edu)\n")
+        -     print(" Licensed under the Apache License, Version 2.0 \n")
+        -     print(" https://github.com/cgrudz/DataAssimilationBenchmarks/blob/master/LICENSE.md\n")
+        -     print("\n")
+        -     nothing
+        - 
+        - end
+        - 
+        - ##############################################################################################
+        - 
+        - end
