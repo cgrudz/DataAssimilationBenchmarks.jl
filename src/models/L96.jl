@@ -22,18 +22,18 @@ end
 
 ##############################################################################################
 """
-    dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
+    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T))
 
 Time derivative for Lorenz-96 model, `x` is a  model state of size `state_dim` and type
 [`VecA`](@ref), `t` is a dummy time argument for consistency with integration methods,
 `dx_params` is of type [`ParamDict`](@ref) which is called for the forcing parameter.
 """
-function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
+function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # unpack the (only) derivative parameter for l96
     # NOTE: we may want to recast this type for auto-differentiation
     F = dx_params["F"][1]::Float64
     x_dim = length(x)
-    dx = Vector{T where T <: Real}(undef, x_dim)
+    dx = Vector{T}(undef, x_dim)
 
     for j in 1:x_dim
         # index j minus 2, modulo the system dimension
@@ -61,7 +61,7 @@ variable `t` is a dummy variable for consistency with integration methods,
 Note that this is designed to load entries in a zeros array and return a sparse array to
 make a compromise between memory and computational resources.
 """
-function jacobian(x::VecA, t::Float64, dx_params::ParamDict)
+function jacobian(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
 
     x_dim = length(x)
     dxF = zeros(x_dim, x_dim)
@@ -127,11 +127,11 @@ This method is derived in
 [Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 NOTE: this Julia version still pending validation as in the manuscript
 """
-function l96s_tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs)
+function l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
     # Infer model and parameters
     sys_dim = length(x)
-    dx_params = kwargs["dx_params"]::ParamDict
+    dx_params = kwargs["dx_params"]::ParamDict(T)
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
     p = kwargs["p"]::Int64

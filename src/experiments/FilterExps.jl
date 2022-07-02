@@ -32,7 +32,7 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
     
@@ -194,7 +194,7 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
     

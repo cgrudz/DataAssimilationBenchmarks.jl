@@ -22,7 +22,7 @@ where `kwargs` is type [`StepKwargs`](@ref). Details on this scheme are availabl
 manuscript
 [Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 """
-function rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs)
+function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the integration scheme arguments and the parameters of the derivative
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
@@ -30,7 +30,7 @@ function rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs)
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
-        dx_params = kwargs["dx_params"]::ParamDict
+        dx_params = kwargs["dx_params"]::ParamDict(T)
     end
 
     # infer the (possibly) extended state dimension
@@ -123,10 +123,10 @@ dynamics.  Arguments are given as:
 ```
 where `kwargs` is type [`StepKwargs`](@ref).
 """
-function tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs)
+function tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack dx_params
     h = kwargs["h"]::Float64
-    dx_params = kwargs["dx_params"]::ParamDict
+    dx_params = kwargs["dx_params"]::ParamDict(T)
     dx_dt = kwargs["dx_dt"]
     jacobian = kwargs["jacobian"]
 
@@ -157,10 +157,10 @@ where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available
 manuscript
 [Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 """
-function em_step!(x::VecA, t::Float64, kwargs::StepKwargs)
+function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
-    dx_params = kwargs["dx_params"]::ParamDict
+    dx_params = kwargs["dx_params"]::ParamDict(T)
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]
     state_dim = length(x)

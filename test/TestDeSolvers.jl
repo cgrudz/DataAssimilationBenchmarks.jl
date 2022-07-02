@@ -13,7 +13,7 @@ Wrapper for making a vectorized output of the exponential function for the DE so
 is used to verify the order of convergence for integration methods versus an analytical
 solution.
 """
-function exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
+function exponentialODE(x::VecA(T), t::T, dx_params::ParamDict(T)) where T <: Float64
     [exp(t)]
 end
 
@@ -26,7 +26,7 @@ Auxiliary function to compute the difference of the numerically simulated integr
 the analytical value.  This is a function of the time step and integration method, for
 varying the approximations to demonstrate the correct reduction in discretization errors.
 """
-function expDiscretizationError(step_model!, h)
+function expDiscretizationError(step_model!, h::Float64)
     # continuous time length of the integration
     tanl = 0.1
 

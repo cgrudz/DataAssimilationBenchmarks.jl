@@ -14,16 +14,16 @@ generator buses. The input `dx_params` of type [`ParamDict`](@ref) containing sy
 parameters to be passed to the integration scheme.  The system is currenty defined
 autonomously to be run as an SDE, noise perturbed steady state.
 """
-function dx_dt(x::VecA, t::Float64, dx_params::ParamDict)
+function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # unpack the system parameters effective network of
     # Nishikawa, T., & Motter, A. E. (2015). Comparative analysis of existing
     # models for power-grid synchronization.
-    A = dx_params["A"]::Array{Float64}
-    D = dx_params["D"]::Array{Float64}
-    H = dx_params["H"]::Array{Float64}
-    K = dx_params["K"]::Array{Float64}
-    γ = dx_params["γ"]::Array{Float64}
-    ω = dx_params["ω"]::Array{Float64}
+    A = dx_params["A"]::Array{T}
+    D = dx_params["D"]::Array{T}
+    H = dx_params["H"]::Array{T}
+    K = dx_params["K"]::Array{T}
+    γ = dx_params["γ"]::Array{T}
+    ω = dx_params["ω"]::Array{T}
 
     # convert the effective bus coupling and passive injection to contain the change
     # of variable terms

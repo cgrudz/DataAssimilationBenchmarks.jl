@@ -14,7 +14,9 @@ export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
 Type union of Vectors and 1-D SubArrays in order to pass columns of an ensemble maxtrix into
 integration schemes and related array operations.
 """
-VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
+function VecA(type)
+    Union{Vector{T}, SubArray{T, 1}} where T <: type
+end
 
 """
     ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
@@ -22,7 +24,9 @@ VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
 Type union of Arrays and SubArrays for use within ensemble conditioning operations,
 integration schemes and other array operations.
 """
-ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
+function ArView(type)
+    Union{Array{T, 2}, SubArray{T, 2}} where T <: type
+end
 
 """
     ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
@@ -31,7 +35,9 @@ Dictionary for model parameters to be passed to derivative functions by name.  T
 one to pass both vector parameters (and scalars written as vectors), as well as matrix
 valued parameters such as diffusion arrays.
 """
-ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
+function ParamDict(type)
+    Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: type
+end
 
 """
     ParamSample = Dict{String, Vector{UnitRange{Int64}}}
@@ -49,7 +55,9 @@ ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 Type union of covariance matrix types, for optimized computation based on their
 special characteristics as symmetric, positive definite operators.
 """
-CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
+function CovM(type)
+    Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: type
+end
 
 """
     ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
@@ -57,21 +65,15 @@ CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
 Type union of conditioning matrix types, which are used for optimization routines in the
 transform method.
 """
-ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
+function ConM(type)
+    Union{UniformScaling{T}, Symmetric{T}} where T <: type
+end
 
-"""
-    TransM = Union{Tuple{Symmetric{T, Array{T,2}}, Array{T,2},
-                         Array{T,2}},
-                   Tuple{Symmetric{T, Array{T,2}},
-                         Array{T,1}, Array{T,2}},
-                   Array{T,2}} where T <: Real
 
-Type union of right ensemble transform types, including soley a transform,
-or a transform, weights and rotation package.
-"""
-TransM = Union{Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}},
-               Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
-               Array{T,2}} where T <: Real
+function TransM(type)
+    Union{Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
+          Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}}} where T <: type
+end
 
 """
     StepKwargs = Dict{String,Any}

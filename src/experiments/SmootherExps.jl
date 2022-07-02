@@ -40,7 +40,7 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
    
@@ -261,7 +261,7 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
@@ -531,7 +531,7 @@ function single_iteration_state((time_series, method, seed, nanl, lag, shift, md
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
@@ -833,7 +833,7 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
@@ -1190,7 +1190,7 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
@@ -1525,7 +1525,7 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
     # load the timeseries and associated parameters
     ts = load(time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
-    dx_params = ts["dx_params"]::ParamDict
+    dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
