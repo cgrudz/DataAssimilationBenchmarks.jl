@@ -20,4 +20,3 @@ in the pre-print
 [A fast, single-iteration ensemble Kalman smoother for sequential data
 assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/)
 available currently in open review in Geoscientific Model Development.
-

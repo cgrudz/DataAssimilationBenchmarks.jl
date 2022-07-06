@@ -16,17 +16,22 @@ function mod_indx!(indx::Int64, dim::Int64)
     if indx==0
         indx = dim
     end
-    return indx
+    return indx::Int64
 end
 
 
 ##############################################################################################
 """
-    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T))
+    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
 
 Time derivative for Lorenz-96 model, `x` is a  model state of size `state_dim` and type
 [`VecA`](@ref), `t` is a dummy time argument for consistency with integration methods,
 `dx_params` is of type [`ParamDict`](@ref) which is called for the forcing parameter.
+
+Returns time derivative of the state vector
+```
+return dx
+```
 """
 function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # unpack the (only) derivative parameter for l96
@@ -52,13 +57,16 @@ end
 
 ##############################################################################################
 """
-    jacobian(x::VecA, t::Float64, dx_params::ParamDict) 
+    jacobian(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     
 Computes the Jacobian of Lorenz-96 about the state `x` of type [`VecA`](@ref). The time
 variable `t` is a dummy variable for consistency with integration methods,
 `dx_params` is of type [`ParamDict`](@ref) which is called for the forcing parameter.
 Note that this is designed to load entries in a zeros array and return a sparse array to
 make a compromise between memory and computational resources.
+```
+return sparse(dxF)
+```
 """
 function jacobian(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
 
@@ -99,6 +107,9 @@ Computes auxiliary functions for the 2nd order Taylor-Stratonovich expansion. Th
 Fourier series, the argument `p`, for the integration method.  These constants are then
 supplied as arguments to `l96s_tay2_step!` in `kwargs`. See [`l96s_tay2_step!`](@ref) for
 the interpretation and usage of these constants.
+```
+return α(p)::Float64, ρ(p)::Float64
+```
 """
 function compute_α_ρ(p::Int64)
     function α(p::Int64)
@@ -107,13 +118,13 @@ function compute_α_ρ(p::Int64)
     function ρ(p::Int64)
         1.0/12.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^2.0)
     end
-    return α(p), ρ(p)
+    return α(p)::Float64, ρ(p)::Float64
 end
 
 
 ##############################################################################################
 """
-    l96s_tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     
 One step of integration rule for l96 second order taylor rule
 The constants `ρ` and `α` are to be computed with `compute_α_ρ`, depending
@@ -125,6 +136,9 @@ necessary for order 2.0 convergence.
 This method is derived in
 [Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 NOTE: this Julia version still pending validation as in the manuscript
+```
+return x
+```
 """
 function l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
@@ -207,8 +221,8 @@ function l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: 
     end
 
     # define the approximations of the second order Stratonovich integral
-    Ψ_plus = Vector{T where T <: Real}(undef, sys_dim)
-    Ψ_minus = Vector{T where T <: Real}(undef, sys_dim)
+    Ψ_plus = copy(x) 
+    Ψ_minus = copy(x)
     for i in 1:sys_dim
         Ψ_plus[i] = Ψ(mod_indx!((i-1), sys_dim), mod_indx!((i+1), sys_dim))
         Ψ_minus[i] = Ψ(mod_indx!((i-2), sys_dim), mod_indx!((i-1), sys_dim))
@@ -221,6 +235,7 @@ function l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: 
             diffusion * Jac_x * J_pdelta +           # stochastic first order taylor step
             diffusion^2.0 * (Ψ_plus - Ψ_minus)       # stochastic second order taylor step
            ))
+    return x
 end
 
 

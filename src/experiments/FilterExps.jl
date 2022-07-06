@@ -92,7 +92,7 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
     
     # check if there is a diffusion structure matrix
     if haskey(ts, "diff_mat")
-        kwargs["diff_mat"] = ts["diff_mat"]
+        kwargs["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
     end
    
     # create storage for the forecast and analysis statistics
@@ -121,7 +121,7 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
 
         # after the forecast step, perform assimilation of the observation
         analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, s_infl, kwargs)
-        ens = analysis["ens"]
+        ens = analysis["ens"]::Array{Float64,2}
 
         # compute the analysis statistics
         filt_rmse[i], filt_spread[i] = analyze_ens(ens, truth[:, i])
@@ -148,7 +148,7 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
                            ) 
     
     if haskey(ts, "diff_mat")
-        data["diff_mat"] = ts["diff_mat"]
+        data["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
     end
         
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
@@ -325,7 +325,7 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
 
         # compute the analysis statistics
         filt_rmse[i], filt_spread[i] = analyze_ens(ens[1:state_dim, :], truth[:, i])
-        para_rmse[i], para_spread[i] = analyze_ens_para(param_ens, param_truth)
+        para_rmse[i], para_spread[i] = analyze_ens_param(param_ens, param_truth)
 
         # include random walk for the ensemble of parameters
         # with standard deviation given by the p_wlk scaling
@@ -364,7 +364,7 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
     
     # check if there is a diffusion structure matrix
     if haskey(ts, "diff_mat")
-        data["diff_mat"] = ts["diff_mat"]
+        data["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
     end
 
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"

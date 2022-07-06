@@ -6,7 +6,7 @@ using ..DataAssimilationBenchmarks
 export rk4_step!, tay2_step!, em_step!
 ##############################################################################################
 """
-    rk4_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
 Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020.
 The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
@@ -21,12 +21,17 @@ Arguments are given as:
 where `kwargs` is type [`StepKwargs`](@ref). Details on this scheme are available in the
 manuscript
 [Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+
+This method overwrites the input in-place and returns the updated
+```
+return x::VecA(T)
+```
 """
 function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the integration scheme arguments and the parameters of the derivative
     h = kwargs["h"]::Float64
     diffusion = kwargs["diffusion"]::Float64
-    dx_dt = kwargs["dx_dt"]
+    dx_dt = kwargs["dx_dt"]::Function
 
     if haskey(kwargs, "dx_params")
         # get parameters for resolving dx_dt
@@ -104,7 +109,7 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     
     # compute the update to the dynamic variables
     x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
-    x
+    return x::VecA(T)
 end
 
 
@@ -122,13 +127,18 @@ dynamics.  Arguments are given as:
               and optionals
 ```
 where `kwargs` is type [`StepKwargs`](@ref).
+
+This overwrites the input in-place and returns the updated
+```
+return x::VecA(T)
+```
 """
 function tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack dx_params
     h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict(T)
-    dx_dt = kwargs["dx_dt"]
-    jacobian = kwargs["jacobian"]
+    dx_dt = kwargs["dx_dt"]::Function
+    jacobian = kwargs["jacobian"]::Function
 
     # calculate the evolution of x one step forward via the second order Taylor expansion
 
@@ -137,6 +147,7 @@ function tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
     # second order taylor expansion
     x .= x + dx * h + 0.5 * jacobian(x, t, dx_params) * dx * h^2.0
+    return x::VecA(T)
 end
 
 
@@ -156,13 +167,18 @@ Arguments are given as:
 where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available in the
 manuscript
 [Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+
+This overwrites the input in-place and returns the updated
+```
+return x::VecA(T)
+```
 """
 function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the arguments for the integration step
     h = kwargs["h"]::Float64 
     dx_params = kwargs["dx_params"]::ParamDict(T)
     diffusion = kwargs["diffusion"]::Float64
-    dx_dt = kwargs["dx_dt"]
+    dx_dt = kwargs["dx_dt"]::Function
     state_dim = length(x)
 
     # check if SDE or deterministic formulation
@@ -185,6 +201,7 @@ function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
     # step forward by interval h
     x .= x +  h * dx_dt(x, t, dx_params) + diffusion * W
+    return x::VecA(T)
 end
 
 
