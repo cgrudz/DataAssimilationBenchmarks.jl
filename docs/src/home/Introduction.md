@@ -59,15 +59,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td> EnKS, perturbed obs.</td>
-	<td> X  </td>
-	<td> X  </td>
-	<td>    </td>
-	<td> NA </td>
-	<td>    </td>
-	<td> NA </td>
-</tr>
-<tr>
   <td> ETKS</td>
 	<td> X  </td>
 	<td> X  </td>
