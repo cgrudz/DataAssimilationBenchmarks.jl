@@ -6,7 +6,7 @@ using ..DataAssimilationBenchmarks
 export dx_dt
 ##############################################################################################
 """
-    dx_dt(x::VecA, t::Float64, dx_params::ParamDict) 
+    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real 
     
 Time derivative of the phase and fequency of the [effective-network swing equation model](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012).
 Input x is a 2 `n_g` [`VecA`](@ref) of the phase and fequency at each of the `n_g`
@@ -59,7 +59,7 @@ function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # to compute the derivative of the frequencies, we finally 
     # divide back out by the inertia
     dx[n_g + 1 : end] = dx[n_g + 1: end] ./ H
-    return dx
+    return dx::VecA(T)
 end
 
 

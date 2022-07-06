@@ -21,18 +21,19 @@ inflation parameter and key word arguments for running the underlying dynamical 
 Examples of the syntax are below:
 
 ```{julia}
-ensemble_filter(analysis::String, ens::Array{Float64,2}, obs::Vector{Float64},
-                         obs_cov::CovM, state_infl::Float64, kwargs::StepKwargs)
+ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), obs_cov::CovM(T),
+    state_infl::Float64, kwargs::StepKwargs) where T <: Float64
 
-ls_smoother_classic(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::CovM, state_infl::Float64, kwargs::StepKwargs)
+ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T), obs_cov::CovM(T),
+    state_infl::Float64, kwargs::StepKwargs) where T <: Float64
 
-ls_smoother_single_iteration(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::CovM, state_infl::Float64, kwargs::StepKwargs)
+ls_smoother_single_iteration(analysis::String, ens::ArView(T), obs::ArView(T),
+    obs_cov::CovM(T), state_infl::Float64, kwargs::StepKwargs) where T <: Float64
 
-ls_smoother_gauss_newton(analysis::String, ens::Array{Float64,2}, obs::Array{Float64,2},
-                             obs_cov::CovM, state_infl::Float64, kwargs::StepKwargs;
-                             ϵ::Float64=0.0001, tol::Float64=0.001, max_iter::Int64=10)
+ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T), obs_cov::CovM(T),
+    state_infl::Float64, kwargs::StepKwargs; ϵ::Float64=0.0001, tol::Float64=0.001,
+		max_iter::Int64=10) where T <: Float64
+
 
 """
 analysis   -- string name analysis scheme given to the transform sub-routine
@@ -48,16 +49,19 @@ kwargs     -- keyword arguments for parameter estimation or other functionality,
 """
 ```
 
-The type of analysis to be passed to the transform step is specified with the `analysis` string, with partiuclar
-analysis methods described below.  Observations for the filter schemes correspond to information available
-at a single analysis time while the ls (lag-shift) smoothers require an array of observations corresponding
-to all analysis times within the DAW.  Observation covariances are typed as [`CovM`](@ref) for efficiency.
-The `state_infl` is a required tuneable parameter for multiplicative covariance inflation.   Extended parameter
-state covariance inflation can be specified in `kwargs`.  These outer-loops will pass the required values
-to the `transform` function that generates the ensemble transform for conditioning on observations.  Different
-outer-loop schemes can be built around the `transform` function alone in order to use validated ensemble transform 
-schemes.  Utility scripts to generate observation operators, analyze ensemble statistics, etc, are included
-in the below. 
+The type of analysis to be passed to the transform step is specified with the `analysis`
+string, with partiuclar analysis methods described below.  Observations for the filter
+schemes correspond to information available at a single analysis time giving an observation
+of the state vector of type [`VecA`](@ref). The ls (lag-shift) smoothers require an array of
+observations of type [`ArView`](@ref) corresponding to all analysis times within the DAW.
+Observation covariances are typed as [`CovM`](@ref) for efficiency. The `state_infl` is a
+required tuneable parameter for multiplicative covariance inflation.   Extended parameter
+state covariance inflation can be specified in `kwargs`.  These outer-loops will pass the
+required values to the
+[`DataAssimilationBenchmarks.EnsembleKalmanSchemes.transform_R`](@ref) method
+that generates the ensemble transform
+for conditioning on observations. Utility scripts to generate observation operators,
+analyze ensemble statistics, etc, are included in the below. 
 
 ## Methods
 

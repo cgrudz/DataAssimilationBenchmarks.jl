@@ -128,10 +128,10 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
         # observations indexed in absolute time
         analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov,
                                        s_infl, kwargs)
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64} 
+        filt = analysis["filt"]::Array{Float64} 
+        post = analysis["post"]::Array{Float64} 
         
         for j in 1:shift
             # compute the forecast, filter and analysis statistics
@@ -382,10 +382,10 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
                                        method, ens, obs[:, i: i + shift - 1],
                                        obs_cov, s_infl, kwargs
                                       )
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64}
+        filt = analysis["filt"]::Array{Float64}
+        post = analysis["post"]::Array{Float64}
         
         for j in 1:shift
             # compute the forecast, filter and analysis statistics
@@ -414,10 +414,10 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
                                                     )
 
                 para_rmse[i + j - 2], 
-                para_spread[i + j - 2] = analyze_ens_para(
-                                                          post[state_dim + 1: end,:, j], 
-                                                          param_truth
-                                                         )
+                para_spread[i + j - 2] = analyze_ens_param(
+                                                           post[state_dim + 1: end,:, j], 
+                                                           param_truth
+                                                          )
             elseif i > lag 
                 # for lag > shift, we wait for the dummy lag-1-total posterior states
                 # to be cycled out the first posterior starts with the first prior at time 1,
@@ -430,10 +430,10 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
 
                 para_rmse[i - lag + j - 1], 
                 para_spread[i - lag + j - 1] = 
-                                             analyze_ens_para(
-                                                              post[state_dim + 1: end, :, j], 
-                                                              param_truth
-                                                             )
+                                             analyze_ens_param(
+                                                               post[state_dim + 1: end, :, j],
+                                                               param_truth
+                                                              )
             end
         end
     end        
@@ -684,10 +684,10 @@ function single_iteration_state((time_series, method, seed, nanl, lag, shift, md
                                                 method, ens, obs[:, i: i + lag - 1], 
                                                 obs_cov, s_infl, kwargs
                                                )
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64}
+        filt = analysis["filt"]::Array{Float64}
+        post = analysis["post"]::Array{Float64}
 
         if spin
             for j in 1:lag 
@@ -1017,10 +1017,10 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
                                                 s_infl, 
                                                 kwargs
                                                )
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64}
+        filt = analysis["filt"]::Array{Float64}
+        post = analysis["post"]::Array{Float64}
 
         if spin
             for j in 1:lag 
@@ -1048,10 +1048,10 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
                                                     )
                 
                 para_rmse[i - 2 + j], 
-                para_spread[i - 2 + j] = analyze_ens_para(
-                                                          post[state_dim+1:end, :, j], 
-                                                          param_truth
-                                                         )
+                para_spread[i - 2 + j] = analyze_ens_param(
+                                                           post[state_dim+1:end, :, j], 
+                                                           param_truth
+                                                          )
                 
             end
 
@@ -1087,10 +1087,10 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
                                                     )
                 
                 para_rmse[i - 2 + j], 
-                para_spread[i - 2 + j] = analyze_ens_para(
-                                                          post[state_dim+1:end, :, j], 
-                                                          param_truth
-                                                         )
+                para_spread[i - 2 + j] = analyze_ens_param(
+                                                           post[state_dim+1:end, :, j], 
+                                                           param_truth
+                                                          )
 
             end
 
@@ -1365,10 +1365,10 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
                                              obs_cov, s_infl, kwargs)
         end
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64}
+        filt = analysis["filt"]::Array{Float64}
+        post = analysis["post"]::Array{Float64}
         iteration_sequence = [iteration_sequence; analysis["iterations"]]
         m+=1
 
@@ -1723,10 +1723,10 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
                                              obs_cov, s_infl, kwargs)
         end
-        ens = analysis["ens"]
-        fore = analysis["fore"]
-        filt = analysis["filt"]
-        post = analysis["post"]
+        ens = analysis["ens"]::Array{Float64}
+        fore = analysis["fore"]::Array{Float64}
+        filt = analysis["filt"]::Array{Float64}
+        post = analysis["post"]::Array{Float64}
         iteration_sequence = [iteration_sequence; analysis["iterations"]]
         m+=1
 
@@ -1751,7 +1751,7 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
                                                           truth[:, i - 2 + j])
                 
                 para_rmse[i - 2 + j], 
-                para_spread[i - 2 + j] = analyze_ens_para(post[state_dim+1:end, :, j], 
+                para_spread[i - 2 + j] = analyze_ens_param(post[state_dim+1:end, :, j], 
                                                                      param_truth)
                 
             end
@@ -1786,10 +1786,10 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
                                                     )
 
                 para_rmse[i - 2 + j], 
-                para_spread[i - 2 + j] = analyze_ens_para(
-                                                          post[state_dim+1:end, :, j], 
-                                                          param_truth
-                                                         )
+                para_spread[i - 2 + j] = analyze_ens_param(
+                                                           post[state_dim+1:end, :, j], 
+                                                           param_truth
+                                                          )
 
             end
 

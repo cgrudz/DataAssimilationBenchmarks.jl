@@ -29,8 +29,6 @@ see the manuscript
 [A fast, single-iteration ensemble Kalman smoother for sequential data
 assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 
-
-
 ```@raw html
 <table>
 <tr>
@@ -41,15 +39,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<th>Linesearch</th>
 	<th>Localization / Hybridization</th>
 	<th>Multiple data assimilation (general shift and lag)</th>
-</tr>
-<tr>
-  <td> EnKF, perturbed obs.</td>
-	<td> X  </td>
-	<td> X  </td>
-	<td>    </td>
-	<td> NA </td>
-	<td>    </td>
-	<td> NA </td>
 </tr>
 <tr>
   <td> ETKF </td>

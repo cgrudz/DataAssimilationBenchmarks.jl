@@ -9,31 +9,37 @@ export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
 # Global type union declarations for multiple dispatch and type aliases
 
 """
-    VecA = Union{Vector{T}, SubArray{T, 1}} where T <: Real
+    function VecA(type)
+        Union{Vector{T}, SubArray{T, 1}} where T <: type
+    end
 
-Type union of Vectors and 1-D SubArrays in order to pass columns of an ensemble maxtrix into
-integration schemes and related array operations.
+Type constructor for union of Vectors and 1-D SubArrays.  This is utilzed  in order to pass
+columns of an ensemble maxtrix into integration schemes and related array operations.
 """
 function VecA(type)
     Union{Vector{T}, SubArray{T, 1}} where T <: type
 end
 
 """
-    ArView = Union{Array{T, 2}, SubArray{T, 2}} where T <: Real
+    function ArView(type)
+        Union{Array{T, 2}, SubArray{T, 2}} where T <: type
+    end
 
-Type union of Arrays and SubArrays for use within ensemble conditioning operations,
-integration schemes and other array operations.
+Type constructor for union of Arrays and SubArrays for use within ensemble conditioning
+operations, integration schemes and other array operations.
 """
 function ArView(type)
     Union{Array{T, 2}, SubArray{T, 2}} where T <: type
 end
 
 """
-    ParamDict = Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: Real
+    function ParamDict(type)
+        Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: type
+    end
 
-Dictionary for model parameters to be passed to derivative functions by name.  This allows
-one to pass both vector parameters (and scalars written as vectors), as well as matrix
-valued parameters such as diffusion arrays.
+Type constructor for Dictionary of model parameters to be passed to derivative functions
+by name.  This allows one to pass both vector parameters (and scalars written as
+vectors), as well as matrix valued parameters such as diffusion arrays.
 """
 function ParamDict(type)
     Union{Dict{String, Array{T}}, Dict{String, Vector{T}}} where T <: type
@@ -50,17 +56,23 @@ ParamSample = Dict{String, Vector{UnitRange{Int64}}}
 
 
 """
-    CovM = Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: Real
+    function CovM(type)
+        Union{UniformScaling{T}, Diagonal{T, Vector{T}},
+              Symmetric{T, Matrix{T}}} where T <: type
+    end
 
-Type union of covariance matrix types, for optimized computation based on their
-special characteristics as symmetric, positive definite operators.
+Type constructor for union of covariance matrix types, for multiple dispatch
+based on their special characteristics as symmetric, positive definite operators.
 """
 function CovM(type)
-    Union{UniformScaling{T}, Diagonal{T}, Symmetric{T}} where T <: type
+    Union{UniformScaling{T}, Diagonal{T, Vector{T}},
+          Symmetric{T, Matrix{T}}} where T <: type
 end
 
 """
-    ConM = Union{UniformScaling{T}, Symmetric{T}} where T <: Real
+    function ConM(type)
+        Union{UniformScaling{T}, Symmetric{T}} where T <: type
+    end
 
 Type union of conditioning matrix types, which are used for optimization routines in the
 transform method.
@@ -69,7 +81,16 @@ function ConM(type)
     Union{UniformScaling{T}, Symmetric{T}} where T <: type
 end
 
+"""
+    function TransM(type)
+        Union{Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
+              Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}}} where T <: type
+    end
 
+Type union constructor for tuples representing the ensemble update step with a right
+ensemble anomaly transformation, mean update weights and mean-preserving orthogonal
+transformation.
+"""
 function TransM(type)
     Union{Tuple{Symmetric{T,Array{T,2}},Array{T,1},Array{T,2}},
           Tuple{Symmetric{T,Array{T,2}},Array{T,2},Array{T,2}}} where T <: type
@@ -86,9 +107,9 @@ Key word arguments for twin experiment time stepping. Arguments are given as:
     dx_params    -- parameters necessary to resolve dx_dt, not including
                     parameters to be estimated in the extended state vector 
     h            -- numerical time discretization step size
-    γ            -- controls nonlinearity of the alternating_obs_operator
 
     OPTIONAL:
+    γ            -- controls nonlinearity of the alternating_obs_operator
     diffusion    -- tunes the standard deviation of the Wiener process, 
                     equal to sqrt(h) * diffusion
     diff_mat     -- structure matrix for the diffusion coefficients,
