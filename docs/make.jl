@@ -15,7 +15,8 @@ makedocs(
              "Submodules" => Any[
                  "Models" => Any[
                     "L96" => "submodules/models/L96.md",
-                    "IEEE39bus" => "submodules/models/IEEE39bus.md"
+                    "IEEE39bus" => "submodules/models/IEEE39bus.md",
+                    "ObsOperators" => "submodules/models/ObsOperators.md"
                     ],
                  "Methods" => Any[
                     "DeSolvers" => "submodules/methods/DeSolvers.md",

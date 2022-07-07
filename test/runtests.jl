@@ -6,6 +6,7 @@ using Test
 using JLD2
 ##############################################################################################
 # include test sub-modules
+include("TestObsOperators.jl")
 include("TestDeSolvers.jl")
 include("TestL96.jl")
 include("TestTimeSeriesGeneration.jl")
@@ -85,6 +86,10 @@ end
     @test TestSingleIterationSmootherExps.analyze_mda_smoother_param_L96()
 end
 
+# test set 9: test Observation Operators jacobian
+@testset "Observation Operators " begin
+    @test TestObsOperators.alternating_obs_jacobian()
+end
 
 ##############################################################################################
 # end module

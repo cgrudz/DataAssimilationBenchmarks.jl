@@ -132,6 +132,7 @@ include("methods/DeSolvers.jl")
 include("methods/EnsembleKalmanSchemes.jl")
 include("models/L96.jl")
 include("models/IEEE39bus.jl")
+include("models/ObsOperators.jl")
 include("experiments/GenerateTimeSeries.jl")
 include("experiments/FilterExps.jl")
 include("experiments/SmootherExps.jl")
@@ -140,12 +141,13 @@ using .DeSolvers
 using .EnsembleKalmanSchemes
 using .L96
 using .IEEE39bus
+using .ObsOperators
 using .GenerateTimeSeries
 using .FilterExps
 using .SmootherExps
 using .SingleExperimentDriver
-export DeSolvers, EnsembleKalmanSchemes, L96, IEEE39bus, GenerateTimeSeries, FilterExps,
-       SingleExperimentDriver
+export DeSolvers, EnsembleKalmanSchemes, L96, IEEE39bus, ObsOperators, GenerateTimeSeries, 
+    FilterExps, SingleExperimentDriver
 
 ##############################################################################################
 # info

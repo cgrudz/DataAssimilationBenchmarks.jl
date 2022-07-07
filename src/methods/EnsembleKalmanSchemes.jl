@@ -5,7 +5,7 @@ module EnsembleKalmanSchemes
 using Random, Distributions, Statistics
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
-using Optim, LineSearches
+using Optim, LineSearches, LinearAlgebra
 export alternating_obs_operator, analyze_ens, analyze_ens_param, rand_orth, 
        inflate_state!, inflate_param!, transform_R, ens_gauss_newton, square_root,
        square_root_inv, ensemble_filter, ls_smoother_classic,
@@ -14,7 +14,7 @@ export alternating_obs_operator, analyze_ens, analyze_ens_param, rand_orth,
 # Main methods, debugged and validated
 ##############################################################################################
 """
-    alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+    alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
 
 Utility method produces a projection of alternating vector components via slicing.
 ```
@@ -29,7 +29,7 @@ If the observation dimension is less than half the state dimension, states corre
 to odd state dimension idices are subsequently removed until the observation dimension
 is appropriate.
 """
-function alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+function alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
     sys_dim = length(x)
     if obs_dim == sys_dim
 
@@ -59,7 +59,7 @@ end
 
 ##############################################################################################
 """
-    alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+    alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
 
 Utility method produces a projection of alternating ensemble components in-place via slicing.
 ```
@@ -77,7 +77,7 @@ vector until the observation dimension is appropriate.  If the observation dimen
 less than half the state dimension, states corresponding to odd state dimension idices
 are subsequently removed until the observation dimension is appropriate.
 """
-function alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+function alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
     sys_dim, N_ens = size(ens)
     if obs_dim == sys_dim
 
@@ -146,12 +146,12 @@ function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
     end
 
     # project the state vector into the correct components
-    alternating_projector!(obs, obs_dim)
+    obs = alternating_projector(obs, obs_dim)
 
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
         if γ > 1.0
-            obs .= (obs / 2.0) .* ( 1.0 .+ ( abs.(obs) / 10.0 ).^(γ - 1.0) )
+            obs .= (obs ./ 2.0) .* ( 1.0 .+ ( abs.(obs) ./ 10.0 ).^(γ - 1.0) )
 
         elseif γ == 0.0
             obs .= 0.05*obs.^2.0
@@ -200,7 +200,7 @@ function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
     end
 
     # project the state vector into the correct components
-    alternating_projector!(obs, obs_dim)
+    obs = alternating_projector(obs, obs_dim)
 
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
@@ -223,6 +223,64 @@ function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
     return obs
 end
 
+
+##############################################################################################
+"""
+    alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
+    kwargs::StepKwargs) where T <: Real
+
+Explicitly computes the jacobian of the Ensemble Kalman Schemes' alternating observation operator 
+given a single model state `x` of type [`VecA`](@ref) and desired dimension of observations 'obs_dim' for
+pseudo-data. The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
+component-wise transformation of the remaining state vector components mapped to the
+observation space.  For `γ=1.0`, there is no transformation applied, and the observation
+operator acts as a linear projection onto the remaining components of the state vector,
+equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
+[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
+pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
+observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
+is applied to the remaining state components.  If `γ<0.0`, the exponential observation
+operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
+is applied to the remaining state vector components.
+        
+"""
+
+function alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
+    kwargs::StepKwargs) where T <: Real
+    sys_dim = length(x)
+    if haskey(kwargs, "state_dim")
+        # performing parameter estimation, load the dynamic state dimension
+        state_dim = kwargs["state_dim"]::Int64
+        
+        # observation operator for extended state, without observing extended state components
+        jac = copy(x[1:state_dim])
+        
+        # proceed with alternating observations of the regular state vector
+        sys_dim = state_dim
+    else
+        jac = copy(x)
+    end
+
+    # jacobian calculation 
+    if haskey(kwargs, "γ")
+        γ = kwargs["γ"]::Float64
+        if γ > 1.0
+            jac .= (1.0 / 2.0) .* (((jac .*(γ - 1.0) / 10.0) .* (( abs.(jac) / 10.0 ).^(γ - 2.0))) .+ 1.0 .+ (( abs.(jac) / 10.0 ).^(γ - 1.0)))
+        
+        elseif γ == 0.0
+            jac = 0.1.*jac
+
+        elseif γ < 0.0
+            jac .= exp.(-γ * jac) .* (1.0 .- (γ * jac))
+            
+        end
+    end
+    
+    # matrix formation and projection
+    jacobian_matrix = alternating_projector(diagm(jac), obs_dim)
+
+    return jacobian_matrix    
+end
 
 ##############################################################################################
 """
