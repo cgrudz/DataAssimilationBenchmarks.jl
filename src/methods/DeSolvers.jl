@@ -24,7 +24,7 @@ manuscript
 
 This method overwrites the input in-place and returns the updated
 ```
-return x::VecA(T)
+return x
 ```
 """
 function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
@@ -109,7 +109,7 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     
     # compute the update to the dynamic variables
     x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
-    return x::VecA(T)
+    return x
 end
 
 
@@ -130,7 +130,7 @@ where `kwargs` is type [`StepKwargs`](@ref).
 
 This overwrites the input in-place and returns the updated
 ```
-return x::VecA(T)
+return x
 ```
 """
 function tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
@@ -147,7 +147,7 @@ function tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
     # second order taylor expansion
     x .= x + dx * h + 0.5 * jacobian(x, t, dx_params) * dx * h^2.0
-    return x::VecA(T)
+    return x
 end
 
 
@@ -170,7 +170,7 @@ manuscript
 
 This overwrites the input in-place and returns the updated
 ```
-return x::VecA(T)
+return x
 ```
 """
 function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
@@ -201,7 +201,7 @@ function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
     # step forward by interval h
     x .= x +  h * dx_dt(x, t, dx_params) + diffusion * W
-    return x::VecA(T)
+    return x
 end
 
 

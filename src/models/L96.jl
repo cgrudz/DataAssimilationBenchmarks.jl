@@ -16,7 +16,7 @@ function mod_indx!(indx::Int64, dim::Int64)
     if indx==0
         indx = dim
     end
-    return indx::Int64
+    return indx
 end
 
 
@@ -118,7 +118,7 @@ function compute_α_ρ(p::Int64)
     function ρ(p::Int64)
         1.0/12.0 - 0.5 * π^(-2.0) * sum(1.0 ./ Vector{Float64}(1:p).^2.0)
     end
-    return α(p)::Float64, ρ(p)::Float64
+    return α(p), ρ(p)
 end
 
 

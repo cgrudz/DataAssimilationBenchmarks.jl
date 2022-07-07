@@ -59,7 +59,7 @@ function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     # to compute the derivative of the frequencies, we finally 
     # divide back out by the inertia
     dx[n_g + 1 : end] = dx[n_g + 1: end] ./ H
-    return dx::VecA(T)
+    return dx
 end
 
 

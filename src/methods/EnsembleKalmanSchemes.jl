@@ -14,24 +14,109 @@ export alternating_obs_operator, analyze_ens, analyze_ens_param, rand_orth,
 # Main methods, debugged and validated
 ##############################################################################################
 """
+    alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+
+Utility method produces a projection of alternating vector components via slicing.
+```
+return x
+```
+
+This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
+alternating entries.  The operator selects components of the vector
+based on the observation dimension.  States correpsonding to even state dimension indices
+are removed from the state vector until the observation dimension is appropriate.
+If the observation dimension is less than half the state dimension, states corresponding
+to odd state dimension idices are subsequently removed until the observation dimension
+is appropriate.
+"""
+function alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+    sys_dim = length(x)
+    if obs_dim == sys_dim
+
+    elseif (obs_dim / sys_dim) > 0.5
+        # the observation dimension is greater than half the state dimension, so we
+        # remove only the trailing odd-index rows equal to the difference
+        # of the state and observation dimension
+        R = sys_dim - obs_dim
+        indx = 1:(sys_dim - 2 * R)
+        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
+        x = x[indx]
+
+    elseif (obs_dim / sys_dim) == 0.5
+        # the observation dimension is equal to half the state dimension so we remove exactly
+        # half the rows, corresponding to those with even-index
+        x = x[1:2:sys_dim, :]
+
+    else
+        # the observation dimension is less than half of the state dimension so that we
+        # remove all even rows and then all but the remaining, leading obs_dim rows
+        x = x[1:2:sys_dim]
+        x = x[1:obs_dim]
+    end
+    return x
+end
+
+
+##############################################################################################
+"""
+    alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+
+Utility method produces a projection of alternating ensemble components in-place via slicing.
+```
+return ens
+```
+
+This operator takes either a truth twin time series or an ensemble of states of type
+[`ArView`](@ref), and maps this data to alternating row components.  The truth twin in
+this version is assumed to be 2D, where the first index corresponds to the state dimension
+and the second index corresponds to the time dimension.  The ensemble is assumed to be
+2D where the first index corresponds to the state dimension and the second index
+corresponds to the ensemble dimension.
+States correpsonding to even state dimension indices are removed from the state
+vector until the observation dimension is appropriate.  If the observation dimension is
+less than half the state dimension, states corresponding to odd state dimension idices
+are subsequently removed until the observation dimension is appropriate.
+"""
+function alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+    sys_dim, N_ens = size(ens)
+    if obs_dim == sys_dim
+
+    elseif (obs_dim / sys_dim) > 0.5
+        # the observation dimension is greater than half the state dimension, so we
+        # remove only the trailing odd-index rows equal to the difference
+        # of the state and observation dimension
+        R = sys_dim - obs_dim
+        indx = 1:(sys_dim - 2 * R)
+        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
+        ens = ens[indx, :]
+
+    elseif (obs_dim / sys_dim) == 0.5
+        # the observation dimension is equal to half the state dimension so we remove exactly
+        # half the rows, corresponding to those with even-index
+        ens = ens[1:2:sys_dim, :]
+
+    else
+        # the observation dimension is less than half of the state dimension so that we
+        # remove all even rows and then all but the remaining, leading obs_dim rows
+        ens = ens[1:2:sys_dim, :]
+        ens = ens[1:obs_dim, :]
+    end
+    return ens
+end
+
+
+##############################################################################################
+"""
     alternating_obs_operator(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
 
 This produces observations of alternating state vector components for generating pseudo-data.
 ```
-return obs::VecA(T)
+return obs
 ```
 
-
 This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
-the observation space.  The operator selects components of the state dimension to observe
-based on the observation dimension, adjusting if the state vector includes parameter values.
-Model parameters are always assumed unobservable, and parameters in the state vector will
-be first truncated out of the  before mapping the state vectors to the observation
-space. States correpsonding to even state dimension indices are removed from the state
-vector until the observation dimension is appropriate.  If the observation dimension is
-less than half the state dimension, states corresponding to odd state dimension idices
-are subsequently removed until the observation dimension is appropriate.
-
+the observation space via the method [`alternating_projector`](@ref) and (possibly) a 
+nonlinear transform.
 The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
 component-wise transformation of the remaining state vector components mapped to the
 observation space.  For `γ=1.0`, there is no transformation applied, and the observation
@@ -60,45 +145,22 @@ function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
         obs = copy(x)
     end
 
-    if obs_dim == sys_dim
+    # project the state vector into the correct components
+    alternating_projector!(obs, obs_dim)
 
-    elseif (obs_dim / sys_dim) > 0.5
-        # the observation dimension is greater than half the state dimension, so we
-        # remove only the trailing odd-index rows equal to the difference
-        # of the state and observation dimension
-        R = sys_dim - obs_dim
-        indx = 1:(sys_dim - 2 * R)
-        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
-        obs = obs[indx]
-
-    elseif (obs_dim / sys_dim) == 0.5
-        # the observation dimension is equal to half the state dimension so we remove exactly
-        # half the rows, corresponding to those with even-index
-        obs = obs[1:2:sys_dim, :]
-
-    else
-        # the observation dimension is less than half of the state dimension so that we
-        # remove all even rows and then all but the remaining, leading obs_dim rows
-        obs = obs[1:2:sys_dim]
-        obs = obs[1:obs_dim]
-    end
-        
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
         if γ > 1.0
-            obs = (obs / 2.0) .* ( 1.0 .+ ( abs.(obs) / 10.0 ).^(γ - 1.0) )
+            obs .= (obs / 2.0) .* ( 1.0 .+ ( abs.(obs) / 10.0 ).^(γ - 1.0) )
 
         elseif γ == 0.0
             obs .= 0.05*obs.^2.0
 
         elseif γ < 0.0
-            for i in 1:N_x
-                x = obs[:, i]
-                obs[:, i] = x .* exp.(-γ * x)
-            end
+            obs .= obs .* exp.(-γ * obs)
         end
     end
-    return obs::VecA(T)
+    return obs
 end
 
 
@@ -109,35 +171,16 @@ end
 
 This produces observations of alternating state vector components for generating pseudo-data.
 ```
-return obs::ArView(T)
+return obs
 ```
 
 This operator takes either a truth twin time series or an ensemble of states of type
-[`ArView`](@ref), and maps this data to the observation space.  The truth twin in
+[`ArView`](@ref), and maps this data to the observation space via the method
+[`alternating_projector`](@ref) and (possibly) a nonlinear transform.  The truth twin in
 this version is assumed to be 2D, where the first index corresponds to the state dimension
 and the second index corresponds to the time dimension.  The ensemble is assumed to be
 2D where the first index corresponds to the state dimension and the second index
-corresponds to the ensemble dimension.  The operator selects components of the state
-dimension to observe based on the observation dimension,
-adjusting if parameter estimation is being performed.  Model parameters are always assumed
-unobservable, and statistical replicates of model parameters in the ensemble will be first
-truncated out of the ensemble matrix before mapping the state vectors to the observation
-space. States correpsonding to even state dimension indices are removed from the state
-vector until the observation dimension is appropriate.  If the observation dimension is
-less than half the state dimension, states corresponding to odd state dimension idices
-are subsequently removed until the observation dimension is appropriate.
-
-The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
-component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1.0`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector,
-equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
-[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
-pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
-observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
-is applied to the remaining state components.  If `γ<0.0`, the exponential observation
-operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
-is applied to the remaining state vector components.
+corresponds to the ensemble dimension.
 """
 function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
                                   kwargs::StepKwargs) where T <: Real
@@ -156,48 +199,28 @@ function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
         obs = copy(ens)
     end
 
-    if obs_dim == sys_dim
+    # project the state vector into the correct components
+    alternating_projector!(obs, obs_dim)
 
-    elseif (obs_dim / sys_dim) > 0.5
-        # the observation dimension is greater than half the state dimension, so we
-        # remove only the trailing odd-index rows equal to the difference
-        # of the state and observation dimension
-        R = sys_dim - obs_dim
-        indx = 1:(sys_dim - 2 * R)
-        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
-        obs = obs[indx, :]
-
-    elseif (obs_dim / sys_dim) == 0.5
-        # the observation dimension is equal to half the state dimension so we remove exactly
-        # half the rows, corresponding to those with even-index
-        obs = obs[1:2:sys_dim, :]
-
-    else
-        # the observation dimension is less than half of the state dimension so that we
-        # remove all even rows and then all but the remaining, leading obs_dim rows
-        obs = obs[1:2:sys_dim, :]
-        obs = obs[1:obs_dim, :]
-    end
-        
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
         if γ > 1.0
             for i in 1:N_ens
                 x = obs[:, i]
-                obs[:, i]  = (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
+                obs[:, i] .= (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
             end
 
         elseif γ == 0.0
-            obs .= 0.05*obs.^2.0
+            obs = 0.05*obs.^2.0
 
         elseif γ < 0.0
             for i in 1:N_ens
                 x = obs[:, i]
-                obs[:, i] = x .* exp.(-γ * x)
+                obs[:, i] .= x .* exp.(-γ * x)
             end
         end
     end
-    return obs::ArView(T)
+    return obs
 end
 
 
@@ -207,7 +230,7 @@ end
 
 Computes the ensemble state RMSE as compared with truth twin, and the ensemble spread.
 ```
-return rmse::Float64, spread::Float64
+return rmse, spread
 ```
 
 Note: the ensemble `ens` should only include the state vector components to compare with the
@@ -230,7 +253,7 @@ function analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64
     spread = sqrt( ( 1.0 / (N_ens - 1.0) ) * sum(mean((ens .- x_bar).^2.0, dims=1)))
 
     # return the tuple pair
-    rmse::Float64, spread::Float64
+    rmse, spread
 end
 
 
@@ -240,7 +263,7 @@ end
 
 Computes the ensemble parameter RMSE as compared with truth twin, and the ensemble spread.
 ```
-return rmse::Float64, spread::Float64
+return rmse, spread
 ```
 
 Note: the ensemble `ens` should only include the extended state vector components
@@ -266,7 +289,7 @@ function analyze_ens_param(ens::ArView(T), truth::VecA(T)) where T <: Float64
                              (ones(param_dim, N_ens) .* truth.^2.0), dims=1)))
     
     # return the tuple pair
-    rmse::Float64, spread::Float64
+    rmse, spread
 end
 
 
@@ -278,7 +301,7 @@ This generates a random, mean-preserving, orthogonal matrix as in [Sakov & Oke
 2008](https://journals.ametsoc.org/view/journals/mwre/136/3/2007mwr2021.1.xml), depending on
 the esemble size `N_ens`.
 ```
-return U::Array{Float64, 2}
+return U
 ```
 """
 function rand_orth(N_ens::Int64)
@@ -299,7 +322,7 @@ function rand_orth(N_ens::Int64)
     # and B is a full-size orthogonal matrix
     B, R = qr!(B)
     U = B * U_p * transpose(B) 
-    U::Array{Float64, 2}
+    U
 end
 
 
@@ -310,7 +333,7 @@ end
 
 Applies multiplicative covariance inflation to the state components of the ensemble matrix.
 ```
-return ens::ArView(T)
+return ens
 ```
 
 The first index of the ensemble matrix `ens` corresponds to the length `sys_dim` (extended)
@@ -327,7 +350,7 @@ function inflate_state!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
         infl =  Matrix(1.0I, sys_dim, sys_dim) 
         infl[1:state_dim, 1:state_dim] .*= inflation 
         ens .= x_mean .+ infl * X
-        return ens::ArView(T)
+        return ens
     end
 end
 
@@ -339,7 +362,7 @@ end
 
 Applies multiplicative covariance inflation to parameter replicates in the ensemble matrix.
 ```
-return ens::ArView(T)
+return ens
 ```
 
 The first index of the ensemble matrix `ens` corresponds to the length `sys_dim` (extended)
@@ -359,7 +382,7 @@ function inflate_param!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
         infl =  Matrix(1.0I, sys_dim, sys_dim) 
         infl[state_dim+1: end, state_dim+1: end] .*= inflation
         ens .= x_mean .+ infl * X
-        return ens::ArView(T)
+        return ens
     end
 end
 
@@ -377,7 +400,7 @@ matrices are computed via the singular value decomposition, for stability and ac
 for close-to-singular matrices.
 
 ```
-return S::CovM(T)
+return S
 ```
 """
 function square_root(M::UniformScaling{T}) where T <: Real 
@@ -419,13 +442,13 @@ and are evaluated in the above order.
 Output follows control flow:
 ```
 if sq_rt
-    return S_inv::CovM(T), S::CovM(T)
+    return S_inv, S
 elseif inverse
-    return S_inv::CovM(T), M_inv::CovM(T)
+    return S_inv, M_inv
 elseif full
-    return S_inv::CovM(T), S::CovM(T), M_inv::CovM(T)
+    return S_inv, S, M_inv
 else
-    return S_inv::CovM(T)
+    return S_inv
 end
 ```
 """
@@ -516,7 +539,7 @@ Kalman schemes. The output type is a tuple containing a right transform of the e
 anomalies, the weights for the mean update and a random orthogonal transformation
 for stabilization:
 ```
-return (trans, w, U)::TransM(T)
+return trans, w, U
 ```
 where the tuple is of type [`TransM`](@ref).
 `m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with 
@@ -1122,7 +1145,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         U = rand_orth(N_ens)
 
     end
-    return (trans, w, U)::TransM(T)
+    return trans, w, U
 end
 
 ##############################################################################################
@@ -1137,7 +1160,7 @@ end
 
 Computes the ensemble estimated gradient and Hessian terms for nonlinear least-squares
 ```
-return ∇_J::ArView(T), Hess_J::ArView(T)
+return ∇_J, Hess_J
 ```
 `m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with 
 default values provided.
@@ -1190,7 +1213,7 @@ function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T),
         hess_J = transpose(S) * inv_obs_cov * S
 
         # return tuple of the gradient and hessian terms
-        return ∇J::ArView(T), hess_J::ArView(T)
+        return ∇J, hess_J
     end
 end
 
@@ -1200,7 +1223,7 @@ end
 
 Updates forecast ensemble to the analysis ensemble by right transform (RT) method. 
 ```
-return ens::ArView(T)
+return ens
 ```
 
 Arguments include the ensemble of type [`ArView`](@ref) and the 3-tuple including the
@@ -1221,7 +1244,7 @@ function ens_update_RT!(ens::ArView(T), update::TransM(T)) where T <: Float64
     # step 3: compute the update
     ens_transform = w .+ trans * U * sqrt(N_ens - 1.0)
     ens .= x_mean .+ X * ens_transform
-    return ens::ArView(T)
+    return ens
 end
 
 
