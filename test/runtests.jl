@@ -87,8 +87,10 @@ end
 end
 
 # test set 9: test Observation Operators jacobian
-@testset "Observation Operators " begin
-    @test TestObsOperators.alternating_obs_jacobian()
+@testset "Observation Operators" begin
+    @test TestObsOperators.alternating_obs_jacobian_pos()
+    @test TestObsOperators.alternating_obs_jacobian_zero()
+    @test TestObsOperators.alternating_obs_jacobian_neg()
 end
 
 ##############################################################################################
