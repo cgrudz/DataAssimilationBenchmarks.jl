@@ -14,7 +14,7 @@ export alternating_obs_operator, analyze_ens, analyze_ens_param, rand_orth,
 # Main methods, debugged and validated
 ##############################################################################################
 """
-    alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+    alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
 
 Utility method produces a projection of alternating vector components via slicing.
 ```
@@ -29,7 +29,7 @@ If the observation dimension is less than half the state dimension, states corre
 to odd state dimension idices are subsequently removed until the observation dimension
 is appropriate.
 """
-function alternating_projector!(x::VecA(T), obs_dim::Int64) where T <: Real
+function alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
     sys_dim = length(x)
     if obs_dim == sys_dim
 
@@ -59,7 +59,7 @@ end
 
 ##############################################################################################
 """
-    alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+    alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
 
 Utility method produces a projection of alternating ensemble components in-place via slicing.
 ```
@@ -77,7 +77,7 @@ vector until the observation dimension is appropriate.  If the observation dimen
 less than half the state dimension, states corresponding to odd state dimension idices
 are subsequently removed until the observation dimension is appropriate.
 """
-function alternating_projector!(ens::ArView(T), obs_dim::Int64) where T <: Real
+function alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
     sys_dim, N_ens = size(ens)
     if obs_dim == sys_dim
 
@@ -146,7 +146,7 @@ function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
     end
 
     # project the state vector into the correct components
-    alternating_projector!(obs, obs_dim)
+    obs = alternating_projector(obs, obs_dim)
 
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
@@ -200,7 +200,7 @@ function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
     end
 
     # project the state vector into the correct components
-    alternating_projector!(obs, obs_dim)
+    obs = alternating_projector(obs, obs_dim)
 
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
