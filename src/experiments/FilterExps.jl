@@ -5,7 +5,8 @@ module FilterExps
 using Random, Distributions
 using LinearAlgebra
 using JLD2, HDF5
-using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
+using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers,
+       ..EnsembleKalmanSchemes, ..L96, ..IEEE39bus
 export filter_state, filter_param
 ##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
@@ -35,6 +36,9 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
     dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
+
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
     
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
@@ -80,13 +84,14 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
                               "dx_params" => dx_params,
                               "h" => h,
                               "diffusion" => diffusion,
+                              "s_infl" => s_infl,
                               "gamma" => γ,
                              )
 
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -120,7 +125,7 @@ function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
         fore_rmse[i], fore_spread[i] = analyze_ens(ens, truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, s_infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], H_obs, obs_cov, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # compute the analysis statistics
@@ -198,6 +203,9 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
     
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -261,13 +269,14 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
                               "diffusion" => diffusion,
                               "gamma" => γ,
                               "state_dim" => state_dim,
+                              "s_infl" => s_infl,
                               "p_infl" => p_infl
                              )
     
     # define the observation operator, observation error covariance and observations with
     # error observation covariance operator currently taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -317,7 +326,7 @@ function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_e
         fore_rmse[i], fore_spread[i] = analyze_ens(ens[1:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, obs[:, i], obs_cov, s_infl, kwargs)
+        analysis = ensemble_filter(method, ens, obs[:, i], H_obs, obs_cov, kwargs)
         ens = analysis["ens"]::Array{Float64,2}
 
         # extract the parameter ensemble for later usage

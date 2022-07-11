@@ -4,7 +4,7 @@ module SingleExperimentDriver
 # imports and exports
 using JLD2, HDF5
 using ..DataAssimilationBenchmarks, ..FilterExps, ..SmootherExps, ..GenerateTimeSeries
-export exps, foo
+export exps
 ##############################################################################################
 path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
 

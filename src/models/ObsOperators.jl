@@ -2,25 +2,32 @@
 module ObsOperators
 ##############################################################################################
 # imports and exports
-using Random, Distributions, Statistics
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
-using Optim, LineSearches, LinearAlgebra
 export alternating_projector, alternating_obs_operator, alternating_obs_operator_jacobian
 ##############################################################################################
 # Main methods
 ##############################################################################################
 """
     alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
+    alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
 
-Utility method produces a projection of alternating vector components via slicing.
+Utility method produces a projection of alternating vector or ensemble components via slicing.
+
 ```
 return x
+return ens
 ```
 
-This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
-alternating entries.  The operator selects components of the vector
-based on the observation dimension.  States correpsonding to even state dimension indices
+This operator takes a single model state `x` of type [`VecA`](@ref), a truth twin time series
+or an ensemble of states of type [`ArView`](@ref), and maps this data to alternating
+row components.  If truth twin is 2D, then the first index corresponds to the state dimension
+and the second index corresponds to the time dimension.  The ensemble is assumed to be
+2D where the first index corresponds to the state dimension and the second index
+corresponds to the ensemble dimension.
+
+The operator selects row components of the input to keep based on the `obs_dim`.
+States correpsonding to even state dimension indices
 are removed from the state vector until the observation dimension is appropriate.
 If the observation dimension is less than half the state dimension, states corresponding
 to odd state dimension idices are subsequently removed until the observation dimension
@@ -54,26 +61,6 @@ function alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
 end
 
 
-##############################################################################################
-"""
-    alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
-
-Utility method produces a projection of alternating ensemble components in-place via slicing.
-```
-return ens
-```
-
-This operator takes either a truth twin time series or an ensemble of states of type
-[`ArView`](@ref), and maps this data to alternating row components.  The truth twin in
-this version is assumed to be 2D, where the first index corresponds to the state dimension
-and the second index corresponds to the time dimension.  The ensemble is assumed to be
-2D where the first index corresponds to the state dimension and the second index
-corresponds to the ensemble dimension.
-States correpsonding to even state dimension indices are removed from the state
-vector until the observation dimension is appropriate.  If the observation dimension is
-less than half the state dimension, states corresponding to odd state dimension idices
-are subsequently removed until the observation dimension is appropriate.
-"""
 function alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
     sys_dim, N_ens = size(ens)
     if obs_dim == sys_dim
@@ -105,15 +92,21 @@ end
 ##############################################################################################
 """
     alternating_obs_operator(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
+    alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
+                             kwargs::StepKwargs) where T <: Real
 
 This produces observations of alternating state vector components for generating pseudo-data.
 ```
 return obs
 ```
 
-This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
-the observation space via the method [`alternating_projector`](@ref) and (possibly) a 
-nonlinear transform.
+This operator takes a single model state `x` of type [`VecA`](@ref), a truth twin time series
+or an ensemble of states of type [`ArView`](@ref), and maps this data to the observation
+space via the method [`alternating_projector`](@ref) and (possibly) a nonlinear transform.
+The truth twin in this version is assumed to be 2D, where the first index corresponds to
+the state dimension and the second index corresponds to the time dimension.  The ensemble
+is assumed to be 2D where the first index corresponds to the state dimension and the
+second index corresponds to the ensemble dimension.
 The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
 component-wise transformation of the remaining state vector components mapped to the
 observation space.  For `γ=1.0`, there is no transformation applied, and the observation
@@ -160,25 +153,6 @@ function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
     return obs
 end
 
-
-##############################################################################################
-"""
-    alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
-                             kwargs::StepKwargs) where T <: Real
-
-This produces observations of alternating state vector components for generating pseudo-data.
-```
-return obs
-```
-
-This operator takes either a truth twin time series or an ensemble of states of type
-[`ArView`](@ref), and maps this data to the observation space via the method
-[`alternating_projector`](@ref) and (possibly) a nonlinear transform.  The truth twin in
-this version is assumed to be 2D, where the first index corresponds to the state dimension
-and the second index corresponds to the time dimension.  The ensemble is assumed to be
-2D where the first index corresponds to the state dimension and the second index
-corresponds to the ensemble dimension.
-"""
 function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
                                   kwargs::StepKwargs) where T <: Real
     sys_dim, N_ens = size(ens)
@@ -227,12 +201,13 @@ end
     kwargs::StepKwargs) where T <: Real
 
 Explicitly computes the jacobian of the alternating observation operator 
-given a single model state `x` of type [`VecA`](@ref) and desired dimension of observations 'obs_dim' for
-the jacobian. The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
-component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1.0`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector,
-equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
+given a single model state `x` of type [`VecA`](@ref) and desired dimension of observations
+'obs_dim' for the jacobian. The `γ` parameter (optional) in `kwargs` of type
+[`StepKwargs`](@ref) controls the component-wise transformation of the remaining state
+vector components mapped to the observation space.  For `γ=1.0`, there is no
+transformation applied, and the observation operator acts as a linear projection onto
+the remaining components of the state vector, equivalent to not specifying `γ`. 
+For `γ>1.0`, the nonlinear observation operator of 
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
 pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
 observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
