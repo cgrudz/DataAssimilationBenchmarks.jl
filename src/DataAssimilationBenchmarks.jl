@@ -109,18 +109,23 @@ Key word arguments for twin experiment time stepping. Arguments are given as:
     h            -- numerical time discretization step size
 
     OPTIONAL:
-    γ            -- controls nonlinearity of the alternating_obs_operator
     diffusion    -- tunes the standard deviation of the Wiener process, 
                     equal to sqrt(h) * diffusion
     diff_mat     -- structure matrix for the diffusion coefficients,
                     replaces the default uniform scaling 
+    s_infl       -- ensemble anomalies of state components are scaled by this
+                    parameter for calculation of emperical covariance
+    p_infl       -- ensemble anomalies of extended-state components for parameter sample
+                    replicates are scaled by this parameter for calculation of emperical
+                    covariance, state_dim must be defined below
     state_dim    -- keyword for parameter estimation, dimension of the
                     dynamic state < dimension of full extended state
     param_sample -- ParamSample dictionary for merging extended state with dx_params
     ξ            -- random array size state_dim, can be defined in kwargs
                     to provide a particular realization for method validation
+    γ            -- controls nonlinearity of the alternating_obs_operator
 ```
-See [`DataAssimilationBenchmarks.EnsembleKalmanSchemes.alternating_obs_operator`](@ref) for
+See [`DataAssimilationBenchmarks.ObsOperators.alternating_obs_operator`](@ref) for
 a discusssion of the `γ` parameter.
 """
 StepKwargs = Union{Dict{String,Any}}
@@ -185,7 +190,7 @@ function Info()
 
     print("\n")
     printstyled(" Welcome to DataAssimilationBenchmarks!\n", bold=true)
-    print(" Version 0.20, Copyright 2022 Colin James Grudzien (cgrudzien@ucsd.edu)\n")
+    print(" Version 0.20, Copyright 2022 Colin Grudzien (cgrudzien@ucsd.edu) et al.\n")
     print(" Licensed under the Apache License, Version 2.0 \n")
     print(" https://github.com/cgrudz/DataAssimilationBenchmarks/blob/master/LICENSE.md\n")
     print("\n")

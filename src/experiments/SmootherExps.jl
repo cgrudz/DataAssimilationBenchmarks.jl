@@ -5,7 +5,8 @@ module SmootherExps
 using Random, Distributions
 using LinearAlgebra
 using JLD2, HDF5
-using ..DataAssimilationBenchmarks, ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..IEEE39bus
+using ..DataAssimilationBenchmarks, ..ObsOperators, ..EnsembleKalmanSchemes, ..DeSolvers,
+      ..L96, ..IEEE39bus
 export classic_state, classic_param, single_iteration_state, single_iteration_param,
        iterative_state, iterative_param
 ##############################################################################################
@@ -33,7 +34,6 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
 
     # Define experiment parameters
     
-
     # define static mda parameter, not used for classic smoother 
     mda = false
 
@@ -44,6 +44,9 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
    
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -87,6 +90,7 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
                               "dx_params" => dx_params,
                               "h" => h,
                               "diffusion" => diffusion,
+                              "s_infl" => s_infl,
                               "gamma" => γ,
                               "shift" => shift,
                               "mda" => mda 
@@ -95,7 +99,7 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
     # define the observation operator, observation error covariance and observations
     # with error, observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -126,8 +130,8 @@ function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs
     for i in 2: shift : nanl + 1 + lag
         kwargs["posterior"] = post
         # observations indexed in absolute time
-        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1], obs_cov,
-                                       s_infl, kwargs)
+        analysis = ls_smoother_classic(method, ens, obs[:, i: i + shift - 1],
+                                       H_obs, obs_cov, kwargs)
         ens = analysis["ens"]::Array{Float64}
         fore = analysis["fore"]::Array{Float64} 
         filt = analysis["filt"]::Array{Float64} 
@@ -265,6 +269,9 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -333,6 +340,7 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
                               "gamma" => γ,
                               "state_dim" => state_dim,
                               "p_wlk" => p_wlk,
+                              "s_infl" => s_infl,
                               "p_infl" => p_infl,
                               "shift" => shift,
                               "mda" => mda 
@@ -341,7 +349,7 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -380,7 +388,7 @@ function classic_param((time_series, method, seed, nanl, lag, shift, obs_un, obs
         # observations indexed in absolute time
         analysis = ls_smoother_classic(
                                        method, ens, obs[:, i: i + shift - 1],
-                                       obs_cov, s_infl, kwargs
+                                       H_obs, obs_cov, kwargs
                                       )
         ens = analysis["ens"]::Array{Float64}
         fore = analysis["fore"]::Array{Float64}
@@ -535,6 +543,9 @@ function single_iteration_state((time_series, method, seed, nanl, lag, shift, md
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -584,13 +595,14 @@ function single_iteration_state((time_series, method, seed, nanl, lag, shift, md
                               "diffusion" => diffusion,
                               "gamma" => γ,
                               "shift" => shift,
+                              "s_infl" => s_infl,
                               "mda" => mda 
                              )
 
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -682,7 +694,7 @@ function single_iteration_state((time_series, method, seed, nanl, lag, shift, md
         # peform the analysis
         analysis = ls_smoother_single_iteration(
                                                 method, ens, obs[:, i: i + lag - 1], 
-                                                obs_cov, s_infl, kwargs
+                                                H_obs, obs_cov, kwargs
                                                )
         ens = analysis["ens"]::Array{Float64}
         fore = analysis["fore"]::Array{Float64}
@@ -837,6 +849,9 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -905,6 +920,7 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
                               "state_dim" => state_dim,
                               "shift" => shift,
                               "p_wlk" => p_wlk,
+                              "s_infl" => s_infl,
                               "p_infl" => p_infl,
                               "mda" => mda 
                              )
@@ -912,7 +928,7 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
     
@@ -1013,8 +1029,8 @@ function single_iteration_param((time_series, method, seed, nanl, lag, shift, md
                                                 method, 
                                                 ens, 
                                                 obs[:, i: i + lag - 1], 
+                                                H_obs,
                                                 obs_cov, 
-                                                s_infl, 
                                                 kwargs
                                                )
         ens = analysis["ens"]::Array{Float64}
@@ -1194,6 +1210,9 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -1213,7 +1232,7 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
     # define integration method
     step_model! = rk4_step!
     
-    # define the iterative smoother method
+    # define the iterative smoother method HARD-CODED here
     ls_smoother_iterative = ls_smoother_gauss_newton
 
     # number of discrete forecast steps
@@ -1244,6 +1263,7 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
                               "h" => h,
                               "diffusion" => diffusion,
                               "gamma" => γ,
+                              "s_infl" => s_infl,
                               "shift" => shift,
                               "mda" => mda 
                              )
@@ -1251,7 +1271,7 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
@@ -1355,15 +1375,15 @@ function iterative_state((time_series, method, seed, nanl, lag, shift, mda, obs_
                 # on the spin cycle, there are the standard number of iterations allowed
                 # to warm up
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, s_infl, kwargs)
+                                                 H_obs, obs_cov, kwargs)
             else
                 # after this, the number of iterations allowed is set to one
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, s_infl, kwargs, max_iter=1)
+                                                 H_obs, obs_cov, kwargs, max_iter=1)
             end
         else
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
-                                             obs_cov, s_infl, kwargs)
+                                             H_obs, obs_cov, kwargs)
         end
         ens = analysis["ens"]::Array{Float64}
         fore = analysis["fore"]::Array{Float64}
@@ -1529,6 +1549,9 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
     tanl = ts["tanl"]::Float64
     model = ts["model"]::String
 
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
     # set the integration step size for the ensemble at 0.01 if an SDE, if deterministic
     # simply use the same step size as the observation model
     if diffusion > 0.0
@@ -1600,6 +1623,7 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
                               "state_dim" => state_dim,
                               "shift" => shift,
                               "p_wlk" => p_wlk,
+                              "s_infl" => s_infl,
                               "p_infl" => p_infl,
                               "mda" => mda 
                              )
@@ -1607,7 +1631,7 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
     # define the observation operator, observation error covariance and observations
     # with error observation covariance operator taken as a uniform scaling by default,
     # can be changed in the definition below
-    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+    obs = H_obs(obs, obs_dim, kwargs)
     obs += obs_un * rand(Normal(), size(obs))
     obs_cov = obs_un^2.0 * I
 
@@ -1713,15 +1737,15 @@ function iterative_param((time_series, method, seed, nanl, lag, shift, mda, obs_
             if spin
                 # on the spin cycle, a standard number of iterations allowed to warm up
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, s_infl, kwargs)
+                                                 H_obs, obs_cov, kwargs)
             else
                 # after this, the number of iterations allowed is set to one
                 analysis = ls_smoother_iterative(method[5:end], ens, obs[:, i: i + lag - 1],
-                                                 obs_cov, s_infl, kwargs, max_iter=1)
+                                                 H_obs, obs_cov, kwargs, max_iter=1)
             end
         else
             analysis = ls_smoother_iterative(method, ens, obs[:, i: i + lag - 1], 
-                                             obs_cov, s_infl, kwargs)
+                                             H_obs, obs_cov, kwargs)
         end
         ens = analysis["ens"]::Array{Float64}
         fore = analysis["fore"]::Array{Float64}
@@ -1935,7 +1959,7 @@ end
 #    end
 #
 #    # define the observation operator, observation error covariance and observations with error 
-#    obs = alternating_obs_operator(obs, obs_dim, kwargs)
+#    obs = H_obs(obs, obs_dim, kwargs)
 #    obs += obs_un * rand(Normal(), size(obs))
 #    obs_cov = obs_un^2.0 * I
 #    

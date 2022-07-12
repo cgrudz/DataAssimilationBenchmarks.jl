@@ -6,282 +6,13 @@ using Random, Distributions, Statistics
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
 using Optim, LineSearches, LinearAlgebra
-export alternating_obs_operator, analyze_ens, analyze_ens_param, rand_orth, 
-       inflate_state!, inflate_param!, transform_R, ens_gauss_newton, square_root,
-       square_root_inv, ensemble_filter, ls_smoother_classic,
+export analyze_ens, analyze_ens_param, rand_orth, inflate_state!, inflate_param!,
+       transform_R, ens_gauss_newton,
+       square_root, square_root_inv,
+       ensemble_filter, ls_smoother_classic,
        ls_smoother_single_iteration, ls_smoother_gauss_newton
 ##############################################################################################
 # Main methods, debugged and validated
-##############################################################################################
-"""
-    alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
-
-Utility method produces a projection of alternating vector components via slicing.
-```
-return x
-```
-
-This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
-alternating entries.  The operator selects components of the vector
-based on the observation dimension.  States correpsonding to even state dimension indices
-are removed from the state vector until the observation dimension is appropriate.
-If the observation dimension is less than half the state dimension, states corresponding
-to odd state dimension idices are subsequently removed until the observation dimension
-is appropriate.
-"""
-function alternating_projector(x::VecA(T), obs_dim::Int64) where T <: Real
-    sys_dim = length(x)
-    if obs_dim == sys_dim
-
-    elseif (obs_dim / sys_dim) > 0.5
-        # the observation dimension is greater than half the state dimension, so we
-        # remove only the trailing odd-index rows equal to the difference
-        # of the state and observation dimension
-        R = sys_dim - obs_dim
-        indx = 1:(sys_dim - 2 * R)
-        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
-        x = x[indx]
-
-    elseif (obs_dim / sys_dim) == 0.5
-        # the observation dimension is equal to half the state dimension so we remove exactly
-        # half the rows, corresponding to those with even-index
-        x = x[1:2:sys_dim, :]
-
-    else
-        # the observation dimension is less than half of the state dimension so that we
-        # remove all even rows and then all but the remaining, leading obs_dim rows
-        x = x[1:2:sys_dim]
-        x = x[1:obs_dim]
-    end
-    return x
-end
-
-
-##############################################################################################
-"""
-    alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
-
-Utility method produces a projection of alternating ensemble components in-place via slicing.
-```
-return ens
-```
-
-This operator takes either a truth twin time series or an ensemble of states of type
-[`ArView`](@ref), and maps this data to alternating row components.  The truth twin in
-this version is assumed to be 2D, where the first index corresponds to the state dimension
-and the second index corresponds to the time dimension.  The ensemble is assumed to be
-2D where the first index corresponds to the state dimension and the second index
-corresponds to the ensemble dimension.
-States correpsonding to even state dimension indices are removed from the state
-vector until the observation dimension is appropriate.  If the observation dimension is
-less than half the state dimension, states corresponding to odd state dimension idices
-are subsequently removed until the observation dimension is appropriate.
-"""
-function alternating_projector(ens::ArView(T), obs_dim::Int64) where T <: Real
-    sys_dim, N_ens = size(ens)
-    if obs_dim == sys_dim
-
-    elseif (obs_dim / sys_dim) > 0.5
-        # the observation dimension is greater than half the state dimension, so we
-        # remove only the trailing odd-index rows equal to the difference
-        # of the state and observation dimension
-        R = sys_dim - obs_dim
-        indx = 1:(sys_dim - 2 * R)
-        indx = [indx; sys_dim - 2 * R + 2: 2: sys_dim]
-        ens = ens[indx, :]
-
-    elseif (obs_dim / sys_dim) == 0.5
-        # the observation dimension is equal to half the state dimension so we remove exactly
-        # half the rows, corresponding to those with even-index
-        ens = ens[1:2:sys_dim, :]
-
-    else
-        # the observation dimension is less than half of the state dimension so that we
-        # remove all even rows and then all but the remaining, leading obs_dim rows
-        ens = ens[1:2:sys_dim, :]
-        ens = ens[1:obs_dim, :]
-    end
-    return ens
-end
-
-
-##############################################################################################
-"""
-    alternating_obs_operator(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
-
-This produces observations of alternating state vector components for generating pseudo-data.
-```
-return obs
-```
-
-This operator takes a single model state `x` of type [`VecA`](@ref) and maps this data to
-the observation space via the method [`alternating_projector`](@ref) and (possibly) a 
-nonlinear transform.
-The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
-component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1.0`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector,
-equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
-[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
-pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
-observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
-is applied to the remaining state components.  If `γ<0.0`, the exponential observation
-operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
-is applied to the remaining state vector components.
-"""
-function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
-                                  kwargs::StepKwargs) where T <: Real
-    sys_dim = length(x)
-    if haskey(kwargs, "state_dim")
-        # performing parameter estimation, load the dynamic state dimension
-        state_dim = kwargs["state_dim"]::Int64
-        
-        # observation operator for extended state, without observing extended state components
-        obs = copy(x[1:state_dim])
-        
-        # proceed with alternating observations of the regular state vector
-        sys_dim = state_dim
-    else
-        obs = copy(x)
-    end
-
-    # project the state vector into the correct components
-    obs = alternating_projector(obs, obs_dim)
-
-    if haskey(kwargs, "γ")
-        γ = kwargs["γ"]::Float64
-        if γ > 1.0
-            obs .= (obs ./ 2.0) .* ( 1.0 .+ ( abs.(obs) ./ 10.0 ).^(γ - 1.0) )
-
-        elseif γ == 0.0
-            obs .= 0.05*obs.^2.0
-
-        elseif γ < 0.0
-            obs .= obs .* exp.(-γ * obs)
-        end
-    end
-    return obs
-end
-
-
-##############################################################################################
-"""
-    alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
-                             kwargs::StepKwargs) where T <: Real
-
-This produces observations of alternating state vector components for generating pseudo-data.
-```
-return obs
-```
-
-This operator takes either a truth twin time series or an ensemble of states of type
-[`ArView`](@ref), and maps this data to the observation space via the method
-[`alternating_projector`](@ref) and (possibly) a nonlinear transform.  The truth twin in
-this version is assumed to be 2D, where the first index corresponds to the state dimension
-and the second index corresponds to the time dimension.  The ensemble is assumed to be
-2D where the first index corresponds to the state dimension and the second index
-corresponds to the ensemble dimension.
-"""
-function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
-                                  kwargs::StepKwargs) where T <: Real
-    sys_dim, N_ens = size(ens)
-
-    if haskey(kwargs, "state_dim")
-        # performing parameter estimation, load the dynamic state dimension
-        state_dim = kwargs["state_dim"]::Int64
-        
-        # observation operator for extended state, without observing extended state components
-        obs = copy(ens[1:state_dim, :])
-        
-        # proceed with alternating observations of the regular state vector
-        sys_dim = state_dim
-    else
-        obs = copy(ens)
-    end
-
-    # project the state vector into the correct components
-    obs = alternating_projector(obs, obs_dim)
-
-    if haskey(kwargs, "γ")
-        γ = kwargs["γ"]::Float64
-        if γ > 1.0
-            for i in 1:N_ens
-                x = obs[:, i]
-                obs[:, i] .= (x / 2.0) .* ( 1.0 .+ ( abs.(x) / 10.0 ).^(γ - 1.0) )
-            end
-
-        elseif γ == 0.0
-            obs = 0.05*obs.^2.0
-
-        elseif γ < 0.0
-            for i in 1:N_ens
-                x = obs[:, i]
-                obs[:, i] .= x .* exp.(-γ * x)
-            end
-        end
-    end
-    return obs
-end
-
-
-##############################################################################################
-"""
-    alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
-    kwargs::StepKwargs) where T <: Real
-
-Explicitly computes the jacobian of the Ensemble Kalman Schemes' alternating observation operator 
-given a single model state `x` of type [`VecA`](@ref) and desired dimension of observations 'obs_dim' for
-pseudo-data. The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls the
-component-wise transformation of the remaining state vector components mapped to the
-observation space.  For `γ=1.0`, there is no transformation applied, and the observation
-operator acts as a linear projection onto the remaining components of the state vector,
-equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
-[Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
-pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
-observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
-is applied to the remaining state components.  If `γ<0.0`, the exponential observation
-operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
-is applied to the remaining state vector components.
-        
-"""
-
-function alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
-    kwargs::StepKwargs) where T <: Real
-    sys_dim = length(x)
-    if haskey(kwargs, "state_dim")
-        # performing parameter estimation, load the dynamic state dimension
-        state_dim = kwargs["state_dim"]::Int64
-        
-        # observation operator for extended state, without observing extended state components
-        jac = copy(x[1:state_dim])
-        
-        # proceed with alternating observations of the regular state vector
-        sys_dim = state_dim
-    else
-        jac = copy(x)
-    end
-
-    # jacobian calculation 
-    if haskey(kwargs, "γ")
-        γ = kwargs["γ"]::Float64
-        if γ > 1.0
-            jac .= (1.0 / 2.0) .* (((jac .*(γ - 1.0) / 10.0) .* (( abs.(jac) / 10.0 ).^(γ - 2.0))) .+ 1.0 .+ (( abs.(jac) / 10.0 ).^(γ - 1.0)))
-        
-        elseif γ == 0.0
-            jac = 0.1.*jac
-
-        elseif γ < 0.0
-            jac .= exp.(-γ * jac) .* (1.0 .- (γ * jac))
-            
-        end
-    end
-    
-    # matrix formation and projection
-    jacobian_matrix = alternating_projector(diagm(jac), obs_dim)
-
-    return jacobian_matrix    
-end
-
 ##############################################################################################
 """
     analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64  
@@ -585,7 +316,7 @@ function square_root_inv(M::Symmetric{T, Matrix{T}}; sq_rt::Bool=false, inverse:
 end
 ##############################################################################################
 """
-    transform_R(analysis::String, ens::ArView(T), obs::VecA(T),        
+    transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
                 obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM=1000.0I, 
                 m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                 tol::Float64 = 0.0001,
@@ -647,7 +378,7 @@ Currently validated `analysis` options:
    minimization of the cost function for the adaptive inflation with
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
 """
-function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), 
+function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
                      obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM(T)=1000.0I, 
                      m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                      tol::Float64 = 0.0001,
@@ -660,7 +391,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         obs_dim = length(obs)
 
         # step 1: compute the ensemble in observation space
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
 
         # step 2: compute the ensemble mean in observation space
         y_mean = mean(Y, dims=2)
@@ -726,7 +457,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
             # step 2a: define the linearization of the observation operator 
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * trans 
-            Y = alternating_obs_operator(ens, obs_dim, kwargs)
+            Y = H_obs(ens, obs_dim, kwargs)
             y_mean = mean(Y, dims=2)
 
             # step 2b: compute the weighted anomalies in observation space, conditioned
@@ -754,11 +485,11 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
             end
             if C != nothing
                 if analysis[8:9] == "-n"
-                    y_mean_iter = alternating_obs_operator(ens_mean_iter, obs_dim, kwargs)
+                    y_mean_iter = H_obs(ens_mean_iter, obs_dim, kwargs)
                     δ = obs_sqrt_inv * (obs - y_mean_iter)
                     return N_effective * log(ϵ_N + sum(w.^2.0)) + sum(δ.^2.0)
                 else
-                    y_mean_iter = alternating_obs_operator(ens_mean_iter, obs_dim, kwargs)
+                    y_mean_iter = H_obs(ens_mean_iter, obs_dim, kwargs)
                     δ = obs_sqrt_inv * (obs - y_mean_iter)
                     return (N_ens - 1.0) * sum(w.^2.0) + sum(δ.^2.0)
                 end
@@ -863,7 +594,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
             # step 2a: compute the observed ensemble and ensemble mean 
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * trans
-            Y = alternating_obs_operator(ens, obs_dim, kwargs)
+            Y = H_obs(ens, obs_dim, kwargs)
             y_mean = mean(Y, dims=2)
 
             # step 2b: compute the weighted anomalies in observation space, conditioned
@@ -946,7 +677,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         A = A * square_root(G)
 
         # step 3: compute the ensemble in observation space
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
 
         # step 4: compute the ensemble mean in observation space
         y_mean = mean(Y, dims=2)
@@ -981,7 +712,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         obs_dim = length(obs)
 
         # step 1: compute the observed ensemble and ensemble mean
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
@@ -1066,7 +797,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         obs_dim = length(obs)
 
         # step 1: compute the observed ensemble and ensemble mean 
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
@@ -1141,7 +872,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T),
         obs_dim = length(obs)
 
         # step 1: compute the observed ensemble and ensemble mean 
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
@@ -1209,7 +940,7 @@ end
 ##############################################################################################
 """
     ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T), 
-                     obs_cov::CovM(T), kwargs::StepKwargs;
+                     H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs;
                      conditioning::ConM(T)=1000.0I, 
                      m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                      tol::Float64 = 0.0001,
@@ -1245,7 +976,7 @@ Currently validated `analysis` options:
    `-bundle` or `-transform` version of the IEnKS scheme specified in `analysis`.
 """
 function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T), 
-                          obs_cov::CovM(T), kwargs::StepKwargs;
+                          H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs;
                           conditioning::ConM(T)=1000.0I, 
                           m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                           tol::Float64 = 0.0001,
@@ -1256,7 +987,7 @@ function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T),
         obs_dim = length(obs)
         
         # step 1: compute the observed ensemble and ensemble mean 
-        Y = alternating_obs_operator(ens, obs_dim, kwargs)
+        Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
         
         # step 2: compute the observed anomalies, proportional to the conditioning matrix
@@ -1308,8 +1039,8 @@ end
 
 ##############################################################################################
 """
-    ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), obs_cov::CovM(T),
-                    s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
+    ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
+                    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
 
 General filter analysis step, wrapping the right transform / update, and inflation steps.
 Optional keyword argument includes state_dim for extended state including parameters.
@@ -1319,8 +1050,8 @@ in addition to the state covariance inflation.
 return Dict{String,Array{Float64,2}}("ens" => ens)
 ```
 """
-function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), obs_cov::CovM(T),
-                         s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
+function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
+                         obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
 
     # step 0: infer the system, observation and ensemble dimensions 
     sys_dim, N_ens = size(ens)
@@ -1328,21 +1059,23 @@ function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), obs_cov
 
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]
-        p_infl = kwargs["p_infl"]
-
     else
         state_dim = sys_dim
     end
 
     # step 1: compute the tranform and update ensemble
-    ens_update_RT!(ens, transform_R(analysis, ens, obs, obs_cov, kwargs)) 
+    ens_update_RT!(ens, transform_R(analysis, ens, obs, H_obs, obs_cov, kwargs)) 
 
     # step 2a: compute multiplicative inflation of state variables
-    inflate_state!(ens, s_infl, sys_dim, state_dim)
+    if haskey(kwargs, "s_infl")
+        s_infl = kwargs["s_infl"]::Float64
+        inflate_state!(ens, s_infl, sys_dim, state_dim)
+    end
 
     # step 2b: if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim
+    # optionally compute multiplicative inflation of parameter values
+    if haskey(kwargs, "p_infl")
+        p_infl = kwargs["p_infl"]::Float64
         inflate_param!(ens, p_infl, sys_dim, state_dim)
     end
 
@@ -1352,9 +1085,8 @@ end
 
 ##############################################################################################
 """
-    ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
-                        obs_cov::CovM(T), s_infl::Float64,
-                        kwargs::StepKwargs) where T <: Float64 
+    ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T), H_obs::Function,
+                        obs_cov::CovM(T),  kwargs::StepKwargs) where T <: Float64 
 
 Lag-shift ensemble Kalman smoother analysis step, classical version.
 
@@ -1375,14 +1107,13 @@ return Dict{String,Array{Float64}}(
 ```
 """    
 function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
-                             obs_cov::CovM(T), s_infl::Float64,
+                             H_obs::Function, obs_cov::CovM(T), 
                              kwargs::StepKwargs) where T <: Float64 
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]::Function
     posterior = kwargs["posterior"]::Array{Float64,3}
-    
-    
+
     # infer the ensemble, obs, and system dimensions,
     # observation sequence includes shift forward times,
     # posterior is size lag + shift
@@ -1400,8 +1131,6 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        p_infl = kwargs["p_infl"]::Float64
-        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1445,15 +1174,19 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
         forecast[:, :, s] = ens
 
         # step 2c: perform the filtering step
-        trans = transform_R(analysis, ens, obs[:, s], obs_cov, kwargs)
+        trans = transform_R(analysis, ens, obs[:, s], H_obs, obs_cov, kwargs)
         ens_update_RT!(ens, trans)
 
-        # compute multiplicative inflation of state variables
-        inflate_state!(ens, s_infl, sys_dim, state_dim)
+        # optionally compute multiplicative inflation of state variables
+        if haskey(kwargs, "s_infl")
+            s_infl = kwargs["s_infl"]::Float64
+            inflate_state!(ens, s_infl, sys_dim, state_dim)
+        end
 
         # if including an extended state of parameter values,
-        # compute multiplicative inflation of parameter values
-        if state_dim != sys_dim
+        # optionally compute multiplicative inflation of parameter values
+        if haskey(kwargs, "p_infl")
+            p_infl = kwargs["p_infl"]::Float64
             inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
@@ -1469,7 +1202,8 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
     end
             
     # step 3: if performing parameter estimation, apply the parameter model
-    if state_dim != sys_dim
+    if haskey(kwargs, "p_wlk")
+        p_wlk = kwargs["p_wlk"]::Float64
         param_ens = ens[state_dim + 1:end , :]
         param_mean = mean(param_ens, dims=2)
         param_ens .= param_ens + 
@@ -1489,8 +1223,8 @@ end
 ##############################################################################################
 """
     ls_smoother_single_iteration(analysis::String, ens::ArView(T),
-                                 obs::ArView(T), obs_cov::CovM(T),
-                                 s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
+                                 H_obs::Function, obs::ArView(T), obs_cov::CovM(T),
+                                 kwargs::StepKwargs) where T <: Float64 
 
 Lag-shift, single-iteration ensemble Kalman smoother (SIEnKS) analysis step.
 
@@ -1509,8 +1243,8 @@ return Dict{String,Array{Float64}}(
 ```
 """
 function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
-                                      obs::ArView(T), obs_cov::CovM(T),
-                                      s_infl::Float64, kwargs::StepKwargs) where T <: Float64 
+                                      obs::ArView(T), H_obs::Function, obs_cov::CovM(T),
+                                      kwargs::StepKwargs) where T <: Float64 
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
@@ -1525,8 +1259,6 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        p_infl = kwargs["p_infl"]::Float64
-        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1605,17 +1337,21 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                     end
                     
                     # step 2c: perform the filtering step with rebalancing weights 
-                    trans = transform_R(analysis,
-                                      ens, obs[:, l], obs_cov * reb_weights[l], kwargs)
+                    trans = transform_R(analysis, ens, obs[:, l], H_obs,
+                                        obs_cov * reb_weights[l], kwargs)
                     ens_update_RT!(ens, trans)
 
                     if spin 
-                        # compute multiplicative inflation of state variables
-                        inflate_state!(ens, s_infl, sys_dim, state_dim)
+                        # optionaly compute multiplicative inflation of state variables
+                        if haskey(kwargs, "s_infl")
+                            s_infl = kwargs["s_infl"]::Float64
+                            inflate_state!(ens, s_infl, sys_dim, state_dim)
+                        end
 
                         # if including an extended state of parameter values,
-                        # compute multiplicative inflation of parameter values
-                        if state_dim != sys_dim
+                        # optionally compute multiplicative inflation of parameter values
+                        if haskey(kwargs, "p_infl")
+                            p_infl = kwargs["p_infl"]::Float64
                             inflate_param!(ens, p_infl, sys_dim, state_dim)
                         end
                         
@@ -1643,8 +1379,8 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                     end
                 else
                     # step 2c: perform the filtering step with mda weights
-                    trans = transform_R(analysis,
-                                      ens, obs[:, l], obs_cov * obs_weights[l], kwargs)
+                    trans = transform_R(analysis, ens, obs[:, l], H_obs,
+                                        obs_cov * obs_weights[l], kwargs)
                     ens_update_RT!(ens, trans)
                     
                     # re-analyzed initial conditions are computed in the mda step
@@ -1685,15 +1421,19 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                 forecast[:, :, l] = ens
                 
                 # step 2c: apply the transformation and update step
-                trans = transform_R(analysis, ens, obs[:, l], obs_cov, kwargs)
+                trans = transform_R(analysis, ens, obs[:, l], H_obs, obs_cov, kwargs)
                 ens_update_RT!(ens, trans)
                 
-                # compute multiplicative inflation of state variables
-                inflate_state!(ens, s_infl, sys_dim, state_dim)
+                # optionally compute multiplicative inflation of state variables
+                if haskey(kwargs, "s_infl")
+                    s_infl = kwargs["s_infl"]::Float64
+                    inflate_state!(ens, s_infl, sys_dim, state_dim)
+                end
 
                 # if including an extended state of parameter values,
-                # compute multiplicative inflation of parameter values
-                if state_dim != sys_dim
+                # optionally compute multiplicative inflation of parameter values
+                if haskey(kwargs, "p_infl")
+                    p_infl = kwargs["p_infl"]::Float64
                     inflate_param!(ens, p_infl, sys_dim, state_dim)
                 end
                 
@@ -1711,7 +1451,7 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                 forecast[:, :, l - (lag - shift)] = ens
                 
                 # step 2c: apply the transformation and update step
-                trans = transform_R(analysis, ens, obs[:, l], obs_cov, kwargs)
+                trans = transform_R(analysis, ens, obs[:, l], H_obs, obs_cov, kwargs)
                 ens_update_RT!(ens, trans)
                 
                 # store the filtered states for previously unobserved times, not mda values
@@ -1726,17 +1466,22 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
     end
 
     # step 3: propagate the posterior initial condition forward to the shift-forward time
-    # step 3a: inflate the posterior covariance
-    inflate_state!(ens, s_infl, sys_dim, state_dim)
+    # step 3a: optionally inflate the posterior covariance
+    if haskey(kwargs, "s_infl")
+        s_infl = kwargs["s_infl"]::Float64
+        inflate_state!(ens, s_infl, sys_dim, state_dim)
+    end
     
     # if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim
+    # optionally compute multiplicative inflation of parameter values
+    if haskey(kwargs, "p_infl")
+        p_infl = kwargs["p_infl"]::Float64
         inflate_param!(ens, p_infl, sys_dim, state_dim)
     end
 
     # step 3b: if performing parameter estimation, apply the parameter model
-    if state_dim != sys_dim
+    if haskey(kwargs, "p_wlk")
+        p_wlk = kwargs["p_wlk"]::Float64
         param_ens = ens[state_dim + 1:end , :]
         param_mean = mean(param_ens, dims=2)
         param_ens .= param_ens +
@@ -1782,8 +1527,8 @@ end
 
 ##############################################################################################
 """
-    ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
-                             obs::ArView(T), obs_cov::CovM(T), s_infl::Float64,
+    ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T),
+                             H_obs::Function, obs_cov::CovM(T),
                              kwargs::StepKwargs; ϵ::Float64=0.0001,
                              tol::Float64=0.001, max_iter::Int64=5) where T <: Float64 
 
@@ -1803,8 +1548,8 @@ return Dict{String,Array{Float64}}(
                                   ) 
 ```
 """
-function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
-                                  obs::ArView(T), obs_cov::CovM(T), s_infl::Float64,
+function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T),
+                                  H_obs::Function, obs_cov::CovM(T),
                                   kwargs::StepKwargs; ϵ::Float64=0.0001,
                                   tol::Float64=0.001, max_iter::Int64=5) where T <: Float64 
     # step 0: unpack kwargs, posterior contains length lag past states ending
@@ -1821,8 +1566,6 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
     # optional parameter estimation
     if haskey(kwargs, "state_dim")
         state_dim = kwargs["state_dim"]::Int64
-        p_infl = kwargs["p_infl"]::Float64
-        p_wlk = kwargs["p_wlk"]::Float64
         param_est = true
     else
         state_dim = sys_dim
@@ -1951,6 +1694,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
                         ∇J[:,l], hess_J[:, :, l] = ens_gauss_newton(
                                                              analysis,
                                                              ens, obs[:, l],
+                                                             H_obs,
                                                              obs_cov * reb_weights[l], 
                                                              kwargs,
                                                              conditioning=trans_inv
@@ -1962,6 +1706,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
                                                              analysis,
                                                              ens,
                                                              obs[:, l],
+                                                             H_obs,
                                                              obs_cov * obs_weights[l], 
                                                              kwargs,
                                                              conditioning=trans_inv
@@ -2041,7 +1786,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
 
             # step 3b: if performing parameter estimation, apply the parameter model
             # for the for the MDA step and shifted window
-            if state_dim != sys_dim && stage == 1
+            if haskey(kwargs, "p_wlk") && stage == 1
+                p_wlk = kwargs["p_wlk"]::Float64
                 param_ens = ens[state_dim + 1:end , :]
                 param_mean = mean(param_ens, dims=2)
                 param_ens .= param_ens +
@@ -2115,12 +1861,16 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
             m += i
         end
         
-        # store and inflate the forward posterior at the new initial condition
-        inflate_state!(ens, s_infl, sys_dim, state_dim)
+        # store and optionally inflate the forward posterior at the new initial condition
+        if haskey(kwargs, "s_infl")
+            s_infl = kwargs["s_infl"]::Float64
+            inflate_state!(ens, s_infl, sys_dim, state_dim)
+        end
 
         # if including an extended state of parameter values,
-        # compute multiplicative inflation of parameter values
-        if state_dim != sys_dim
+        # optionally compute multiplicative inflation of parameter values
+        if haskey(kwargs, "p_infl")
+            p_infl = kwargs["p_infl"]::Float64
             inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
@@ -2212,6 +1962,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
                                                              analysis,
                                                              ens,
                                                              obs[:, l],
+                                                             H_obs,
                                                              obs_cov,
                                                              kwargs,
                                                              conditioning=trans_inv
@@ -2225,6 +1976,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
                                                                 analysis,
                                                                 ens,
                                                                 obs[:, l],
+                                                                H_obs,
                                                                 obs_cov,
                                                                 kwargs,
                                                                 conditioning=trans_inv
@@ -2307,7 +2059,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
         ens = ens_mean_iter .+ sqrt(N_ens - 1.0) * anom_0 * trans * U
 
         # step 3b: if performing parameter estimation, apply the parameter model
-        if state_dim != sys_dim
+        if haskey(kwargs, "p_wlk")
+            p_wlk = kwargs["p_wlk"]::Float64
             param_ens = ens[state_dim + 1:end , :]
             param_ens = param_ens + p_wlk * rand(Normal(), size(param_ens))
             ens[state_dim + 1:end, :] = param_ens
@@ -2364,13 +2117,17 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T),
             end
         end
         
-        # store and inflate the forward posterior at the new initial condition
+        # store and optionally inflate the forward posterior at the new initial condition
         ens = copy(new_ens)
-        inflate_state!(ens, s_infl, sys_dim, state_dim)
+        if haskey(kwargs, "s_infl")
+            s_infl = kwargs["s_infl"]::Float64
+            inflate_state!(ens, s_infl, sys_dim, state_dim)
+        end
 
         # if including an extended state of parameter values,
-        # compute multiplicative inflation of parameter values
-        if state_dim != sys_dim
+        # optionally compute multiplicative inflation of parameter values
+        if haskey(kwargs, "p_infl")
+            p_infl = kwargs["p_infl"]::Float64
             inflate_param!(ens, p_infl, sys_dim, state_dim)
         end
 
