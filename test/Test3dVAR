@@ -2,7 +2,7 @@
 module Test3dVAR
 ##############################################################################################
 # imports and exports
-using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.EnsembleKalmanSchemes
+using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.ObsOperators
 using ForwardDiff, LinearAlgebra
 ##############################################################################################
 """
@@ -20,7 +20,7 @@ function testCost()
     params = Dict{String, Any}("γ" => 1.0)
     H_obs = alternating_obs_operator
 
-    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 20
+    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 10
         true
     else
         false
