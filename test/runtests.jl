@@ -7,6 +7,7 @@ using JLD2
 ##############################################################################################
 # include test sub-modules
 include("TestObsOperators.jl")
+include("Test3dVAR")
 include("TestDeSolvers.jl")
 include("TestL96.jl")
 include("TestTimeSeriesGeneration.jl")
@@ -17,6 +18,11 @@ include("TestIterativeSmootherExps.jl")
 include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
+
+# test set 0: test 3D-VAR 
+@testset "3DVAR" begin
+    @test Test3dVAR.testCost()
+end
 
 # test set 1: Calculate the order of convergence for standard integrators
 @testset "Calculate Order Convergence" begin

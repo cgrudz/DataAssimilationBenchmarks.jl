@@ -20,7 +20,8 @@ makedocs(
                     ],
                  "Methods" => Any[
                     "DeSolvers" => "submodules/methods/DeSolvers.md",
-                    "EnsembleKalmanSchemes" => "submodules/methods/EnsembleKalmanSchemes.md"
+                    "EnsembleKalmanSchemes" => "submodules/methods/EnsembleKalmanSchemes.md",
+                    "XdVAR" => "submodules/methods/XdVAR.md"
                    ],
                  "Experiments" => Any[
                     "GenerateTimeSeries" => "submodules/experiments/GenerateTimeSeries.md",

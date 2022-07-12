@@ -135,6 +135,7 @@ StepKwargs = Union{Dict{String,Any}}
 # imports and exports of sub-modules
 include("methods/DeSolvers.jl")
 include("methods/EnsembleKalmanSchemes.jl")
+include("methods/XdVAR.jl")
 include("models/L96.jl")
 include("models/IEEE39bus.jl")
 include("models/ObsOperators.jl")
@@ -151,8 +152,8 @@ using .GenerateTimeSeries
 using .FilterExps
 using .SmootherExps
 using .SingleExperimentDriver
-export DeSolvers, EnsembleKalmanSchemes, L96, IEEE39bus, ObsOperators, GenerateTimeSeries, 
-       FilterExps, SingleExperimentDriver
+export DeSolvers, EnsembleKalmanSchemes, XdVAR, L96, IEEE39bus, ObsOperators, 
+    GenerateTimeSeries, FilterExps, SingleExperimentDriver
 
 ##############################################################################################
 # info
