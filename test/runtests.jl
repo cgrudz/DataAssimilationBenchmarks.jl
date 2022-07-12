@@ -19,11 +19,6 @@ include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
 
-# test set 0: test 3D-VAR 
-@testset "3DVAR" begin
-    @test Test3dVAR.testCost()
-end
-
 # test set 1: Calculate the order of convergence for standard integrators
 @testset "Calculate Order Convergence" begin
     @test TestDeSolvers.testEMExponential()
@@ -97,6 +92,12 @@ end
     @test TestObsOperators.alternating_obs_jacobian_pos()
     @test TestObsOperators.alternating_obs_jacobian_zero()
     @test TestObsOperators.alternating_obs_jacobian_neg()
+end
+
+# test set 10: test 3D-VAR 
+@testset "3DVAR" begin
+    @test Test3dVAR.testCost()
+    @test Test3dVAR.testGrad()
 end
 
 ##############################################################################################
