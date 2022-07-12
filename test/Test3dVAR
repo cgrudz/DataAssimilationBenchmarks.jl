@@ -2,7 +2,7 @@
 module Test3dVAR
 ##############################################################################################
 # imports and exports
-using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.EnsembleKalmanSchemes
+using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.ObsOperators
 using ForwardDiff, LinearAlgebra
 ##############################################################################################
 """
@@ -20,8 +20,37 @@ function testCost()
     params = Dict{String, Any}("γ" => 1.0)
     H_obs = alternating_obs_operator
 
-    H = H_obs(x, length(obs), params)
-    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 20
+    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 10
+        true
+    else
+        false
+    end
+end
+
+##############################################################################################
+"""
+    testGrad() 
+
+    Tests the gradient 3dVAR cost function for known behavior using ForwardDiff.
+"""
+function testGrad()
+    # initialization
+    obs = zeros(40)
+    x_background = ones(40)
+    state_cov = I
+    obs_cov = I
+    params = Dict{String, Any}("γ" => 1.0)
+    H_obs = alternating_obs_operator
+
+    # wrapper function
+    function wrap_cost(x)
+        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+    end
+    # input
+    x = ones(40) * 0.5
+
+    grad = ForwardDiff.gradient(wrap_cost, x)
+    if grad == zeros(40)
         true
     else
         false

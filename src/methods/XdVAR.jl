@@ -2,7 +2,6 @@
 module XdVAR
 ##############################################################################################
 # imports and exports
-using Random, Distributions, Statistics
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
 ##############################################################################################
@@ -20,9 +19,9 @@ function D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov:
     # obs operator
     H = H_obs(x,obs_dim,kwargs)
 
-    back_component = transpose((x - x_background))*(state_cov^(-1))*(x - x_background)
-    obs_component = transpose((obs - H))*(obs_cov^(-1))*(obs - H)
-    J = back_component + obs_component
+    back_component = transpose((x - x_background))*(inv(state_cov))*(x - x_background)
+    obs_component = transpose((obs - H))*(inv(obs_cov))*(obs - H)
+    J = 0.5*back_component + 0.5*obs_component
     return J
 end
 
