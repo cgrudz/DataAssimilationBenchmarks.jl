@@ -1,0 +1,34 @@
+##############################################################################################
+module Test3dVAR
+##############################################################################################
+# imports and exports
+using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.EnsembleKalmanSchemes
+using ForwardDiff, LinearAlgebra
+##############################################################################################
+"""
+    testCost() 
+
+    Tests the 3dVAR cost function for known behavior.
+"""
+function testCost()
+    # initialization
+    x = ones(40) * 0.5
+    obs = zeros(40)
+    x_background = ones(40)
+    state_cov = I
+    obs_cov = I
+    params = Dict{String, Any}("γ" => 1.0)
+    H_obs = alternating_obs_operator
+
+    H = H_obs(x, length(obs), params)
+    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 20
+        true
+    else
+        false
+    end
+end
+
+##############################################################################################
+# end module
+
+end
