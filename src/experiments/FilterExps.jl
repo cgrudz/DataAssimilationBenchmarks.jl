@@ -19,6 +19,50 @@ export filter_state, filter_param
 Filter state estimation twin experiment.  Twin experiment parameters such as the observation
 dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size 
 etc. are specified in the arguments of the NamedTuple.
+
+Output from the experiment is saved in a dictionary of the form,
+
+    data = Dict{String,Any}(
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse,
+                            "fore_spread" => fore_spread,
+                            "filt_spread" => filt_spread,
+                            "method" => method,
+                            "seed" => seed, 
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "sys_dim" => sys_dim,
+                            "obs_dim" => obs_dim, 
+                            "obs_un" => obs_un,
+                            "gamma" => γ,
+                            "nanl" => nanl,
+                            "tanl" => tanl,
+                            "h" =>  h,
+                            "N_ens" => N_ens, 
+                            "s_infl" => round(s_infl, digits=2)
+                           ) 
+
+Experiment output is written to a directory defined by
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    method * 
+    "_" * model *
+    "_state_seed_" * lpad(seed, 4, "0") * 
+    "_diff_" * rpad(diffusion, 5, "0") * 
+    "_sysD_" * lpad(sys_dim, 2, "0") * 
+    "_obsD_" * lpad(obs_dim, 2, "0") * 
+    "_obsU_" * rpad(obs_un, 4, "0") *
+    "_gamma_" * lpad(γ, 5, "0") *
+    "_nanl_" * lpad(nanl, 5, "0") * 
+    "_tanl_" * rpad(tanl, 4, "0") * 
+    "_h_" * rpad(h, 4, "0") *
+    "_nens_" * lpad(N_ens, 3,"0") * 
+    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
+    ".jld2"
+
 """
 function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
                        γ, N_ens, s_infl)::NamedTuple{
@@ -186,6 +230,59 @@ end
 Filter joint state-parameter estimation twin experiment.  Twin experiment parameters such as
 the observation dimension, observation uncertainty, data assimilation method, number of
 cycles, ensemble size etc. are specified in the arguments of the NamedTuple.
+
+Output from the experiment is saved in a dictionary of the form,
+
+    data = Dict{String,Any}(
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse,
+                            "param_rmse" => para_rmse,
+                            "fore_spread" => fore_spread,
+                            "filt_spread" => filt_spread,
+                            "param_spread" => para_spread,
+                            "method" => method,
+                            "seed" => seed, 
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "param_truth" => param_truth,
+                            "sys_dim" => sys_dim,
+                            "state_dim" => state_dim,
+                            "obs_dim" => obs_dim, 
+                            "obs_un" => obs_un,
+                            "gamma" => γ,
+                            "p_err" => p_err,
+                            "p_wlk" => p_wlk,
+                            "nanl" => nanl,
+                            "tanl" => tanl,
+                            "h" => h,
+                            "N_ens" => N_ens, 
+                            "s_infl" => round(s_infl, digits=2),
+                            "p_infl" => round(p_infl, digits=2)
+                           )
+Experiment output is written to a directory defined by
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    method * 
+    "_" * model *
+    "_param_seed_" * lpad(seed, 4, "0") * 
+    "_diff_" * rpad(diffusion, 5, "0") * 
+    "_sysD_" * lpad(sys_dim, 2, "0") * 
+    "_stateD_" * lpad(state_dim, 2, "0") * 
+    "_obsD_" * lpad(obs_dim, 2, "0") * 
+    "_obsU_" * rpad(obs_un, 4, "0") * 
+    "_gamma_" * lpad(γ, 5, "0") * 
+    "_paramE_" * rpad(p_err, 4, "0") * 
+    "_paramW_" * rpad(p_wlk, 6, "0") * 
+    "_nanl_" * lpad(nanl, 5, "0") * 
+    "_tanl_" * rpad(tanl, 4, "0") * 
+    "_h_" * rpad(h, 4, "0") * 
+    "_nens_" * lpad(N_ens, 3, "0") * 
+    "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+    "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
+    ".jld2"
 """
 function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_err, p_wlk,
                        N_ens, s_infl, p_infl)::NamedTuple{

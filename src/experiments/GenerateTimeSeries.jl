@@ -29,7 +29,11 @@ Output from the experiment is saved in a dictionary of the form,
                       "model" => "L96"
                      )
 
-Where the file name is written dynamically according to the selected parameters as follows:
+Experiment output is written to a directory defined by
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
+where the file name is written dynamically according to the selected parameters as follows:
 
     "L96_time_series_seed_" * lpad(seed, 4, "0") * 
     "_dim_" * lpad(state_dim, 2, "0") * 
@@ -117,6 +121,7 @@ function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::N
                              "model" => "L96"
                             )
 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/" 
     name = "L96_time_series_seed_" * lpad(seed, 4, "0") * 
            "_dim_" * lpad(state_dim, 2, "0") * 
            "_diff_" * rpad(diffusion, 5, "0") * 
@@ -127,7 +132,6 @@ function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::N
            "_h_" * rpad(h, 5, "0") * 
            ".jld2"
     
-    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/" 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
@@ -155,7 +159,11 @@ Output from the experiment is saved in a dictionary of the form,
                       "model" => "IEEE39bus"
                      )
 
-Where the file name is written dynamically according to the selected parameters as follows:
+Experiment output is written to a directory defined by
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
+where the file name is written dynamically according to the selected parameters as follows:
 
     "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
     "_diff_" * rpad(diffusion, 5, "0") * 
@@ -253,6 +261,7 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
                              "model" => "IEEE39bus"
                             )
 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
     name = "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
            "_diff_" * rpad(diffusion, 5, "0") * 
            "_tanl_" * rpad(tanl, 4, "0") * 
@@ -261,7 +270,6 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
            "_h_" * rpad(h, 5, "0") * 
            ".jld2"
     
-    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end

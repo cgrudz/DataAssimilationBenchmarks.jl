@@ -21,7 +21,61 @@ Classic ensemble Kalman smoother state estimation twin experiment.  Twin experim
 such as the observation dimension, observation uncertainty, data assimilation method, number
 of cycles, ensemble size etc. are specified in the arguments. NOTE: the classic scheme does
 not use multiple data assimilation and we hard code `mda=false` in the function for
-consistency with other methods.
+consistency with the API of other methods.
+
+Output from the experiment is saved in a dictionary of the form,
+
+    data = Dict{String,Any}(
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse,
+                            "post_rmse" => post_rmse,
+                            "fore_spread" => fore_spread,
+                            "filt_spread" => filt_spread,
+                            "post_spread" => post_spread,
+                            "method" => method,
+                            "seed"  => seed, 
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "sys_dim" => sys_dim,
+                            "obs_dim" => obs_dim, 
+                            "obs_un" => obs_un,
+                            "gamma" => γ,
+                            "nanl" => nanl,
+                            "tanl" => tanl,
+                            "lag" => lag,
+                            "shift" => shift,
+                            "h" => h,
+                            "N_ens" => N_ens, 
+                            "mda"  => mda,
+                            "s_infl" => round(s_infl, digits=2)
+                           )
+
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]
+    end
+    
+Experiment output is written to a directory defined by
+
+    pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "-classic/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    method * "-classic_" * model *
+             "_state_seed_" * lpad(seed, 4, "0") * 
+             "_diff_" * rpad(diffusion, 5, "0") * 
+             "_sysD_" * lpad(sys_dim, 2, "0") * 
+             "_obsD_" * lpad(obs_dim, 2, "0") * 
+             "_obsU_" * rpad(obs_un, 4, "0") *
+             "_gamma_" * lpad(γ, 5, "0") *
+             "_nanl_" * lpad(nanl, 5, "0") * 
+             "_tanl_" * rpad(tanl, 4, "0") * 
+             "_h_" * rpad(h, 4, "0") *
+             "_lag_" * lpad(lag, 3, "0") * 
+             "_shift_" * lpad(shift, 3, "0") *
+             "_mda_" * string(mda) * 
+             "_nens_" * lpad(N_ens, 3,"0") * 
+             "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") * 
+             ".jld2"
 """
 function classic_state((time_series, method, seed, nanl, lag, shift, obs_un, obs_dim,
                         γ, N_ens, s_infl)::NamedTuple{
