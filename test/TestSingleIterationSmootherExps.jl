@@ -9,16 +9,17 @@ using JLD2, Statistics
 ##############################################################################################
 # run and analyze the IEnKS for state estimation with the Lorenz-96 model
 
-function run_sda_smoother_state_L96()
+function run_sda_ensemble_smoother_state_L96()
     try
-        single_iteration_state(exps["Single_iteration_smoother"]["L96_ETKS_state_sda_test"])
+        single_iteration_ensemble_state(
+                                exps["Single_iteration_smoother"]["L96_ETKS_state_sda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_sda_smoother_state_L96()
+function analyze_sda_ensemble_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-single-iteration/"
@@ -39,16 +40,17 @@ function analyze_sda_smoother_state_L96()
     end
 end
 
-function run_mda_smoother_state_L96()
+function run_mda_ensemble_smoother_state_L96()
     try
-        single_iteration_state(exps["Single_iteration_smoother"]["L96_ETKS_state_mda_test"])
+        single_iteration_ensemble_state(
+                                exps["Single_iteration_smoother"]["L96_ETKS_state_mda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_mda_smoother_state_L96()
+function analyze_mda_ensemble_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-single-iteration/"
@@ -73,16 +75,17 @@ end
 ##############################################################################################
 # run and analyze the IEnKS for joint state-parameter estimation with the Lorenz-96 model
 
-function run_sda_smoother_param_L96()
+function run_sda_ensemble_smoother_param_L96()
     try
-        single_iteration_param(exps["Single_iteration_smoother"]["L96_ETKS_param_sda_test"])
+        single_iteration_ensemble_param(
+                                exps["Single_iteration_smoother"]["L96_ETKS_param_sda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_sda_smoother_param_L96()
+function analyze_sda_ensemble_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-single-iteration/"
@@ -106,16 +109,17 @@ function analyze_sda_smoother_param_L96()
     end
 end
 
-function run_mda_smoother_param_L96()
+function run_mda_ensemble_smoother_param_L96()
     try
-        single_iteration_param(exps["Single_iteration_smoother"]["L96_ETKS_param_mda_test"])
+        single_iteration_ensemble_param(
+                                exps["Single_iteration_smoother"]["L96_ETKS_param_mda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_mda_smoother_param_L96()
+function analyze_mda_ensemble_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-single-iteration/"

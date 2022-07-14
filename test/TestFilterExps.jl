@@ -9,16 +9,16 @@ using JLD2, Statistics
 ##############################################################################################
 # run and analyze the ETKF for state estimation with the Lorenz-96 model
 
-function run_filter_state_L96()
+function run_ensemble_filter_state_L96()
     try
-        filter_state(exps["Filter"]["L96_ETKF_state_test"])
+        ensemble_filter_state(exps["Filter"]["L96_ETKF_state_test"])
         true
     catch
         false
     end
 end
 
-function analyze_filter_state_L96()
+function analyze_ensemble_filter_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etkf/"
@@ -42,16 +42,16 @@ end
 ##############################################################################################
 # run and analyze the ETKF for joint state-parameter estimation with the Lorenz-96 model
 
-function run_filter_param_L96()
+function run_ensemble_filter_param_L96()
     try
-        filter_param(exps["Filter"]["L96_ETKF_param_test"])
+        ensemble_filter_param(exps["Filter"]["L96_ETKF_param_test"])
         true
     catch
         false
     end
 end
 
-function analyze_filter_param_L96()
+function analyze_ensemble_filter_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etkf/"
@@ -77,16 +77,16 @@ end
 # run and analyzed the ETKF for state estimateion with the IEEE39bus model
 
 # static version for test cases
-function run_filter_state_IEEE39bus()
+function run_ensemble_filter_state_IEEE39bus()
     try
-        filter_state(exps["Filter"]["IEEE39bus_ETKF_state_test"])
+        ensemble_filter_state(exps["Filter"]["IEEE39bus_ETKF_state_test"])
         true
     catch
         false
     end
 end
 
-function analyze_filter_state_IEEE39bus()
+function analyze_ensemble_filter_state_IEEE39bus()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etkf/"

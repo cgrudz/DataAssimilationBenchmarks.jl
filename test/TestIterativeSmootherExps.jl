@@ -9,16 +9,16 @@ using JLD2, Statistics
 ##############################################################################################
 # run and analyze the IEnKS for state estimation with the Lorenz-96 model
 
-function run_sda_smoother_state_L96()
+function run_sda_ensemble_smoother_state_L96()
     try
-        iterative_state(exps["Iterative_smoother"]["L96_IEnKS_state_sda_test"])
+        iterative_ensemble_state(exps["Iterative_smoother"]["L96_IEnKS_state_sda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_sda_smoother_state_L96()
+function analyze_sda_ensemble_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"
@@ -39,16 +39,16 @@ function analyze_sda_smoother_state_L96()
     end
 end
 
-function run_mda_smoother_state_L96()
+function run_mda_ensemble_smoother_state_L96()
     try
-        iterative_state(exps["Iterative_smoother"]["L96_IEnKS_state_mda_test"])
+        iterative_ensemble_state(exps["Iterative_smoother"]["L96_IEnKS_state_mda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_mda_smoother_state_L96()
+function analyze_mda_ensemble_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"
@@ -73,16 +73,16 @@ end
 ##############################################################################################
 # run and analyze the IEnKS for joint state-parameter estimation with the Lorenz-96 model
 
-function run_sda_smoother_param_L96()
+function run_sda_ensemble_smoother_param_L96()
     try
-        iterative_param(exps["Iterative_smoother"]["L96_IEnKS_param_sda_test"])
+        iterative_ensemble_param(exps["Iterative_smoother"]["L96_IEnKS_param_sda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_sda_smoother_param_L96()
+function analyze_sda_ensemble_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"
@@ -106,16 +106,16 @@ function analyze_sda_smoother_param_L96()
     end
 end
 
-function run_mda_smoother_param_L96()
+function run_mda_ensemble_smoother_param_L96()
     try
-        iterative_param(exps["Iterative_smoother"]["L96_IEnKS_param_mda_test"])
+        iterative_ensemble_param(exps["Iterative_smoother"]["L96_IEnKS_param_mda_test"])
         true
     catch
         false
     end
 end
 
-function analyze_mda_smoother_param_L96()
+function analyze_mda_ensemble_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"

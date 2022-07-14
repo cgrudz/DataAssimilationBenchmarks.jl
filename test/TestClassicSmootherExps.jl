@@ -9,16 +9,16 @@ using JLD2, Statistics
 ##############################################################################################
 # run and analyze the ETKS for state estimation with the Lorenz-96 model
 
-function run_smoother_state_L96()
+function run_ensemble_smoother_state_L96()
     try
-        classic_state(exps["Classic_smoother"]["L96_ETKS_state_test"])
+        classic_ensemble_state(exps["Classic_smoother"]["L96_ETKS_state_test"])
         true
     catch
         false
     end
 end
 
-function analyze_smoother_state_L96()
+function analyze_ensemble_smoother_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-classic/"
@@ -43,16 +43,16 @@ end
 ##############################################################################################
 # run and analyze the ETKF for joint state-parameter estimation with the Lorenz-96 model
 
-function run_smoother_param_L96()
+function run_ensemble_smoother_param_L96()
     try
-        classic_param(exps["Classic_smoother"]["L96_ETKS_param_test"])
+        classic_ensemble_param(exps["Classic_smoother"]["L96_ETKS_param_test"])
         true
     catch
         false
     end
 end
 
-function analyze_smoother_param_L96()
+function analyze_ensemble_smoother_param_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etks-classic/"

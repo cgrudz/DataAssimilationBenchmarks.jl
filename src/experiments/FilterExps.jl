@@ -7,18 +7,16 @@ using LinearAlgebra
 using JLD2, HDF5
 using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers,
        ..EnsembleKalmanSchemes, ..L96, ..IEEE39bus
-export filter_state, filter_param
+export ensemble_filter_state, ensemble_filter_param
 ##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ##############################################################################################
 """
-    filter_state((time_series::String, method::String, seed::Int64, nanl::Int64,
-                  obs_un::Float64, obs_dim::Int64, γ::Float64, N_ens::Int64,
-                  s_infl::Float64)::NamedTuple)
+    ensemble_filter_state((time_series::String, method::String, seed::Int64, nanl::Int64,
+                           obs_un::Float64, obs_dim::Int64, γ::Float64, N_ens::Int64,
+                           s_infl::Float64)::NamedTuple)
 
-Filter state estimation twin experiment.  Twin experiment parameters such as the observation
-dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size 
-etc. are specified in the arguments of the NamedTuple.
+Ensemble filter state estimation twin experiment.
 
 Output from the experiment is saved in a dictionary of the form,
 
@@ -64,12 +62,12 @@ where the file name is written dynamically according to the selected parameters 
     ".jld2"
 
 """
-function filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
-                       γ, N_ens, s_infl)::NamedTuple{
-                     (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim, 
-                      :γ,:N_ens,:s_infl),
-                     <:Tuple{String,String,Int64,Int64,Float64,Int64,
-                             Float64,Int64,Float64}})
+function ensemble_filter_state((time_series, method, seed, nanl, obs_un, obs_dim,
+                                 γ, N_ens, s_infl)::NamedTuple{
+                               (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim, 
+                                :γ,:N_ens,:s_infl),
+                               <:Tuple{String,String,Int64,Int64,Float64,Int64,
+                                       Float64,Int64,Float64}})
 
     # time the experiment
     t1 = time()
@@ -223,13 +221,12 @@ end
 
 ##############################################################################################
 """
-    filter_param((time_series::String, method::String, seed::Int64, nanl::Int64, 
-                  obs_un::Float64, obs_dim::Int64, γ::Float64, p_err::Float64, p_wlk::Float64,
-                  N_ens::Int64, s_infl::Float64, p_infl::Float64)::NamedTuple)
+    ensemble_filter_param((time_series::String, method::String, seed::Int64, nanl::Int64, 
+                           obs_un::Float64, obs_dim::Int64, γ::Float64, p_err::Float64,
+                           p_wlk::Float64, N_ens::Int64, s_infl::Float64,
+                           p_infl::Float64)::NamedTuple)
 
-Filter joint state-parameter estimation twin experiment.  Twin experiment parameters such as
-the observation dimension, observation uncertainty, data assimilation method, number of
-cycles, ensemble size etc. are specified in the arguments of the NamedTuple.
+Ensemble filter joint state-parameter estimation twin experiment.
 
 Output from the experiment is saved in a dictionary of the form,
 
@@ -284,11 +281,11 @@ where the file name is written dynamically according to the selected parameters 
     "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") * 
     ".jld2"
 """
-function filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_err, p_wlk,
-                       N_ens, s_infl, p_infl)::NamedTuple{
-                     (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim,:γ,:p_err,:p_wlk,
-                      :N_ens,:s_infl,:p_infl), 
-                     <:Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
+function ensemble_filter_param((time_series, method, seed, nanl, obs_un, obs_dim, γ, p_err,
+                                p_wlk,N_ens, s_infl, p_infl)::NamedTuple{
+                              (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim,:γ,:p_err,
+                               :p_wlk,:N_ens,:s_infl,:p_infl), 
+                              <:Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
                              Float64,Int64,Float64,Float64}})
     # time the experiment
     t1 = time()

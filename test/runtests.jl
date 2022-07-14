@@ -47,44 +47,44 @@ end
 
 # test set 5: test filter state and parameter experiments
 @testset "Filter Experiments" begin
-    @test TestFilterExps.run_filter_state_L96()
-    @test TestFilterExps.analyze_filter_state_L96()
-    @test TestFilterExps.run_filter_param_L96()
-    @test TestFilterExps.analyze_filter_param_L96()
-    @test TestFilterExps.run_filter_state_IEEE39bus()
-    @test TestFilterExps.analyze_filter_state_IEEE39bus()
+    @test TestFilterExps.run_ensemble_filter_state_L96()
+    @test TestFilterExps.analyze_ensemble_filter_state_L96()
+    @test TestFilterExps.run_ensemble_filter_param_L96()
+    @test TestFilterExps.analyze_ensemble_filter_param_L96()
+    @test TestFilterExps.run_ensemble_filter_state_IEEE39bus()
+    @test TestFilterExps.analyze_ensemble_filter_state_IEEE39bus()
 end
 
 # test set 6: test classic smoother state and parameter experiments
 @testset "Classic Smoother Experiments" begin
-    @test TestClassicSmootherExps.run_smoother_state_L96()
-    @test TestClassicSmootherExps.analyze_smoother_state_L96()
-    @test TestClassicSmootherExps.run_smoother_param_L96()
-    @test TestClassicSmootherExps.analyze_smoother_param_L96()
+    @test TestClassicSmootherExps.run_ensemble_smoother_state_L96()
+    @test TestClassicSmootherExps.analyze_ensemble_smoother_state_L96()
+    @test TestClassicSmootherExps.run_ensemble_smoother_param_L96()
+    @test TestClassicSmootherExps.analyze_ensemble_smoother_param_L96()
 end
 
 # test set 7: test IEnKS smoother state and parameter experiments
 @testset "Iterative Smoother Experiments" begin
-    @test TestIterativeSmootherExps.run_sda_smoother_state_L96()
-    @test TestIterativeSmootherExps.analyze_sda_smoother_state_L96()
-    @test TestIterativeSmootherExps.run_sda_smoother_param_L96()
-    @test TestIterativeSmootherExps.analyze_sda_smoother_param_L96()
-    @test TestIterativeSmootherExps.run_sda_smoother_state_L96()
-    @test TestIterativeSmootherExps.analyze_sda_smoother_state_L96()
-    @test TestIterativeSmootherExps.run_sda_smoother_param_L96()
-    @test TestIterativeSmootherExps.analyze_sda_smoother_param_L96()
+    @test TestIterativeSmootherExps.run_sda_ensemble_smoother_state_L96()
+    @test TestIterativeSmootherExps.analyze_sda_ensemble_smoother_state_L96()
+    @test TestIterativeSmootherExps.run_sda_ensemble_smoother_param_L96()
+    @test TestIterativeSmootherExps.analyze_sda_ensemble_smoother_param_L96()
+    @test TestIterativeSmootherExps.run_sda_ensemble_smoother_state_L96()
+    @test TestIterativeSmootherExps.analyze_sda_ensemble_smoother_state_L96()
+    @test TestIterativeSmootherExps.run_sda_ensemble_smoother_param_L96()
+    @test TestIterativeSmootherExps.analyze_sda_ensemble_smoother_param_L96()
 end
 
 # test set 8: test SIEnKS smoother state and parameter experiments
 @testset "Single Iteration Smoother Experiments" begin
-    @test TestSingleIterationSmootherExps.run_sda_smoother_state_L96()
-    @test TestSingleIterationSmootherExps.analyze_sda_smoother_state_L96()
-    @test TestSingleIterationSmootherExps.run_sda_smoother_param_L96()
-    @test TestSingleIterationSmootherExps.analyze_sda_smoother_param_L96()
-    @test TestSingleIterationSmootherExps.run_mda_smoother_state_L96()
-    @test TestSingleIterationSmootherExps.analyze_mda_smoother_state_L96()
-    @test TestSingleIterationSmootherExps.run_mda_smoother_param_L96()
-    @test TestSingleIterationSmootherExps.analyze_mda_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.run_sda_ensemble_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.analyze_sda_ensemble_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.run_sda_ensemble_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.analyze_sda_ensemble_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.run_mda_ensemble_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.analyze_mda_ensemble_smoother_state_L96()
+    @test TestSingleIterationSmootherExps.run_mda_ensemble_smoother_param_L96()
+    @test TestSingleIterationSmootherExps.analyze_mda_ensemble_smoother_param_L96()
 end
 
 # test set 9: test Observation Operators jacobian
