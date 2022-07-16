@@ -142,7 +142,7 @@ end
     IEEE39bus_time_series((seed::Int64, h:Float64, tanl::Float64, nanl::Int64, spin::Int64,
                            diffusion::Float64)::NamedTuple)
 
-Simulate a "free run" time series of the [IEEE39 Bus Swing Equation Model](@ref) for
+Simulate a "free run" time series of the [IEEE39bus](@ref) for
 generating an observation process and truth twin for data assimilation twin experiments.
 Output from the experiment is saved in a dictionary of the form,
 

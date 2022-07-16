@@ -1,11 +1,17 @@
 # Ensemble Kalman Schemes
 
-## API for data assimilation solvers
-There are currently four families of data assimilation solvers available in this package,
+## API for ensemble Kalman schemes 
+There are currently four families of ensemble Kalman estimators available in this package,
 which define the outer-loop of the data assimilation cycle.  Particularly, these define
-how the sequential data assimilation cycle will pass over a time series of observations.
-Ensemble filters run only forward-in-time.  The classic lag-shift smoother runs identically
-to the filter in its forecast and filter steps, but includes an additional retrospective
+how the sequential data assimilation cycle will pass over a time series of observations,
+conceptually pictured in the figure below.
+```@raw html
+<div sytle="float:left; width:100%;">
+<img style="width:95%" src="../cyclingSDA.png" alt="Observation analysis forecast cycle over multiple data assimilation windows">
+</div>
+```
+Ensemble filters only produce analyses forward-in-time.  The classic lag-shift smoother runsi
+identically to the filter in its forecast and filter steps, but includes an additional retrospective
 analysis to past ensemble states stored in memory.  The single iteration smoother follows
 the same convention as the classic smoother, except in that new cycles are initiated from
 a past, reanlyzed ensemble state.  The Gauss-Newton iterative smoothers are 4D smoothers,
@@ -34,33 +40,28 @@ ls_smoother_single_iteration(analysis::String, ens::ArView(T), obs::ArView(T),
 ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T), obs_cov::CovM(T),
     kwargs::StepKwargs; ϵ::Float64=0.0001, tol::Float64=0.001,
     max_iter::Int64=10) where T <: Float64
-
-"""
-analysis   -- string name analysis scheme given to the transform sub-routine
-ens        -- ensemble matrix defined by the array with columns given by the replicates of
-              the model state
-obs        -- observation vector for the current analysis in ensemble_filter / array with
-              columns given by the observation vectors for the ordered sequence of analysis
-							times in the current smoothing window
-H_obs      -- observation model mapping state vectors and ensembles into observed variables
-obs_cov    -- observation error covariance matrix
-kwargs     -- keyword arguments for inflation, parameter estimation or other functionality,
-              including integration parameters for the state model in smoothing schemes
-"""
 ```
+with conventions defined as follows:
+  * `analysis` - string name of the analysis scheme;
+  * `ens` - ensemble matrix defined by the array with columns given by the replicates of the model state;
+  * `obs` - observation vector for the current analysis in `ensemble_filter` / array with columns given by the observation vectors for the ordered sequence of analysis times in the current smoothing window;
+  * `H_obs` - observation model mapping state vectors and ensembles into observed variables;
+  * `obs_cov` - observation error covariance matrix;
+  * `kwargs` - keyword arguments for inflation, parameter estimation or other functionality, including integration parameters for the state model in smoothing schemes.
 
-The type of analysis to be passed to the transform step is specified with the `analysis`
-string, with partiuclar analysis methods described below.  Observations for the filter
+The `analysis` string is passed to the
+[`DataAssimilationBenchmarks.EnsembleKalmanSchemes.transform_R`](@ref) or the 
+[`DataAssimilationBenchmarks.EnsembleKalmanSchemes.ens_gauss_newton`](@ref)
+methods below to produce a specialized analysis within the outer-loop controlled by the above
+filter and smoother methods. Observations for the filter
 schemes correspond to information available at a single analysis time giving an observation
 of the state vector of type [`VecA`](@ref). The ls (lag-shift) smoothers require an array of
 observations of type [`ArView`](@ref) corresponding to all analysis times within the data
 assimilation window (DAW). Observation covariances are typed as [`CovM`](@ref) for
 efficiency.  State covariance multiplicative inflation and extended state parameter
-covariance multiplicative inflation can be specified in `kwargs`. These outer-loops pass the
-required values to the [`DataAssimilationBenchmarks.EnsembleKalmanSchemes.transform_R`](@ref)
-method that generates the ensemble transform for conditioning on observations. Utility
-scripts to generate observation operators, analyze ensemble statistics, etc, are included
-in the below. 
+covariance multiplicative inflation can be specified in `kwargs`.
+Utility scripts to generate observation operators, analyze ensemble statistics, etc,
+are included in the below. 
 
 ## Methods
 

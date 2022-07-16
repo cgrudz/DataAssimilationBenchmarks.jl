@@ -8,20 +8,9 @@ export rk4_step!, tay2_step!, em_step!
 """
     rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
-Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020.
-The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
-Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref). Details on this scheme are available in the
-manuscript
-[Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+Steps model state with the 4 stage Runge-Kutta scheme.
 
+The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
 This method overwrites the input in-place and returns the updated
 ```
 return x
@@ -115,20 +104,12 @@ end
 
 ##############################################################################################
 """
-    tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T<: Real
 
-Deterministic second order autonomous Taylor method for step size `h` and state vector `x`.
+Steps model state with the deterministic second order autonomous Taylor method.
+
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
-dynamics.  Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref).
-
-This overwrites the input in-place and returns the updated
+dynamics. This overwrites the input in-place and returns the updated
 ```
 return x
 ```
@@ -153,20 +134,9 @@ end
 
 ##############################################################################################
 """
-    em_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
-This will propagate the state `x` one step forward by Euler-Maruyama scheme.
-Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available in the
-manuscript
-[Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+Steps model state with the Euler-Maruyama scheme.
 
 This overwrites the input in-place and returns the updated
 ```

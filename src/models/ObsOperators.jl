@@ -90,7 +90,7 @@ end
 
 
 ##############################################################################################
-"""
+@doc raw"""
     alternating_obs_operator(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
     alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
                              kwargs::StepKwargs) where T <: Real
@@ -113,11 +113,30 @@ observation space.  For `γ=1.0`, there is no transformation applied, and the ob
 operator acts as a linear projection onto the remaining components of the state vector,
 equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
-pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
-observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
-is applied to the remaining state components.  If `γ<0.0`, the exponential observation
+pg. 181 is applied, 
+```math
+\begin{align}
+\mathcal{H}(\pmb{x}) = \frac{\pmb{x}}{2}\circ\left[\pmb{1} + \left(\frac{\vert\pmb{x}\vert}{10} \right)^{\gamma - 1}\right]
+\end{align}
+```
+where ``\circ`` is the Schur product, and which limits to the identity for `γ=1.0`.
+If `γ=0.0`, the quadratic observation operator of
+[Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml),
+```math
+\begin{align}
+\mathcal{H}(\pmb{x}) =0.05 \pmb{x} \circ \pmb{x}
+\end{align}
+```
+is applied to the remaining state components (note, this is not a continuous limit).
+If `γ<0.0`, the exponential observation
 operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
-is applied to the remaining state vector components.
+```math
+\begin{align}
+\mathcal{H}(\pmb{x}) = \pmb{x} \circ \exp\{- \gamma \pmb{x} \}
+\end{align}
+```
+is applied to the remaining state vector components, where the exponential
+is applied componentwise (note, this is also not a continuous limit).
 """
 function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
                                   kwargs::StepKwargs) where T <: Real
