@@ -19,12 +19,6 @@ include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
 
-@testset "Observation Operators" begin
-    @test TestObsOperators.alternating_obs_jacobian_pos()
-    @test TestObsOperators.alternating_obs_jacobian_zero()
-    @test TestObsOperators.alternating_obs_jacobian_neg()
-end
-
 # test set 1: Calculate the order of convergence for standard integrators
 @testset "Calculate Order Convergence" begin
     @test TestDeSolvers.testEMExponential()
