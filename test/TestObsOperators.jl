@@ -14,9 +14,11 @@ Returns whether the difference of computed jacobian is within error tolerance fo
 """
 function alternating_obs_jacobian_pos()
     # 1-D ensemble argument
-    x = [UnitRange{Float64}(1.0,40.0);]
+    x = Vector{Float64}(1:40)
+
     # observation dimension
     obs_dim = 20
+
     # test gammas
     gam_pos = Dict{String, Any}("γ" => 2.0)
 
@@ -50,9 +52,11 @@ Returns whether the difference of computed jacobian is within error tolerance fo
 """
 function alternating_obs_jacobian_zero()
     # 1-D ensemble argument
-    x = [UnitRange{Float64}(1.0,40.0);]
+    x = Vector{Float64}(1:40)
+
     # observation dimension
     obs_dim = 20
+
     # test gamma (γ == 0.0)
     gam_zero = Dict{String, Any}("γ" => 0.0)
 
@@ -86,9 +90,11 @@ Returns whether the difference of computed jacobian is within error tolerance fo
 """
 function alternating_obs_jacobian_neg()
     # 1-D ensemble argument
-    x = [UnitRange{Float64}(1.0,40.0);]
+    x = Vector{Float64}(1:40)
+
     # observation dimension
     obs_dim = 20
+
     # test gamma (γ < 0.0)
     gam_neg = Dict{String, Any}("γ" => -0.5)
 
