@@ -65,7 +65,7 @@ end
 """
 function testNewton()
     # initialization
-    x = ones(40) * 0.5
+    x = ones(40)
     obs = zeros(40)
     x_background = ones(40)
     state_cov = I

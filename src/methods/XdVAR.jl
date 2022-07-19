@@ -74,7 +74,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
     # initializations
     j_max = 40
     tol = 0.001
-    j = 0
+    j = 1
     sys_dim = length(x)
 
     # gradient preallocation over-write 
@@ -84,20 +84,21 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
 
     # hessian preallocation over-write
     function hess!(h::ArView(T), x::VecA(T)) where T <: Real
-        h .= inv(D3_var_hessian(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs))
+        h .= D3_var_hessian(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
     end
 
     # step 6: perform the optimization by simple Newton
     grad_x = Array{Float64}(undef, (sys_dim))
     hess_x = Array{Float64}(undef, (sys_dim, sys_dim))
 
-    while j < j_max
+    while j <= j_max
+        print("Iteration: " * string(j) * "\n")
         # compute the gradient and hessian
         grad!(grad_x, x)
         hess!(hess_x, x)
         
         # perform Newton approximation
-        Δx = hess_x*grad_x
+        Δx = inv(hess_x)*grad_x
         x = x - Δx
 
         if norm(Δx) < tol

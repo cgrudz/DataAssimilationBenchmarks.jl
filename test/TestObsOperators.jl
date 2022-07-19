@@ -3,7 +3,7 @@ module TestObsOperators
 ##############################################################################################
 # imports and exports
 using DataAssimilationBenchmarks.ObsOperators
-using ForwardDiff
+using ForwardDiff, ReverseDiff
 ##############################################################################################
 """
     alternating_obs_jacobian_pos() 
