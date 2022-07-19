@@ -7,7 +7,7 @@ using JLD2
 ##############################################################################################
 # include test sub-modules
 include("TestObsOperators.jl")
-include("Test3dVAR")
+include("Test3dVAR.jl")
 include("TestDeSolvers.jl")
 include("TestL96.jl")
 include("TestTimeSeriesGeneration.jl")
@@ -18,6 +18,13 @@ include("TestIterativeSmootherExps.jl")
 include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
+
+# test set 0: test Observation Operators jacobian
+@testset "Observation Operators" begin
+    @test TestObsOperators.alternating_obs_jacobian_pos()
+    @test TestObsOperators.alternating_obs_jacobian_zero()
+    @test TestObsOperators.alternating_obs_jacobian_neg()
+end
 
 # test set 1: Calculate the order of convergence for standard integrators
 @testset "Calculate Order Convergence" begin
@@ -87,14 +94,7 @@ end
     @test TestSingleIterationSmootherExps.analyze_mda_ensemble_smoother_param_L96()
 end
 
-# test set 9: test Observation Operators jacobian
-@testset "Observation Operators" begin
-    @test TestObsOperators.alternating_obs_jacobian_pos()
-    @test TestObsOperators.alternating_obs_jacobian_zero()
-    @test TestObsOperators.alternating_obs_jacobian_neg()
-end
-
-# test set 10: test 3D-VAR 
+# test set 9: test 3D-VAR
 @testset "3DVAR" begin
     @test Test3dVAR.testCost()
     @test Test3dVAR.testGrad()

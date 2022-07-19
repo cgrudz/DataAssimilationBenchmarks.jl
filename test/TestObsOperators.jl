@@ -26,16 +26,16 @@ function alternating_obs_jacobian_pos()
     end
 
     # jacobian computed via automatic differentiation 
-    jacob_auto = ObsOperators.alternating_projector(ForwardDiff.jacobian(wrap_pos, x), obs_dim)
+    jacob_auto = ForwardDiff.jacobian(wrap_pos, x)
 
     # compute differences between ForwardDiff and ObsOperators calculated jacobians
     diff =  jacob_auto - ObsOperators.alternating_obs_operator_jacobian(x, obs_dim, gam_pos)
 
     # compare within error tolerance for every entry across all differences 
-    if sum((abs.(diff)) .<= 0.01) != 20*40
-        false
-    else
+    if sum((abs.(diff)) .<= 0.001) == 20*40
         true
+    else
+        false
     end
 end
 
@@ -62,16 +62,16 @@ function alternating_obs_jacobian_zero()
     end
 
     # jacobian computed via automatic differentiation 
-    jacob_auto = ObsOperators.alternating_projector(ForwardDiff.jacobian(wrap_zero, x), obs_dim)
+    jacob_auto = ForwardDiff.jacobian(wrap_zero, x)
 
     # compute difference between ForwardDiff and ObsOperators calculated jacobian
     diff = jacob_auto - ObsOperators.alternating_obs_operator_jacobian(x, obs_dim, gam_zero)
 
     # compare within error tolerance for every entry of difference matrix
-    if sum((abs.(diff)) .<= 0.01) != 20*40
-        false
-    else
+    if sum((abs.(diff)) .<= 0.01) == 20*40
         true
+    else
+        false
     end
 end
 
@@ -98,16 +98,16 @@ function alternating_obs_jacobian_neg()
     end
 
     # jacobian computed via automatic differentiation 
-    jacob_auto = ObsOperators.alternating_projector(ForwardDiff.jacobian(wrap_neg, x), obs_dim)
+    jacob_auto = ForwardDiff.jacobian(wrap_neg, x)
 
     # compute difference between ForwardDiff and ObsOperators calculated jacobian
     diff = jacob_auto - ObsOperators.alternating_obs_operator_jacobian(x, obs_dim, gam_neg)
 
     # compare within error tolerance for every entry of difference matrix
-    if sum((abs.(diff)) .<= 0.01) != 20*40
-        false
-    else
+    if sum((abs.(diff)) .<= 0.001) == 20*40
         true
+    else
+        false
     end
 end
 

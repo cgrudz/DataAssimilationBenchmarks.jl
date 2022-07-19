@@ -19,8 +19,9 @@ function testCost()
     obs_cov = I
     params = Dict{String, Any}("γ" => 1.0)
     H_obs = alternating_obs_operator
+    cost = XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params)
 
-    if XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params) == 10
+    if abs(cost - 10) < 0.001
         true
     else
         false
@@ -50,7 +51,7 @@ function testGrad()
     x = ones(40) * 0.5
 
     grad = ForwardDiff.gradient(wrap_cost, x)
-    if grad == zeros(40)
+    if norm(grad) < 0.001
         true
     else
         false
@@ -65,7 +66,7 @@ end
 """
 function testNewton()
     # initialization
-    x = ones(40)
+    x = 5.0 * ones(40)
     obs = zeros(40)
     x_background = ones(40)
     state_cov = I
@@ -76,7 +77,7 @@ function testNewton()
     # perform Simple Newton optimization
     op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
     
-    if op == ones(40) * 0.5
+    if norm(op - ones(40) * 0.5) < 0.001
         true
     else
         false
