@@ -55,7 +55,7 @@ The `analysis` string is passed to the
 methods below to produce a specialized analysis within the outer-loop controlled by the above
 filter and smoother methods. Observations for the filter
 schemes correspond to information available at a single analysis time giving an observation
-of the state vector of type [`VecA`](@ref). The ls (lag-shift) smoothers require an array of
+of the state vector of type [`VecA`](@ref). The `ls` (lag-shift) smoothers require an array of
 observations of type [`ArView`](@ref) corresponding to all analysis times within the data
 assimilation window (DAW). Observation covariances are typed as [`CovM`](@ref) for
 efficiency.  State covariance multiplicative inflation and extended state parameter

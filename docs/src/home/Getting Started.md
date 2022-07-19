@@ -7,7 +7,7 @@ for ordinary and stochastic differential equations, solvers for data assimilatio
 and the core process model code for running twin experiments with benchmark models, collected
 in the `methods` and `models` sub-directories.  Experiments define routines for driving
 standard benchmark case studies with
-[NamedTuples](https://docs.julialang.org/en/v1/manual/types/#Named-Tuple-Types-1)
+[NamedTuples](https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple)
 as arguments to these methods defining the associated experimental hyper-parameters.
 
 In order to get the full functionality of this package you will need to install the dev

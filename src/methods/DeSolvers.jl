@@ -108,6 +108,7 @@ end
 
 Steps model state with the deterministic second order autonomous Taylor method.
 
+This method has order 2.0 convergence for autonomous ODEs.
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
 dynamics. This overwrites the input in-place and returns the updated
 ```
@@ -137,6 +138,10 @@ end
     em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
 Steps model state with the Euler-Maruyama scheme.
+
+This method has order 1.0 convergence for ODEs and for SDEs with additive noise, though has
+inferior performance to the four stage Runge-Kutta scheme when the amplitude of the SDE noise
+purturbations are small-to-moderately large.
 
 This overwrites the input in-place and returns the updated
 ```
