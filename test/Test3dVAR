@@ -58,6 +58,33 @@ function testGrad()
 end
 
 ##############################################################################################
+"""
+    testNewton() 
+
+    Tests the Newton optimization of the 3dVAR cost function.
+"""
+function testNewton()
+    # initialization
+    x = ones(40)
+    obs = zeros(40)
+    x_background = ones(40)
+    state_cov = I
+    obs_cov = I
+    params = Dict{String, Any}("γ" => 1.0)
+    H_obs = alternating_obs_operator
+
+    # perform Simple Newton optimization
+    op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+    
+    if op == ones(40) * 0.5
+        true
+    else
+        false
+    end
+end
+
+
+##############################################################################################
 # end module
 
 end

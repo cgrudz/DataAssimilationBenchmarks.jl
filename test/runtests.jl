@@ -98,6 +98,7 @@ end
 @testset "3DVAR" begin
     @test Test3dVAR.testCost()
     @test Test3dVAR.testGrad()
+    @test Test3dVAR.testNewton()
 end
 
 ##############################################################################################
