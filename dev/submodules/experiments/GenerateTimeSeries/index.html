@@ -6,36 +6,36 @@
                   &quot;h&quot; =&gt; h,
                   &quot;diffusion&quot; =&gt; diffusion,
                   &quot;diff_mat&quot; =&gt; diff_mat,
-                  &quot;dx_params&quot; =&gt; dx_params, 
+                  &quot;dx_params&quot; =&gt; dx_params,
                   &quot;tanl&quot; =&gt; tanl,
                   &quot;nanl&quot; =&gt; nanl,
                   &quot;spin&quot; =&gt; spin,
                   &quot;obs&quot; =&gt; obs,
                   &quot;model&quot; =&gt; &quot;IEEE39bus&quot;
-                 )</code></pre><p>Experiment output is written to a directory defined by</p><pre><code class="nohighlight hljs">path = pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/time_series/&quot;</code></pre><p>where the file name is written dynamically according to the selected parameters as follows:</p><pre><code class="nohighlight hljs">&quot;IEEE39bus_time_series_seed_&quot; * lpad(seed, 4, &quot;0&quot;) * 
-&quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) * 
-&quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) * 
-&quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) * 
-&quot;_spin_&quot; * lpad(spin, 4, &quot;0&quot;) * 
-&quot;_h_&quot; * rpad(h, 5, &quot;0&quot;) * 
+                 )</code></pre><p>Experiment output is written to a directory defined by</p><pre><code class="nohighlight hljs">path = pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/time_series/&quot;</code></pre><p>where the file name is written dynamically according to the selected parameters as follows:</p><pre><code class="nohighlight hljs">&quot;IEEE39bus_time_series_seed_&quot; * lpad(seed, 4, &quot;0&quot;) *
+&quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) *
+&quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) *
+&quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) *
+&quot;_spin_&quot; * lpad(spin, 4, &quot;0&quot;) *
+&quot;_h_&quot; * rpad(h, 5, &quot;0&quot;) *
 &quot;.jld2&quot;</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.GenerateTimeSeries.L96_time_series-Tuple{NamedTuple{(:seed, :h, :state_dim, :tanl, :nanl, :spin, :diffusion, :F), &lt;:Tuple{Int64, Float64, Int64, Float64, Int64, Int64, Float64, Float64}}}" href="#DataAssimilationBenchmarks.GenerateTimeSeries.L96_time_series-Tuple{NamedTuple{(:seed, :h, :state_dim, :tanl, :nanl, :spin, :diffusion, :F), &lt;:Tuple{Int64, Float64, Int64, Float64, Int64, Int64, Float64, Float64}}}"><code>DataAssimilationBenchmarks.GenerateTimeSeries.L96_time_series</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">L96_time_series((seed::Int64, h::Float64, state_dim::Int64, tanl::Float64, nanl::Int64,
-                 spin::Int64, diffusion::Float64, F::Float64)::NamedTuple)</code></pre><p>Simulate a &quot;free run&quot; time series of the <a href="../../models/L96/#Lorenz-96-model">Lorenz-96 model</a> model  for generating an observation process and truth twin for data assimilation twin experiments. Output from the experiment is saved in a dictionary of the form,</p><pre><code class="nohighlight hljs">Dict{String, Any}(
+                 spin::Int64, diffusion::Float64, F::Float64)::NamedTuple)</code></pre><p>Simulate a &quot;free run&quot; time series of the <a href="../../models/L96/#Lorenz-96-model">Lorenz-96 model</a> model for generating an observation process and truth twin for data assimilation twin experiments. Output from the experiment is saved in a dictionary of the form,</p><pre><code class="nohighlight hljs">Dict{String, Any}(
                   &quot;seed&quot; =&gt; seed,
                   &quot;h&quot; =&gt; h,
-                  &quot;diffusion&quot; =&gt; diffusion, 
-                  &quot;dx_params&quot; =&gt; dx_params, 
+                  &quot;diffusion&quot; =&gt; diffusion,
+                  &quot;dx_params&quot; =&gt; dx_params,
                   &quot;tanl&quot; =&gt; tanl,
                   &quot;nanl&quot; =&gt; nanl,
                   &quot;spin&quot; =&gt; spin,
                   &quot;state_dim&quot; =&gt; state_dim,
                   &quot;obs&quot; =&gt; obs,
                   &quot;model&quot; =&gt; &quot;L96&quot;
-                 )</code></pre><p>Experiment output is written to a directory defined by</p><pre><code class="nohighlight hljs">path = pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/time_series/&quot;</code></pre><p>where the file name is written dynamically according to the selected parameters as follows:</p><pre><code class="nohighlight hljs">&quot;L96_time_series_seed_&quot; * lpad(seed, 4, &quot;0&quot;) * 
-&quot;_dim_&quot; * lpad(state_dim, 2, &quot;0&quot;) * 
-&quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) * 
-&quot;_F_&quot; * lpad(F, 4, &quot;0&quot;) * 
-&quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) * 
-&quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) * 
-&quot;_spin_&quot; * lpad(spin, 4, &quot;0&quot;) * 
-&quot;_h_&quot; * rpad(h, 5, &quot;0&quot;) * 
-&quot;.jld2&quot;</code></pre></div></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../methods/XdVAR/">« XdVAR</a><a class="docs-footer-nextpage" href="../FilterExps/">FilterExps »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 02:52">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+                 )</code></pre><p>Experiment output is written to a directory defined by</p><pre><code class="nohighlight hljs">path = pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/time_series/&quot;</code></pre><p>where the file name is written dynamically according to the selected parameters as follows:</p><pre><code class="nohighlight hljs">&quot;L96_time_series_seed_&quot; * lpad(seed, 4, &quot;0&quot;) *
+&quot;_dim_&quot; * lpad(state_dim, 2, &quot;0&quot;) *
+&quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) *
+&quot;_F_&quot; * lpad(F, 4, &quot;0&quot;) *
+&quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) *
+&quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) *
+&quot;_spin_&quot; * lpad(spin, 4, &quot;0&quot;) *
+&quot;_h_&quot; * rpad(h, 5, &quot;0&quot;) *
+&quot;.jld2&quot;</code></pre></div></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../methods/XdVAR/">« XdVAR</a><a class="docs-footer-nextpage" href="../FilterExps/">FilterExps »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 17:48">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

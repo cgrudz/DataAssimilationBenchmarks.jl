@@ -17,11 +17,11 @@ iterative_param        -- Gauss-Newton style state-parameter estimation</code></
                         &quot;filt_spread&quot; =&gt; filt_spread,
                         &quot;post_spread&quot; =&gt; post_spread,
                         &quot;method&quot; =&gt; method,
-                        &quot;seed&quot;  =&gt; seed, 
+                        &quot;seed&quot;  =&gt; seed,
                         &quot;diffusion&quot; =&gt; diffusion,
                         &quot;dx_params&quot; =&gt; dx_params,
                         &quot;sys_dim&quot; =&gt; sys_dim,
-                        &quot;obs_dim&quot; =&gt; obs_dim, 
+                        &quot;obs_dim&quot; =&gt; obs_dim,
                         &quot;obs_un&quot; =&gt; obs_un,
                         &quot;gamma&quot; =&gt; γ,
                         &quot;nanl&quot; =&gt; nanl,
@@ -29,7 +29,7 @@ iterative_param        -- Gauss-Newton style state-parameter estimation</code></
                         &quot;lag&quot; =&gt; lag,
                         &quot;shift&quot; =&gt; shift,
                         &quot;h&quot; =&gt; h,
-                        &quot;N_ens&quot; =&gt; N_ens, 
+                        &quot;N_ens&quot; =&gt; N_ens,
                         &quot;mda&quot;  =&gt; mda,
                         &quot;s_infl&quot; =&gt; round(s_infl, digits=2)
                        )
@@ -37,20 +37,20 @@ iterative_param        -- Gauss-Newton style state-parameter estimation</code></
 if haskey(ts, &quot;diff_mat&quot;)
     data[&quot;diff_mat&quot;] = ts[&quot;diff_mat&quot;]
 end</code></pre><p>Experiment output is written to a directory defined by</p><pre><code class="nohighlight hljs">pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/&quot; * method * &quot;-classic/&quot;</code></pre><p>where the file name is written dynamically according to the selected parameters as follows:</p><pre><code class="nohighlight hljs">method * &quot;-classic_&quot; * model *
-         &quot;_state_seed_&quot; * lpad(seed, 4, &quot;0&quot;) * 
-         &quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) * 
-         &quot;_sysD_&quot; * lpad(sys_dim, 2, &quot;0&quot;) * 
-         &quot;_obsD_&quot; * lpad(obs_dim, 2, &quot;0&quot;) * 
+         &quot;_state_seed_&quot; * lpad(seed, 4, &quot;0&quot;) *
+         &quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) *
+         &quot;_sysD_&quot; * lpad(sys_dim, 2, &quot;0&quot;) *
+         &quot;_obsD_&quot; * lpad(obs_dim, 2, &quot;0&quot;) *
          &quot;_obsU_&quot; * rpad(obs_un, 4, &quot;0&quot;) *
          &quot;_gamma_&quot; * lpad(γ, 5, &quot;0&quot;) *
-         &quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) * 
-         &quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) * 
+         &quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) *
+         &quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) *
          &quot;_h_&quot; * rpad(h, 4, &quot;0&quot;) *
-         &quot;_lag_&quot; * lpad(lag, 3, &quot;0&quot;) * 
+         &quot;_lag_&quot; * lpad(lag, 3, &quot;0&quot;) *
          &quot;_shift_&quot; * lpad(shift, 3, &quot;0&quot;) *
-         &quot;_mda_&quot; * string(mda) * 
-         &quot;_nens_&quot; * lpad(N_ens, 3,&quot;0&quot;) * 
-         &quot;_stateInfl_&quot; * rpad(round(s_infl, digits=2), 4, &quot;0&quot;) * 
+         &quot;_mda_&quot; * string(mda) *
+         &quot;_nens_&quot; * lpad(N_ens, 3,&quot;0&quot;) *
+         &quot;_stateInfl_&quot; * rpad(round(s_infl, digits=2), 4, &quot;0&quot;) *
          &quot;.jld2&quot;</code></pre></div></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.SmootherExps.iterative_ensemble_param-Tuple{NamedTuple{(:time_series, :method, :seed, :nanl, :lag, :shift, :mda, :obs_un, :obs_dim, :γ, :p_err, :p_wlk, :N_ens, :s_infl, :p_infl), &lt;:Tuple{String, String, Int64, Int64, Int64, Int64, Bool, Float64, Int64, Float64, Float64, Float64, Int64, Float64, Float64}}}" href="#DataAssimilationBenchmarks.SmootherExps.iterative_ensemble_param-Tuple{NamedTuple{(:time_series, :method, :seed, :nanl, :lag, :shift, :mda, :obs_un, :obs_dim, :γ, :p_err, :p_wlk, :N_ens, :s_infl, :p_infl), &lt;:Tuple{String, String, Int64, Int64, Int64, Int64, Bool, Float64, Int64, Float64, Float64, Float64, Int64, Float64, Float64}}}"><code>DataAssimilationBenchmarks.SmootherExps.iterative_ensemble_param</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">iterative_ensemble_param((time_series:String, method:String, seed::Int64, nanl::Int64,
                           lag::Int64, shift::Int64, mda::Bool, obs_un::Float64,
                           obs_dim::Int64, γ::Float64, p_err::Float64, p_wlk::Float64,
@@ -64,4 +64,4 @@ end</code></pre><p>Experiment output is written to a directory defined by</p><pr
                                  s_infl::Float64, p_infl::Float64)::NamedTuple)</code></pre><p>SIEnKS joint state-parameter estimation twin experiment.  Twin experiment parameters such as the observation dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size etc. are specified in the arguments.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.SmootherExps.single_iteration_ensemble_state-Tuple{NamedTuple{(:time_series, :method, :seed, :nanl, :lag, :shift, :mda, :obs_un, :obs_dim, :γ, :N_ens, :s_infl), &lt;:Tuple{String, String, Int64, Int64, Int64, Int64, Bool, Float64, Int64, Float64, Int64, Float64}}}" href="#DataAssimilationBenchmarks.SmootherExps.single_iteration_ensemble_state-Tuple{NamedTuple{(:time_series, :method, :seed, :nanl, :lag, :shift, :mda, :obs_un, :obs_dim, :γ, :N_ens, :s_infl), &lt;:Tuple{String, String, Int64, Int64, Int64, Int64, Bool, Float64, Int64, Float64, Int64, Float64}}}"><code>DataAssimilationBenchmarks.SmootherExps.single_iteration_ensemble_state</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">single_iteration_ensemble_state((time_series::String, method::String, seed::Int64,
                                  nanl::Int64, lag::Int64, shift::Int64, mda::Bool,
                                  obs_un::Float64, obs_dim::Int64, γ::Float64,
-                                 N_ens::Int64, s_infl::Float64})::NamedTuple)</code></pre><p>SIEnKS state estimation twin experiment.  Twin experiment parameters such as the observation dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size etc. are specified in the arguments.</p></div></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../FilterExps/">« FilterExps</a><a class="docs-footer-nextpage" href="../SingleExperimentDriver/">SingleExperimentDriver »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 02:52">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+                                 N_ens::Int64, s_infl::Float64})::NamedTuple)</code></pre><p>SIEnKS state estimation twin experiment.  Twin experiment parameters such as the observation dimension, observation uncertainty, data assimilation method, number of cycles, ensemble size etc. are specified in the arguments.</p></div></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../FilterExps/">« FilterExps</a><a class="docs-footer-nextpage" href="../SingleExperimentDriver/">SingleExperimentDriver »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Wednesday 20 July 2022 17:48">Wednesday 20 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
