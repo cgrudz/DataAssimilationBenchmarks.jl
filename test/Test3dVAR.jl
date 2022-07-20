@@ -79,7 +79,7 @@ function testNewton()
     # perform Simple Newton optimization
     op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
   
-    if abs(op - ones(40) * 0.5) < 0.001
+    if abs(sum(op - ones(40) * 0.5)) < 0.001
         true
     else
         false
@@ -107,7 +107,7 @@ function testNewtonNoise()
     # perform Simple Newton optimization
     op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
     
-    if abs(op - obs * 0.5) < 0.001
+    if abs(sum(op - obs * 0.5)) < 0.001
         true
     else
         false
