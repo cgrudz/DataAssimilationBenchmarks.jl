@@ -5,7 +5,7 @@ using DataAssimilationBenchmarks.DeSolvers, DataAssimilationBenchmarks.L96
 using ForwardDiff
 ##############################################################################################
 """
-    Jacobian() 
+    Jacobian()
 
 Tests the L96 jacobian function for known behavior with automatic differentiation.
 Returns whether the difference of computed jacobians is within error tolerance for every entry
@@ -40,7 +40,7 @@ end
 
 ##############################################################################################
 """
-    EMZerosStep() 
+    EMZerosStep()
 
 Tests the L96 derivative function for known behavior with Euler(-Maruyama) method.
 The initial condition of zeros returns h * F in all components
@@ -48,7 +48,7 @@ The initial condition of zeros returns h * F in all components
 function EMZerosStep()
     # step size
     h = 0.01
-    
+
     # forcing parameter
     F = 8.0
     dx_params = Dict{String, Array{Float64}}("F" => [F])
@@ -79,7 +79,7 @@ end
 
 ##############################################################################################
 """
-    EMFStep() 
+    EMFStep()
 
 Tests the L96 derivative function for known behavior with Euler(-Maruyama) method.
 The vector with all components equal to the forcing parameter F is a fixed point for the
@@ -88,7 +88,7 @@ system and the time derivative should be zero with this initiial condition.
 function EMFStep()
     # step size
     h = 0.01
-    
+
     # forcing parameter
     F = 8.0
     dx_params = Dict{String, Array{Float64}}("F" => [F])

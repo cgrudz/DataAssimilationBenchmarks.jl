@@ -2,11 +2,11 @@
 module L96
 ##############################################################################################
 # imports and exports
-using ..DataAssimilationBenchmarks, SparseArrays 
-export dx_dt, jacobian, l96s_tay_2_step!, compute_α_ρ 
+using ..DataAssimilationBenchmarks, SparseArrays
+export dx_dt, jacobian, l96s_tay_2_step!, compute_α_ρ
 ##############################################################################################
 """
-    mod_indx!(indx::Int64, dim::Int64) 
+    mod_indx!(indx::Int64, dim::Int64)
 
 Auxiliary function to return state vector indices for the Lorenz-96 model, where `indx` is
 taken mod `dim`.  Mod zero is replaced with `dim` for indexing in Julia state vectors.
@@ -58,7 +58,7 @@ end
 ##############################################################################################
 """
     jacobian(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
-    
+
 Computes the Jacobian of Lorenz-96 about the state `x` of type [`VecA`](@ref). The time
 variable `t` is a dummy variable for consistency with integration methods,
 `dx_params` is of type [`ParamDict`](@ref) which is called for the forcing parameter.
@@ -100,7 +100,7 @@ end
 
 ##############################################################################################
 """
-    compute_α_ρ(p::Int64) 
+    compute_α_ρ(p::Int64)
 
 Computes auxiliary functions for the 2nd order Taylor-Stratonovich expansion. The constants
 `α` and `ρ` need to be computed once, only as a function of the order of truncation of the
@@ -125,7 +125,7 @@ end
 ##############################################################################################
 """
     l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
-    
+
 One step of integration rule for l96 second order taylor rule
 The constants `ρ` and `α` are to be computed with `compute_α_ρ`, depending
 only on `p`, and supplied for all steps. This is the general formulation which includes,
@@ -215,13 +215,13 @@ function l96s_tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: 
 
     function Ψ(l, j)
         # Ψ - generic function of the indicies l and j, define Ψ plus and Ψ minus index-wise
-        h^2.0 * ξ[l] * ξ[j] / 3.0 + h * a[l] * a[j] / 2.0 + 
+        h^2.0 * ξ[l] * ξ[j] / 3.0 + h * a[l] * a[j] / 2.0 +
         h^(1.5) * (ξ[l] * a[j] + ξ[j] * a[l]) / 4.0 -
         h^(1.5) * (ξ[l] * b[j] + ξ[j] * b[l]) / (2.0 * π) - h^2.0 * (C(l,j) + C(j,l))
     end
 
     # define the approximations of the second order Stratonovich integral
-    Ψ_plus = copy(x) 
+    Ψ_plus = copy(x)
     Ψ_minus = copy(x)
     for i in 1:sys_dim
         Ψ_plus[i] = Ψ(mod_indx!((i-1), sys_dim), mod_indx!((i+1), sys_dim))

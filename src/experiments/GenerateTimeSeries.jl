@@ -1,5 +1,5 @@
 ##############################################################################################
-module GenerateTimeSeries 
+module GenerateTimeSeries
 ##############################################################################################
 # imports and exports
 using Random, Distributions
@@ -12,15 +12,15 @@ export L96_time_series, IEEE39bus_time_series
     L96_time_series((seed::Int64, h::Float64, state_dim::Int64, tanl::Float64, nanl::Int64,
                      spin::Int64, diffusion::Float64, F::Float64)::NamedTuple)
 
-Simulate a "free run" time series of the [Lorenz-96 model](@ref) model 
+Simulate a "free run" time series of the [Lorenz-96 model](@ref) model
 for generating an observation process and truth twin for data assimilation twin experiments.
 Output from the experiment is saved in a dictionary of the form,
 
     Dict{String, Any}(
                       "seed" => seed,
                       "h" => h,
-                      "diffusion" => diffusion, 
-                      "dx_params" => dx_params, 
+                      "diffusion" => diffusion,
+                      "dx_params" => dx_params,
                       "tanl" => tanl,
                       "nanl" => nanl,
                       "spin" => spin,
@@ -29,25 +29,29 @@ Output from the experiment is saved in a dictionary of the form,
                       "model" => "L96"
                      )
 
-Where the file name is written dynamically according to the selected parameters as follows:
+Experiment output is written to a directory defined by
 
-    "L96_time_series_seed_" * lpad(seed, 4, "0") * 
-    "_dim_" * lpad(state_dim, 2, "0") * 
-    "_diff_" * rpad(diffusion, 5, "0") * 
-    "_F_" * lpad(F, 4, "0") * 
-    "_tanl_" * rpad(tanl, 4, "0") * 
-    "_nanl_" * lpad(nanl, 5, "0") * 
-    "_spin_" * lpad(spin, 4, "0") * 
-    "_h_" * rpad(h, 5, "0") * 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    "L96_time_series_seed_" * lpad(seed, 4, "0") *
+    "_dim_" * lpad(state_dim, 2, "0") *
+    "_diff_" * rpad(diffusion, 5, "0") *
+    "_F_" * lpad(F, 4, "0") *
+    "_tanl_" * rpad(tanl, 4, "0") *
+    "_nanl_" * lpad(nanl, 5, "0") *
+    "_spin_" * lpad(spin, 4, "0") *
+    "_h_" * rpad(h, 5, "0") *
     ".jld2"
 """
-function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::NamedTuple{ 
+function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::NamedTuple{
                         (:seed,:h,:state_dim,:tanl,:nanl,:spin,:diffusion,:F),
                         <:Tuple{Int64,Float64,Int64,Float64,Int64,Int64,
                                 Float64,Float64}})
     # time the experiment
     t1 = time()
-    
+
     # define the model
     dx_dt = L96.dx_dt
     dx_params = Dict{String, Array{Float64}}("F" => [8.0])
@@ -60,7 +64,7 @@ function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::N
     else
         # generate the observations with the strong Taylor scheme
         step_model! = L96.l96s_tay2_step!
-        
+
         # parameters for the order 2.0 strong Taylor scheme
         p = 1
         α, ρ = comput_α_ρ(p)
@@ -103,12 +107,12 @@ function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::N
         end
         obs[:, j] = x
     end
-    
+
     data = Dict{String, Any}(
                              "seed" => seed,
                              "h" => h,
                              "diffusion" => diffusion,
-                             "dx_params" => dx_params, 
+                             "dx_params" => dx_params,
                              "tanl" => tanl,
                              "nanl" => nanl,
                              "spin" => spin,
@@ -117,17 +121,17 @@ function L96_time_series((seed, h, state_dim, tanl, nanl, spin, diffusion, F)::N
                              "model" => "L96"
                             )
 
-    name = "L96_time_series_seed_" * lpad(seed, 4, "0") * 
-           "_dim_" * lpad(state_dim, 2, "0") * 
-           "_diff_" * rpad(diffusion, 5, "0") * 
-           "_F_" * lpad(F, 4, "0") * 
-           "_tanl_" * rpad(tanl, 4, "0") * 
-           "_nanl_" * lpad(nanl, 5, "0") * 
-           "_spin_" * lpad(spin, 4, "0") * 
-           "_h_" * rpad(h, 5, "0") * 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+    name = "L96_time_series_seed_" * lpad(seed, 4, "0") *
+           "_dim_" * lpad(state_dim, 2, "0") *
+           "_diff_" * rpad(diffusion, 5, "0") *
+           "_F_" * lpad(F, 4, "0") *
+           "_tanl_" * rpad(tanl, 4, "0") *
+           "_nanl_" * lpad(nanl, 5, "0") *
+           "_spin_" * lpad(spin, 4, "0") *
+           "_h_" * rpad(h, 5, "0") *
            ".jld2"
-    
-    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/" 
+
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end
@@ -138,7 +142,7 @@ end
     IEEE39bus_time_series((seed::Int64, h:Float64, tanl::Float64, nanl::Int64, spin::Int64,
                            diffusion::Float64)::NamedTuple)
 
-Simulate a "free run" time series of the [IEEE39 Bus Swing Equation Model](@ref) for
+Simulate a "free run" time series of the [IEEE39bus](@ref) for
 generating an observation process and truth twin for data assimilation twin experiments.
 Output from the experiment is saved in a dictionary of the form,
 
@@ -147,7 +151,7 @@ Output from the experiment is saved in a dictionary of the form,
                       "h" => h,
                       "diffusion" => diffusion,
                       "diff_mat" => diff_mat,
-                      "dx_params" => dx_params, 
+                      "dx_params" => dx_params,
                       "tanl" => tanl,
                       "nanl" => nanl,
                       "spin" => spin,
@@ -155,14 +159,18 @@ Output from the experiment is saved in a dictionary of the form,
                       "model" => "IEEE39bus"
                      )
 
-Where the file name is written dynamically according to the selected parameters as follows:
+Experiment output is written to a directory defined by
 
-    "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
-    "_diff_" * rpad(diffusion, 5, "0") * 
-    "_tanl_" * rpad(tanl, 4, "0") * 
-    "_nanl_" * lpad(nanl, 5, "0") * 
-    "_spin_" * lpad(spin, 4, "0") * 
-    "_h_" * rpad(h, 5, "0") * 
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") *
+    "_diff_" * rpad(diffusion, 5, "0") *
+    "_tanl_" * rpad(tanl, 4, "0") *
+    "_nanl_" * lpad(nanl, 5, "0") *
+    "_spin_" * lpad(spin, 4, "0") *
+    "_h_" * rpad(h, 5, "0") *
     ".jld2"
 """
 function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTuple{
@@ -171,23 +179,23 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
     # time the experiment
     t1 = time()
 
-    # set random seed 
+    # set random seed
     Random.seed!(seed)
-    
+
     # define the model
     dx_dt = IEEE39bus.dx_dt
     state_dim = 20
 
     # define the model parameters
-    input_data = pkgdir(DataAssimilationBenchmarks) * 
+    input_data = pkgdir(DataAssimilationBenchmarks) *
                  "/src/models/IEEE39bus_inputs/NE_EffectiveNetworkParams.jld2"
     tmp = load(input_data)
     dx_params = Dict{String, Array{Float64}}(
-                                             "A" => tmp["A"], 
-                                             "D" => tmp["D"], 
-                                             "H" => tmp["H"], 
+                                             "A" => tmp["A"],
+                                             "D" => tmp["D"],
+                                             "H" => tmp["H"],
                                              "K" => tmp["K"],
-                                             "γ" => tmp["γ"], 
+                                             "γ" => tmp["γ"],
                                              "ω" => tmp["ω"]
                                             )
 
@@ -213,7 +221,7 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
     kwargs = Dict{String, Any}(
               "h" => h,
               "diffusion" => diffusion,
-              "dx_params" => dx_params, 
+              "dx_params" => dx_params,
               "dx_dt" => dx_dt,
               "diff_mat" => diff_mat
              )
@@ -239,13 +247,13 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
         end
         obs[:, j] = x
     end
-    
+
     data = Dict{String, Any}(
                              "seed" => seed,
                              "h" => h,
                              "diffusion" => diffusion,
                              "diff_mat" => diff_mat,
-                             "dx_params" => dx_params, 
+                             "dx_params" => dx_params,
                              "tanl" => tanl,
                              "nanl" => nanl,
                              "spin" => spin,
@@ -253,15 +261,15 @@ function IEEE39bus_time_series((seed, h, tanl, nanl, spin, diffusion)::NamedTupl
                              "model" => "IEEE39bus"
                             )
 
-    name = "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") * 
-           "_diff_" * rpad(diffusion, 5, "0") * 
-           "_tanl_" * rpad(tanl, 4, "0") * 
-           "_nanl_" * lpad(nanl, 5, "0") * 
-           "_spin_" * lpad(spin, 4, "0") * 
-           "_h_" * rpad(h, 5, "0") * 
-           ".jld2"
-    
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+    name = "IEEE39bus_time_series_seed_" * lpad(seed, 4, "0") *
+           "_diff_" * rpad(diffusion, 5, "0") *
+           "_tanl_" * rpad(tanl, 4, "0") *
+           "_nanl_" * lpad(nanl, 5, "0") *
+           "_spin_" * lpad(spin, 4, "0") *
+           "_h_" * rpad(h, 5, "0") *
+           ".jld2"
+
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 end

@@ -8,20 +8,9 @@ export rk4_step!, tay2_step!, em_step!
 """
     rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
-Step of integration rule for 4 stage Runge-Kutta as discussed in Grudzien et al. 2020.
-The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
-Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref). Details on this scheme are available in the
-manuscript
-[Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+Steps model state with the 4 stage Runge-Kutta scheme.
 
+The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs.
 This method overwrites the input in-place and returns the updated
 ```
 return x
@@ -61,13 +50,13 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(Normal(), state_dim) 
+            ξ = rand(Normal(), state_dim)
         end
         if haskey(kwargs, "diff_mat")
-            # diffusion is a scalar intensity which is applied to the 
+            # diffusion is a scalar intensity which is applied to the
             # structure matrix for the diffusion coefficients
             diff_mat = kwargs["diff_mat"]::Array{Float64}
-            diffusion = diffusion * diff_mat 
+            diffusion = diffusion * diff_mat
         end
         # rescale the standard normal to variance h for Wiener process
         W = ξ * sqrt(h)
@@ -101,34 +90,27 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
         κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h + diffusion * W
     else
         # deterministic formulation
-        κ[:, 1] = dx_dt(v, t, dx_params) * h 
-        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h 
-        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h 
-        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h 
+        κ[:, 1] = dx_dt(v, t, dx_params) * h
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h
     end
-    
+
     # compute the update to the dynamic variables
-    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
+    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4])
     return x
 end
 
 
 ##############################################################################################
 """
-    tay2_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    tay2_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T<: Real
 
-Deterministic second order autonomous Taylor method for step size `h` and state vector `x`.
+Steps model state with the deterministic second order autonomous Taylor method.
+
+This method has order 2.0 convergence for autonomous ODEs.
 Time variable `t` is just a dummy variable, where this method is not defined for non-autonomous
-dynamics.  Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref).
-
-This overwrites the input in-place and returns the updated
+dynamics. This overwrites the input in-place and returns the updated
 ```
 return x
 ```
@@ -153,20 +135,13 @@ end
 
 ##############################################################################################
 """
-    em_step!(x::VecA, t::Float64, kwargs::StepKwargs) 
+    em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 
-This will propagate the state `x` one step forward by Euler-Maruyama scheme.
-Arguments are given as:
-```
-    x      -- type [`VecA`](@ref) of model states possibly including static
-              parameter values
-    t      -- time value for present model state
-    kwargs -- includes state time derivative dx_dt, paramters for the dx_dt
-              and optionals
-```
-where `kwargs` is type [`StepKwargs`](@ref) Details on this scheme are available in the
-manuscript
-[Grudzien, C. et al.: (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+Steps model state with the Euler-Maruyama scheme.
+
+This method has order 1.0 convergence for ODEs and for SDEs with additive noise, though has
+inferior performance to the four stage Runge-Kutta scheme when the amplitude of the SDE noise
+purturbations are small-to-moderately large.
 
 This overwrites the input in-place and returns the updated
 ```
@@ -175,7 +150,7 @@ return x
 """
 function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the arguments for the integration step
-    h = kwargs["h"]::Float64 
+    h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict(T)
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]::Function
@@ -188,7 +163,7 @@ function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(Normal(), state_dim) 
+            ξ = rand(Normal(), state_dim)
         end
 
     else

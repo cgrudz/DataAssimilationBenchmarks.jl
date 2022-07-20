@@ -6,7 +6,7 @@ using DataAssimilationBenchmarks
 using JLD, Statistics
 ##############################################################################################
 """
-    test_synchrony() 
+    test_synchrony()
 
 This function tests to see if the swing equation model without noise reaches the synchronous
 steady state for the system, by evaluating the standard deviation of the state components

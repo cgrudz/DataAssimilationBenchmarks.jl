@@ -7,7 +7,7 @@ using DataAssimilationBenchmarks.DeSolvers, DataAssimilationBenchmarks.L96
 using LsqFit
 ##############################################################################################
 """
-    exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA} 
+    exponentialODE(x::T, t::Float64, dx_params::ParamDict) where {T <: VecA}
 
 Wrapper for making a vectorized output of the exponential function for the DE solvers.  This
 is used to verify the order of convergence for integration methods versus an analytical
@@ -20,7 +20,7 @@ end
 
 ##############################################################################################
 """
-    expDiscretizationError(step_model!, h) 
+    expDiscretizationError(step_model!, h)
 
 Auxiliary function to compute the difference of the numerically simulated integral versus
 the analytical value.  This is a function of the time step and integration method, for
@@ -58,7 +58,7 @@ end
 
 ##############################################################################################
 """
-    calculateOrderConvergence(step_model!) 
+    calculateOrderConvergence(step_model!)
 
 Auxiliary function to compute the least-squares estimated order of convergence for the
 numerical integration schemes.  This ranges over step sizes as a function of the integration

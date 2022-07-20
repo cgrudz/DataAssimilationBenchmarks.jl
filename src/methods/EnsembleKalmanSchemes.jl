@@ -15,7 +15,7 @@ export analyze_ens, analyze_ens_param, rand_orth, inflate_state!, inflate_param!
 # Main methods, debugged and validated
 ##############################################################################################
 """
-    analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64  
+    analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64
 
 Computes the ensemble state RMSE as compared with truth twin, and the ensemble spread.
 ```
@@ -37,7 +37,7 @@ function analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64
     # compute the RMSE of the ensemble mean
     rmse = sqrt(mean( (truth - x_bar).^2.0))
 
-    # compute the spread as in whitaker & louge 98 by the standard deviation 
+    # compute the spread as in whitaker & louge 98 by the standard deviation
     # of the mean square deviation of the ensemble from its mean
     spread = sqrt( ( 1.0 / (N_ens - 1.0) ) * sum(mean((ens .- x_bar).^2.0, dims=1)))
 
@@ -73,10 +73,10 @@ function analyze_ens_param(ens::ArView(T), truth::VecA(T)) where T <: Float64
     # compute the spread as in whitaker & louge 98 by the standard deviation
     # of the mean square deviation of the ensemble from its mean,
     # with the weight by the size of the parameter square
-    spread = sqrt( ( 1.0 / (N_ens - 1.0) ) * 
-                   sum(mean( (ens .- x_bar).^2.0 ./ 
+    spread = sqrt( ( 1.0 / (N_ens - 1.0) ) *
+                   sum(mean( (ens .- x_bar).^2.0 ./
                              (ones(param_dim, N_ens) .* truth.^2.0), dims=1)))
-    
+
     # return the tuple pair
     rmse, spread
 end
@@ -94,7 +94,7 @@ return U
 ```
 """
 function rand_orth(N_ens::Int64)
-    # generate the random, mean preserving orthogonal transformation within the 
+    # generate the random, mean preserving orthogonal transformation within the
     # basis given by the B matrix
     Q = rand(Normal(), N_ens - 1, N_ens - 1)
     Q, R = qr!(Q)
@@ -110,7 +110,7 @@ function rand_orth(N_ens::Int64)
     # note, this uses the "full" QR decomposition so that the singularity is encoded in R
     # and B is a full-size orthogonal matrix
     B, R = qr!(B)
-    U = B * U_p * transpose(B) 
+    U = B * U_p * transpose(B)
     U
 end
 
@@ -118,7 +118,7 @@ end
 ##############################################################################################
 """
     inflate_state!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                   state_dim::Int64) where T <: Float64 
+                   state_dim::Int64) where T <: Float64
 
 Applies multiplicative covariance inflation to the state components of the ensemble matrix.
 ```
@@ -132,12 +132,12 @@ parameter replicates are after. Multiplicative inflation is performed only in th
 components of the ensemble anomalies from the ensemble mean, in-place in memory.
 """
 function inflate_state!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64) where T <: Float64 
+                        state_dim::Int64) where T <: Float64
     if inflation != 1.0
         x_mean = mean(ens, dims=2)
         X = ens .- x_mean
-        infl =  Matrix(1.0I, sys_dim, sys_dim) 
-        infl[1:state_dim, 1:state_dim] .*= inflation 
+        infl =  Matrix(1.0I, sys_dim, sys_dim)
+        infl[1:state_dim, 1:state_dim] .*= inflation
         ens .= x_mean .+ infl * X
         return ens
     end
@@ -147,7 +147,7 @@ end
 ##############################################################################################
 """
     inflate_param!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                   state_dim::Int64) where T <: Float64 
+                   state_dim::Int64) where T <: Float64
 
 Applies multiplicative covariance inflation to parameter replicates in the ensemble matrix.
 ```
@@ -157,18 +157,18 @@ return ens
 The first index of the ensemble matrix `ens` corresponds to the length `sys_dim` (extended)
 state dimension while the second index corresponds to the ensemble dimension.  Dynamic state
 variables are assumed to be in the leading `state_dim` rows of `ens`, while extended state
-parameter replicates are after. Multiplicative inflation is performed only in the trailing 
+parameter replicates are after. Multiplicative inflation is performed only in the trailing
 `state_dim + 1: state_dim` components of the ensemble anomalies from the ensemble mean,
 in-place in memory.
 """
 function inflate_param!(ens::ArView(T), inflation::Float64, sys_dim::Int64,
-                        state_dim::Int64) where T <: Float64 
+                        state_dim::Int64) where T <: Float64
     if inflation == 1.0
         return ens
     else
         x_mean = mean(ens, dims=2)
         X = ens .- x_mean
-        infl =  Matrix(1.0I, sys_dim, sys_dim) 
+        infl =  Matrix(1.0I, sys_dim, sys_dim)
         infl[state_dim+1: end, state_dim+1: end] .*= inflation
         ens .= x_mean .+ infl * X
         return ens
@@ -178,7 +178,7 @@ end
 
 ##############################################################################################
 """
-    square_root(M::CovM(T)) where T <: Real 
+    square_root(M::CovM(T)) where T <: Real
 
 Computes the square root of covariance matrices with parametric type.
 
@@ -192,15 +192,15 @@ for close-to-singular matrices.
 return S
 ```
 """
-function square_root(M::UniformScaling{T}) where T <: Real 
+function square_root(M::UniformScaling{T}) where T <: Real
     S = M^0.5
 end
 
-function square_root(M::Diagonal{T, Vector{T}}) where T <: Real 
+function square_root(M::Diagonal{T, Vector{T}}) where T <: Real
     S = sqrt(M)
 end
 
-function square_root(M::Symmetric{T, Matrix{T}}) where T <: Real 
+function square_root(M::Symmetric{T, Matrix{T}}) where T <: Real
     F = svd(M)
     S = Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt)
 end
@@ -208,7 +208,7 @@ end
 ##############################################################################################
 """
     square_root_inv(M::CovM(T); sq_rt::Bool=false, inverse::Bool=false,
-                    full::Bool=false) where T <: Real 
+                    full::Bool=false) where T <: Real
 
 Computes the square root inverse of covariance matrices with parametric type.
 
@@ -219,7 +219,7 @@ are computed directly, while the square root inverses of the more general class 
 stability and accuracy for close-to-singular matrices. This will optionally return a
 computation of the inverse and the square root itself all as a byproduct of the singular
 value decomposition for efficient numerical computation of ensemble
-analysis / update routines. 
+analysis / update routines.
 
 Optional keyword arguments are specified as:
  * `sq_rt=true` returns the matrix square root in addition to the square root inverse
@@ -242,7 +242,7 @@ end
 ```
 """
 function square_root_inv(M::UniformScaling{T}; sq_rt::Bool=false, inverse::Bool=false,
-                         full::Bool=false) where T <: Real 
+                         full::Bool=false) where T <: Real
         if sq_rt
             S = M^0.5
             S_inv = S^(-1.0)
@@ -263,17 +263,17 @@ function square_root_inv(M::UniformScaling{T}; sq_rt::Bool=false, inverse::Bool=
 end
 
 function square_root_inv(M::Diagonal{T, Vector{T}}; sq_rt::Bool=false, inverse::Bool=false,
-                         full::Bool=false) where T <: Real 
+                         full::Bool=false) where T <: Real
     if sq_rt
         S = sqrt(M)
         S_inv = inv(S)
         S_inv, S
-    
-    elseif inverse 
+
+    elseif inverse
         M_inv = inv(M)
         S_inv = sqrt(M_inv)
         S_inv, M_inv
-    
+
     elseif full
         S = sqrt(M)
         S_inv = inv(S)
@@ -286,14 +286,14 @@ function square_root_inv(M::Diagonal{T, Vector{T}}; sq_rt::Bool=false, inverse::
 end
 
 function square_root_inv(M::Symmetric{T, Matrix{T}}; sq_rt::Bool=false, inverse::Bool=false,
-                         full::Bool=false) where T <: Real 
+                         full::Bool=false) where T <: Real
     # stable square root inverse for close-to-singular inverse calculations
     F = svd(M)
-    if sq_rt 
+    if sq_rt
         # take advantage of the SVD calculation to produce both the square root inverse
         # and square root simultaneously
-        S_inv = Symmetric(F.U * Diagonal(1.0 ./ sqrt.(F.S)) * F.Vt) 
-        S = Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt) 
+        S_inv = Symmetric(F.U * Diagonal(1.0 ./ sqrt.(F.S)) * F.Vt)
+        S = Symmetric(F.U * Diagonal(sqrt.(F.S)) * F.Vt)
         S_inv, S
     elseif inverse
         # take advantage of the SVD calculation to produce the square root inverse
@@ -317,7 +317,7 @@ end
 ##############################################################################################
 """
     transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
-                obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM=1000.0I, 
+                obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM=1000.0I,
                 m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                 tol::Float64 = 0.0001,
                 j_max::Int64=40,
@@ -331,7 +331,7 @@ for stabilization:
 return trans, w, U
 ```
 where the tuple is of type [`TransM`](@ref).
-`m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with 
+`m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with
 default values provided.
 
 Serves as an auxilliary function for EnKF, ETKF(-N), EnKS, ETKS(-N), where
@@ -341,20 +341,20 @@ is of type [`ConM`](@ref), the keyword arguments dictionary `kwargs` is of type
 [`StepKwargs`](@ref) and the model error covariance matrix `Q` is of type [`CovM`](@ref).
 
 Currently validated `analysis` options:
- * `analysis=="etkf" || analysis=="etks"` computes the deterministic ensemble transform 
+ * `analysis=="etkf" || analysis=="etks"` computes the deterministic ensemble transform
    as in the ETKF described in [Grudzien, et al.
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
  * `analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"` computes the maximum likelihood
-   ensemble filter transform described in [Grudzien, et al. 
+   ensemble filter transform described in [Grudzien, et al.
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/), optimizing the nonlinear
-   cost function with Newton-based 
+   cost function with Newton-based
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
- * `analysis[1:4]=="mlef" || analysis[1:4]=="mles"` computes the maximum likelihood     
+ * `analysis[1:4]=="mlef" || analysis[1:4]=="mles"` computes the maximum likelihood
    ensemble filter transform described in
    [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
    optimizing the nonlinear
-   cost function with simple Newton-based scheme. 
- * `analysis=="enkf-n-dual" || analysis=="enks-n-dual"` 
+   cost function with simple Newton-based scheme.
+ * `analysis=="enkf-n-dual" || analysis=="enks-n-dual"`
    computes the dual form of the EnKF-N transform as in [Bocquet, et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/)
    Note: this cannot be used with the nonlinear observation operator.
@@ -379,14 +379,14 @@ Currently validated `analysis` options:
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
 """
 function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
-                     obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM(T)=1000.0I, 
+                     obs_cov::CovM(T), kwargs::StepKwargs; conditioning::ConM(T)=1000.0I,
                      m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                      tol::Float64 = 0.0001,
                      j_max::Int64=40,
-                     Q::CovM(T)=1.0I) where T <: Float64 
+                     Q::CovM(T)=1.0I) where T <: Float64
 
     if analysis=="etkf" || analysis=="etks"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
 
@@ -395,21 +395,21 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
 
         # step 2: compute the ensemble mean in observation space
         y_mean = mean(Y, dims=2)
-        
+
         # step 3: compute the sensitivity matrix in observation space
         obs_sqrt_inv = square_root_inv(obs_cov)
         S = obs_sqrt_inv * (Y .- y_mean )
 
         # step 4: compute the weighted innovation
         δ = obs_sqrt_inv * ( obs - y_mean )
-       
+
         # step 5: compute the approximate hessian
         hessian = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
-        
+
         # step 6: compute the transform matrix, transform matrix inverse and
         # hessian inverse simultaneously via the SVD for stability
         trans, hessian_inv = square_root_inv(hessian, inverse=true)
-        
+
         # step 7: compute the analysis weights
         w = hessian_inv * transpose(S) * δ
 
@@ -417,12 +417,12 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         U = rand_orth(N_ens)
 
     elseif analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
-        
-        # step 1: set up inputs for the optimization 
-        
+
+        # step 1: set up inputs for the optimization
+
         # step 1a: inial choice is no change to the mean state
         ens_mean_0 = mean(ens, dims=2)
         anom_0 = ens .- ens_mean_0
@@ -433,7 +433,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
 
         # step 1c: define the conditioning and parameters for finite size formalism if needed
         if analysis[end-5:end] == "bundle"
-            trans = inv(conditioning) 
+            trans = inv(conditioning)
             trans_inv = conditioning
         elseif analysis[end-8:end] == "transform"
             trans = Symmetric(Matrix(1.0*I, N_ens, N_ens))
@@ -454,19 +454,19 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         # step 2: define the cost / gradient / hessian function to avoid repeated computations
         function fgh!(G, H, C, trans::ConM(T1), trans_inv::ConM(T1),
                       w::Vector{T1}) where T1 <: Float64
-            # step 2a: define the linearization of the observation operator 
+            # step 2a: define the linearization of the observation operator
             ens_mean_iter = ens_mean_0 + anom_0 * w
-            ens = ens_mean_iter .+ anom_0 * trans 
+            ens = ens_mean_iter .+ anom_0 * trans
             Y = H_obs(ens, obs_dim, kwargs)
             y_mean = mean(Y, dims=2)
 
             # step 2b: compute the weighted anomalies in observation space, conditioned
             # with trans inverse
-            S = obs_sqrt_inv * (Y .- y_mean) * trans_inv 
+            S = obs_sqrt_inv * (Y .- y_mean) * trans_inv
 
             # step 2c: compute the weighted innovation
             δ = obs_sqrt_inv * (obs - y_mean)
-        
+
             # step 2d: gradient, hessian and cost function definitions
             if G != nothing
                 if analysis[8:9] == "-n"
@@ -506,7 +506,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
                 trans .= trans_tmp
                 trans_inv .= trans_inv_tmp
             end
-            
+
             # step 2f: univariate line search functions
             ϕ(α) = fgh!(nothing, nothing, cost_w, trans, trans_inv, w .+ α.*p)
             function dϕ(α)
@@ -524,10 +524,10 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
             α, fx = linesearch(ϕ, dϕ, ϕdϕ,  1.0, fx, dϕ_0)
             Δw = α * p
             w .= w + Δw
-            
+
             return Δw
         end
-        
+
         # step 3: optimize
         # step 3a: perform the optimization by Newton with linesearch
         # we use StrongWolfe for RMSE performance as the default linesearch
@@ -539,14 +539,14 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         while j < j_max && norm(Δw) > tol
             Δw = newton_ls!(grad_w, hess_w, trans, trans_inv, w, ln_search)
         end
-        
+
         if analysis[8:9] == "-n"
             # peform a final inflation with the finite size cost function
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w)
             hess_w = Symmetric(transpose(S) * S + (N_ens + 1.0) * hess_w)
             trans = square_root_inv(hess_w)
-        
+
         elseif analysis[end-5:end] == "bundle"
             trans = square_root_inv(hess_w)
         end
@@ -555,10 +555,10 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         U = rand_orth(N_ens)
 
     elseif analysis[1:4]=="mlef" || analysis[1:4]=="mles"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
-        
+
         # step 1: set up the optimization, inial choice is no change to the mean state
         ens_mean_0 = mean(ens, dims=2)
         anom_0 = ens .- ens_mean_0
@@ -573,15 +573,15 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         S = Array{Float64}(undef, obs_dim, N_ens)
         ens_mean_iter = copy(ens_mean_0)
 
-        # define the conditioning 
+        # define the conditioning
         if analysis[end-5:end] == "bundle"
-            trans = inv(conditioning) 
+            trans = inv(conditioning)
             trans_inv = conditioning
         elseif analysis[end-8:end] == "transform"
             trans = 1.0*I
             trans_inv = 1.0*I
         end
-        
+
         # step 2: perform the optimization by simple Newton
         j = 0
         if analysis[5:6] == "-n"
@@ -589,9 +589,9 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
             ϵ_N = 1.0 + (1.0 / N_ens)
             N_effective = N_ens + 1.0
         end
-        
+
         while j < j_max
-            # step 2a: compute the observed ensemble and ensemble mean 
+            # step 2a: compute the observed ensemble and ensemble mean
             ens_mean_iter = ens_mean_0 + anom_0 * w
             ens = ens_mean_iter .+ anom_0 * trans
             Y = H_obs(ens, obs_dim, kwargs)
@@ -599,13 +599,13 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
 
             # step 2b: compute the weighted anomalies in observation space, conditioned
             # with trans inverse
-            S = obs_sqrt_inv * (Y .- y_mean) * trans_inv 
+            S = obs_sqrt_inv * (Y .- y_mean) * trans_inv
 
             # step 2c: compute the weighted innovation
             δ = obs_sqrt_inv * (obs - y_mean)
-        
+
             # step 2d: compute the gradient and hessian
-            if analysis[5:6] == "-n" 
+            if analysis[5:6] == "-n"
                 # for finite formalism, we follow the IEnKS-N convention where
                 # the gradient is computed with the finite-size cost function but we use the
                 # usual hessian, with the effective ensemble size
@@ -616,19 +616,19 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
                 grad_w = (N_ens - 1.0)  * w - transpose(S) * δ
                 hess_w = Symmetric((N_ens - 1.0)*I + transpose(S) * S)
             end
-            
+
             # step 2e: perform Newton approximation, simultaneously computing
             # the update transform trans with the SVD based inverse at once
             if analysis[end-8:end] == "transform"
                 trans, trans_inv, hessian_inv = square_root_inv(hess_w, full=true)
-                Δw = hessian_inv * grad_w 
+                Δw = hessian_inv * grad_w
             else
                 Δw = hess_w \ grad_w
             end
 
             # 2f: update the weights
-            w -= Δw 
-            
+            w -= Δw
+
             if norm(Δw) < tol
                 break
             else
@@ -640,10 +640,10 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         if analysis[5:6] == "-n"
             # peform a final inflation with the finite size cost function
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess_w = ζ * I - 2.0 * ζ^2.0 * w * transpose(w)
             hess_w = Symmetric(transpose(S) * S + (N_ens + 1.0) * hess_w)
             trans = square_root_inv(hess_w)
-        
+
         elseif analysis[end-5:end] == "bundle"
             trans = square_root_inv(hess_w)
         end
@@ -652,11 +652,11 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         U = rand_orth(N_ens)
 
     elseif analysis=="etkf-sqrt-core" || analysis=="etks-sqrt-core"
-        ### NOTE: STILL DEVELOPMENT CODE, NOT DEBUGGED 
+        ### NOTE: STILL DEVELOPMENT CODE, NOT DEBUGGED
         # needs to be revised for the calculation with unweighted anomalies
         # Uses the contribution of the model error covariance matrix Q
         # in the square root as in Raanes, et al. 2015
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
 
@@ -668,11 +668,11 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
 
         # step 2b: compute the SVD for the two-sided projected model error covariance
         F = svd(A)
-        Σ_inv = Diagonal([1.0 ./ F.S[1:N_ens-1]; 0.0]) 
+        Σ_inv = Diagonal([1.0 ./ F.S[1:N_ens-1]; 0.0])
         p_inv = F.V * Σ_inv * transpose(F.U)
         ## NOTE: want to
         G = Symmetric(1.0I + (N_ens - 1.0) * p_inv * Q * transpose(p_inv))
-        
+
         # step 2c: compute the model error adjusted anomalies
         A = A * square_root(G)
 
@@ -681,33 +681,33 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
 
         # step 4: compute the ensemble mean in observation space
         y_mean = mean(Y, dims=2)
-        
+
         # step 5: compute the weighted anomalies in observation space
-        
+
         # first we find the observation error covariance inverse
         obs_sqrt_inv = square_root_inv(obs_cov)
-        
+
         # then compute the weighted anomalies
         S = (Y .- y_mean) / sqrt(N_ens - 1.0)
         S = obs_sqrt_inv * S
 
         # step 6: compute the weighted innovation
         δ = obs_sqrt_inv * ( obs - y_mean )
-       
+
         # step 7: compute the transform matrix
         trans = inv(Symmetric(1.0I + transpose(S) * S))
-        
+
         # step 8: compute the analysis weights
         w = trans * transpose(S) * δ
 
         # step 9: compute the square root of the transform
         trans = sqrt(trans)
-        
+
         # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
 
     elseif analysis=="enkf-n-dual" || analysis=="enks-n-dual"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
 
@@ -716,22 +716,22 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
-        
+
         # first we find the observation error covariance inverse
         obs_sqrt_inv = square_root_inv(obs_cov)
-        
-        # then compute the sensitivity matrix in observation space 
+
+        # then compute the sensitivity matrix in observation space
         S = obs_sqrt_inv * (Y .- y_mean)
- 
+
         # step 5: compute the weighted innovation
         δ = obs_sqrt_inv * (obs - y_mean)
-        
+
         # step 6: compute the SVD for the simplified cost function, gauge weights and range
         F = svd(S)
         ϵ_N = 1.0 + (1.0 / N_ens)
         ζ_l = 0.000001
         ζ_u = (N_ens + 1.0) / ϵ_N
-        
+
         # step 7: define the dual cost function derived in singular value form
         function D(ζ::Float64)
             cost = I - (F.U * Diagonal( F.S.^2.0 ./ (ζ .+ F.S.^2.0) ) * transpose(F.U) )
@@ -739,8 +739,8 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
                    (N_ens + 1.0) * log((N_ens + 1.0) / ζ) .- (N_ens + 1.0)
             cost[1]
         end
-        
-        # The below is defined for possible Hessian-based minimization 
+
+        # The below is defined for possible Hessian-based minimization
         # NOTE: standard Brent's method appears to be more reliable at finding a
         # global minimizer with some basic tests, may be tested further
         #
@@ -779,46 +779,46 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         diag_vals = ζ_a.minimizer .+ F.S.^2.0
 
         # step 9: compute the update weights
-        w = F.V * Diagonal( F.S ./ diag_vals ) * transpose(F.U) * δ 
+        w = F.V * Diagonal( F.S ./ diag_vals ) * transpose(F.U) * δ
 
         # step 10: compute the update transform
-        trans = Symmetric(Diagonal( F.S ./ diag_vals) * transpose(F.U) * δ * 
+        trans = Symmetric(Diagonal( F.S ./ diag_vals) * transpose(F.U) * δ *
                                transpose(δ) * F.U * Diagonal( F.S ./ diag_vals))
-        trans = Symmetric(Diagonal(diag_vals) - 
+        trans = Symmetric(Diagonal(diag_vals) -
                                ( (2.0 * ζ_a.minimizer^2.0) / (N_ens + 1.0) ) * trans)
         trans = Symmetric(F.V * square_root_inv(trans) * F.Vt)
-        
+
         # step 11:  generate mean preserving random orthogonal matrix as in sakov oke 08
         U = rand_orth(N_ens)
 
     elseif analysis=="enkf-n-primal" || analysis=="enks-n-primal"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
 
-        # step 1: compute the observed ensemble and ensemble mean 
+        # step 1: compute the observed ensemble and ensemble mean
         Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
-        
+
         # first we find the observation error covariance inverse
         obs_sqrt_inv = square_root_inv(obs_cov)
-        
-        # then compute the sensitivity matrix in observation space 
+
+        # then compute the sensitivity matrix in observation space
         S = obs_sqrt_inv * (Y .- y_mean)
 
         # step 3: compute the weighted innovation
         δ = obs_sqrt_inv * (obs - y_mean)
-        
+
         # step 4: define the epsilon scaling and the effective ensemble size
         ϵ_N = 1.0 + (1.0 / N_ens)
         N_effective = N_ens + 1.0
-        
+
         # step 5: set up the optimization
         # step 5:a the inial choice is no change to the mean state
         w = zeros(N_ens)
-        
+
         # step 5b: define the primal cost function
         function P(w::Vector{Float64})
             cost = (δ - S * w)
@@ -829,16 +829,16 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         # step 5c: define the primal gradient
         function ∇P!(grad::Vector{Float64}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w) 
+            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w)
         end
 
         # step 5d: define the primal hessian
         function H_P!(hess::ArView(T1), w::Vector{Float64}) where T1 <: Float64
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w)
             hess .= transpose(S) * S + N_effective * hess
         end
-        
+
         # step 6: perform the optimization by simple Newton
         j = 0
         trans = Array{Float64}(undef, N_ens, N_ens)
@@ -849,13 +849,13 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
             # compute the gradient and hessian
             ∇P!(grad_w, w)
             H_P!(hess_w, w)
-            
+
             # perform Newton approximation, simultaneously computing
             # the update transform trans with the SVD based inverse at once
             trans, hessian_inv = square_root_inv(Symmetric(hess_w), inverse=true)
-            Δw = hessian_inv * grad_w 
-            w -= Δw 
-            
+            Δw = hessian_inv * grad_w
+            w -= Δw
+
             if norm(Δw) < tol
                 break
             else
@@ -867,34 +867,34 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         U = rand_orth(N_ens)
 
     elseif analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"
-        # step 0: infer the system, observation and ensemble dimensions 
+        # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
 
-        # step 1: compute the observed ensemble and ensemble mean 
+        # step 1: compute the observed ensemble and ensemble mean
         Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
 
         # step 2: compute the weighted anomalies in observation space
-        
+
         # first we find the observation error covariance inverse
         obs_sqrt_inv = square_root_inv(obs_cov)
-        
-        # then compute the sensitivity matrix in observation space 
+
+        # then compute the sensitivity matrix in observation space
         S = obs_sqrt_inv * (Y .- y_mean)
 
         # step 3: compute the weighted innovation
         δ = obs_sqrt_inv * (obs - y_mean)
-        
+
         # step 4: define the epsilon scaling and the effective ensemble size
         ϵ_N = 1.0 + (1.0 / N_ens)
         N_effective = N_ens + 1.0
-        
+
         # step 5: set up the optimization
-        
+
         # step 5:a the inial choice is no change to the mean state
         w = zeros(N_ens)
-        
+
         # step 5b: define the primal cost function
         function J(w::Vector{Float64})
             cost = (δ - S * w)
@@ -905,16 +905,16 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         # step 5c: define the primal gradient
         function ∇J!(grad::Vector{Float64}, w::Vector{Float64})
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w) 
+            grad[:] = N_effective * ζ * w - transpose(S) * (δ - S * w)
         end
 
         # step 5d: define the primal hessian
         function H_J!(hess::ArView(T1), w::Vector{Float64}) where T1 <: Float64
             ζ = 1.0 / (ϵ_N + sum(w.^2.0))
-            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w) 
+            hess .= ζ * I - 2.0 * ζ^2.0 * w * transpose(w)
             hess .= transpose(S) * S + N_effective * hess
         end
-        
+
         # step 6: find the argmin for the update weights
         # step 6a: define the line search algorithm with Newton
         # we use StrongWolfe for RMSE performance as the default linesearch
@@ -929,7 +929,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         # step 7: compute the update transform
         trans = Symmetric(H_J!(Array{Float64}(undef, N_ens, N_ens), w))
         trans = square_root_inv(trans)
-        
+
         # step 8:  generate mean preserving random orthogonal matrix as in Sakov & Oke 08
         U = rand_orth(N_ens)
 
@@ -939,19 +939,19 @@ end
 
 ##############################################################################################
 """
-    ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T), 
+    ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T),
                      H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs;
-                     conditioning::ConM(T)=1000.0I, 
+                     conditioning::ConM(T)=1000.0I,
                      m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                      tol::Float64 = 0.0001,
                      j_max::Int64=40,
-                     Q::CovM(T)=1.0I) where T <: Float64 
+                     Q::CovM(T)=1.0I) where T <: Float64
 
 Computes the ensemble estimated gradient and Hessian terms for nonlinear least-squares
 ```
 return ∇_J, Hess_J
 ```
-`m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with 
+`m_err`, `tol`, `j_max`, `Q` are optional arguments depending on the `analysis`, with
 default values provided.
 
 Serves as an auxilliary function for IEnKS(-N), where "analysis" is a string which
@@ -962,12 +962,12 @@ is of type [`ConM`](@ref), the keyword arguments dictionary `kwargs` is of type
 
 Currently validated `analysis` options:
  * `analysis == "ienks-bundle" || "ienks-n-bundle" || "ienks-transform" || "ienks-n-transform"`
-   computes the weighted observed anomalies as per the  
+   computes the weighted observed anomalies as per the
    bundle or transform version of the IEnKS, described in [Bocquet &
    Sakov 2013](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/qj.2236),
    [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    Bundle versus tranform versions of the scheme are specified by the trailing
-   `analysis` string as `-bundle` or `-transform`.  The bundle version uses a small uniform 
+   `analysis` string as `-bundle` or `-transform`.  The bundle version uses a small uniform
    scalar `ϵ`, whereas the transform version uses a matrix square root inverse as the
    conditioning operator. This form of analysis differs from other schemes by returning a
    sequential-in-time value for the cost function gradient and Hessian, which will is
@@ -975,21 +975,21 @@ Currently validated `analysis` options:
    based on the EnKF-N above, can be utilized by appending additionally a `-n` to the
    `-bundle` or `-transform` version of the IEnKS scheme specified in `analysis`.
 """
-function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T), 
+function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T),
                           H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs;
-                          conditioning::ConM(T)=1000.0I, 
+                          conditioning::ConM(T)=1000.0I,
                           m_err::ArView(T)=(1.0 ./ zeros(1,1)),
                           tol::Float64 = 0.0001,
                           j_max::Int64=40,
-                          Q::CovM(T)=1.0I) where T <: Float64 
-    if analysis[1:5]=="ienks" 
+                          Q::CovM(T)=1.0I) where T <: Float64
+    if analysis[1:5]=="ienks"
         # step 0: infer observation dimension
         obs_dim = length(obs)
-        
-        # step 1: compute the observed ensemble and ensemble mean 
+
+        # step 1: compute the observed ensemble and ensemble mean
         Y = H_obs(ens, obs_dim, kwargs)
         y_mean = mean(Y, dims=2)
-        
+
         # step 2: compute the observed anomalies, proportional to the conditioning matrix
         # here conditioning should be supplied as trans^(-1)
         S = (Y .- y_mean) * conditioning
@@ -1007,10 +1007,10 @@ function ens_gauss_newton(analysis::String, ens::ArView(T), obs::VecA(T),
 end
 
 ##############################################################################################
-""" 
+"""
     ens_update_RT!(ens::ArView(T), transform::TransM(T)) where T <: Float64
 
-Updates forecast ensemble to the analysis ensemble by right transform (RT) method. 
+Updates forecast ensemble to the analysis ensemble by right transform (RT) method.
 ```
 return ens
 ```
@@ -1019,11 +1019,11 @@ Arguments include the ensemble of type [`ArView`](@ref) and the 3-tuple includin
 right transform for the anomalies, the weights for the mean and the random, mean-preserving
 orthogonal matrix, type [`TransM`](@ref).
 """
-function ens_update_RT!(ens::ArView(T), update::TransM(T)) where T <: Float64 
+function ens_update_RT!(ens::ArView(T), update::TransM(T)) where T <: Float64
     # step 0: infer dimensions and unpack the transform
     sys_dim, N_ens = size(ens)
     trans, w, U = update
-    
+
     # step 1: compute the ensemble mean
     x_mean = mean(ens, dims=2)
 
@@ -1040,7 +1040,7 @@ end
 ##############################################################################################
 """
     ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
-                    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
+                    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
 
 General filter analysis step, wrapping the right transform / update, and inflation steps.
 Optional keyword argument includes state_dim for extended state including parameters.
@@ -1051,9 +1051,9 @@ return Dict{String,Array{Float64,2}}("ens" => ens)
 ```
 """
 function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Function,
-                         obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
+                         obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
 
-    # step 0: infer the system, observation and ensemble dimensions 
+    # step 0: infer the system, observation and ensemble dimensions
     sys_dim, N_ens = size(ens)
     obs_dim = length(obs)
 
@@ -1064,7 +1064,7 @@ function ensemble_filter(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::
     end
 
     # step 1: compute the tranform and update ensemble
-    ens_update_RT!(ens, transform_R(analysis, ens, obs, H_obs, obs_cov, kwargs)) 
+    ens_update_RT!(ens, transform_R(analysis, ens, obs, H_obs, obs_cov, kwargs))
 
     # step 2a: compute multiplicative inflation of state variables
     if haskey(kwargs, "s_infl")
@@ -1086,11 +1086,11 @@ end
 ##############################################################################################
 """
     ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T), H_obs::Function,
-                        obs_cov::CovM(T),  kwargs::StepKwargs) where T <: Float64 
+                        obs_cov::CovM(T),  kwargs::StepKwargs) where T <: Float64
 
 Lag-shift ensemble Kalman smoother analysis step, classical version.
 
-Classic EnKS uses the last filtered state for the forecast, different from the 
+Classic EnKS uses the last filtered state for the forecast, different from the
 iterative schemes which use the once or multiple-times re-analized posterior for
 the initial condition for the forecast of the states to the next shift.
 
@@ -1099,16 +1099,16 @@ In this case, a value for the parameter covariance inflation should be included
 in addition to the state covariance inflation.
 ```
 return Dict{String,Array{Float64}}(
-                                   "ens" => ens, 
-                                   "post" =>  posterior, 
-                                   "fore" => forecast, 
+                                   "ens" => ens,
+                                   "post" =>  posterior,
+                                   "fore" => forecast,
                                    "filt" => filtered
-                                  ) 
+                                  )
 ```
-"""    
+"""
 function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
-                             H_obs::Function, obs_cov::CovM(T), 
-                             kwargs::StepKwargs) where T <: Float64 
+                             H_obs::Function, obs_cov::CovM(T),
+                             kwargs::StepKwargs) where T <: Float64
     # step 0: unpack kwargs
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]::Function
@@ -1124,7 +1124,7 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
     if shift < lag
         # posterior contains length lag + shift past states, we discard the oldest shift
         # states and load the new filtered states in the routine
-        posterior = cat(posterior[:, :, 1 + shift: end], 
+        posterior = cat(posterior[:, :, 1 + shift: end],
                         Array{Float64}(undef, sys_dim, N_ens, shift), dims=3)
     end
 
@@ -1147,7 +1147,7 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
         if lag==shift
             posterior[:, :, s] = ens
         end
-        
+
         # step 2a: propagate between observation times
         for j in 1:N_ens
             if param_est
@@ -1193,30 +1193,30 @@ function ls_smoother_classic(analysis::String, ens::ArView(T), obs::ArView(T),
         # store the filtered states and posterior states
         filtered[:, :, s] = ens
         posterior[:, :, end - shift + s] = ens
-        
+
         # step 2e: re-analyze the posterior in the lag window of states,
         # not including current time
-        @views for l in 1:lag + s - 1 
+        @views for l in 1:lag + s - 1
             ens_update_RT!(posterior[:, :, l], trans)
         end
     end
-            
+
     # step 3: if performing parameter estimation, apply the parameter model
     if haskey(kwargs, "p_wlk")
         p_wlk = kwargs["p_wlk"]::Float64
         param_ens = ens[state_dim + 1:end , :]
         param_mean = mean(param_ens, dims=2)
-        param_ens .= param_ens + 
+        param_ens .= param_ens +
                      p_wlk * param_mean .* rand(Normal(), length(param_mean), N_ens)
         ens[state_dim + 1:end, :] = param_ens
     end
-    
+
     Dict{String,Array{Float64}}(
-                                "ens" => ens, 
-                                "post" =>  posterior, 
-                                "fore" => forecast, 
+                                "ens" => ens,
+                                "post" =>  posterior,
+                                "fore" => forecast,
                                 "filt" => filtered
-                               ) 
+                               )
 end
 
 
@@ -1224,7 +1224,7 @@ end
 """
     ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                                  H_obs::Function, obs::ArView(T), obs_cov::CovM(T),
-                                 kwargs::StepKwargs) where T <: Float64 
+                                 kwargs::StepKwargs) where T <: Float64
 
 Lag-shift, single-iteration ensemble Kalman smoother (SIEnKS) analysis step.
 
@@ -1235,22 +1235,22 @@ In this case, a value for the parameter covariance inflation should be included 
 addition to the state covariance inflation.
 ```
 return Dict{String,Array{Float64}}(
-                                   "ens" => ens, 
-                                   "post" =>  posterior, 
-                                   "fore" => forecast, 
+                                   "ens" => ens,
+                                   "post" =>  posterior,
+                                   "fore" => forecast,
                                    "filt" => filtered
-                                  ) 
+                                  )
 ```
 """
 function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                                       obs::ArView(T), H_obs::Function, obs_cov::CovM(T),
-                                      kwargs::StepKwargs) where T <: Float64 
+                                      kwargs::StepKwargs) where T <: Float64
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]::Function
     posterior = kwargs["posterior"]::Array{Float64,3}
-    
+
     # infer the ensemble, obs, and system dimensions, observation sequence
     # includes lag forward times
     obs_dim, lag = size(obs)
@@ -1267,12 +1267,12 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
 
     # make a copy of the intial ens for re-analysis
     ens_0 = copy(ens)
-    
+
     # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero
     # re-analized prior the first initial condition for the future iterations
     # regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
-    
+
     # step 1: create storage for the posterior, forecast and filter values over the DAW
     # only the shift-last and shift-first values are stored as these represent the
     # newly forecasted values and last-iterate posterior estimate respectively
@@ -1283,10 +1283,10 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
         forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
         filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
     end
-    
+
     # multiple data assimilation (mda) is optional, read as boolean variable
     mda = kwargs["mda"]::Bool
-    
+
     if mda
         # set the observation and re-balancing weights
         reb_weights = kwargs["reb_weights"]::Vector{Float64}
@@ -1294,13 +1294,13 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
 
         # set iteration count for the initial rebalancing step followed by mda
         i = 0
-        
+
         # the posterior statistics are computed in the zeroth pass with rebalancing
         posterior[:, :, 1] = ens_0
-        
+
         # make a single iteration with SDA,
         # with MDA make a rebalancing step on the zeroth iteration
-        while i <=1 
+        while i <=1
             # step 2: forward propagate the ensemble and analyze the observations
             for l in 1:lag
                 # step 2a: propagate between observation times
@@ -1335,13 +1335,13 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                         # times beyond previous forecast windows
                         forecast[:, :, l - (lag - shift)] = ens
                     end
-                    
-                    # step 2c: perform the filtering step with rebalancing weights 
+
+                    # step 2c: perform the filtering step with rebalancing weights
                     trans = transform_R(analysis, ens, obs[:, l], H_obs,
                                         obs_cov * reb_weights[l], kwargs)
                     ens_update_RT!(ens, trans)
 
-                    if spin 
+                    if spin
                         # optionaly compute multiplicative inflation of state variables
                         if haskey(kwargs, "s_infl")
                             s_infl = kwargs["s_infl"]::Float64
@@ -1354,16 +1354,16 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                             p_infl = kwargs["p_infl"]::Float64
                             inflate_param!(ens, p_infl, sys_dim, state_dim)
                         end
-                        
+
                         # store all new filtered states
                         filtered[:, :, l] = ens
-                    
+
                     elseif l > (lag - shift)
                         # store the filtered states for previously unobserved times,
                         # not mda values
                         filtered[:, :, l - (lag - shift)] = ens
                     end
-                    
+
                     # step 2d: compute re-analyzed posterior statistics within rebalancing
                     # step, using the MDA rebalancing analysis transform for all available
                     # times on all states that will be discarded on the next shift
@@ -1371,7 +1371,7 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                     @views for s in 1:reanalysis_index
                         ens_update_RT!(posterior[:, :, s], trans)
                     end
-                    
+
                     # store most recent filtered state in the posterior statistics, for all
                     # states to be discarded on the next shift > 1
                     if l < shift
@@ -1382,7 +1382,7 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                     trans = transform_R(analysis, ens, obs[:, l], H_obs,
                                         obs_cov * obs_weights[l], kwargs)
                     ens_update_RT!(ens, trans)
-                    
+
                     # re-analyzed initial conditions are computed in the mda step
                     ens_update_RT!(ens_0, trans)
                 end
@@ -1419,11 +1419,11 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                 # become available
                 # if spin, store all new forecast states
                 forecast[:, :, l] = ens
-                
+
                 # step 2c: apply the transformation and update step
                 trans = transform_R(analysis, ens, obs[:, l], H_obs, obs_cov, kwargs)
                 ens_update_RT!(ens, trans)
-                
+
                 # optionally compute multiplicative inflation of state variables
                 if haskey(kwargs, "s_infl")
                     s_infl = kwargs["s_infl"]::Float64
@@ -1436,32 +1436,32 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
                     p_infl = kwargs["p_infl"]::Float64
                     inflate_param!(ens, p_infl, sys_dim, state_dim)
                 end
-                
+
                 # store all new filtered states
                 filtered[:, :, l] = ens
-            
+
                 # step 2d: compute the re-analyzed initial condition if assimilation update
                 ens_update_RT!(ens_0, trans)
-            
+
             elseif l > (lag - shift)
                 # step 2b: store forecast to compute ensemble statistics before observations
                 # become available
                 # if not spin, only store forecasted states for beyond unobserved times
                 # beyond previous forecast windows
                 forecast[:, :, l - (lag - shift)] = ens
-                
+
                 # step 2c: apply the transformation and update step
                 trans = transform_R(analysis, ens, obs[:, l], H_obs, obs_cov, kwargs)
                 ens_update_RT!(ens, trans)
-                
+
                 # store the filtered states for previously unobserved times, not mda values
                 filtered[:, :, l - (lag - shift)] = ens
-                
+
                 # step 2d: compute re-analyzed initial condition if assimilation update
                 ens_update_RT!(ens_0, trans)
             end
         end
-        # reset the ensemble with the re-analyzed prior 
+        # reset the ensemble with the re-analyzed prior
         ens = copy(ens_0)
     end
 
@@ -1471,7 +1471,7 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
         s_infl = kwargs["s_infl"]::Float64
         inflate_state!(ens, s_infl, sys_dim, state_dim)
     end
-    
+
     # if including an extended state of parameter values,
     # optionally compute multiplicative inflation of parameter values
     if haskey(kwargs, "p_infl")
@@ -1517,11 +1517,11 @@ function ls_smoother_single_iteration(analysis::String, ens::ArView(T),
     end
 
     Dict{String,Array{Float64}}(
-                                "ens" => ens, 
-                                "post" =>  posterior, 
-                                "fore" => forecast, 
+                                "ens" => ens,
+                                "post" =>  posterior,
+                                "fore" => forecast,
                                 "filt" => filtered,
-                                ) 
+                                )
 end
 
 
@@ -1530,7 +1530,7 @@ end
     ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T),
                              H_obs::Function, obs_cov::CovM(T),
                              kwargs::StepKwargs; ϵ::Float64=0.0001,
-                             tol::Float64=0.001, max_iter::Int64=5) where T <: Float64 
+                             tol::Float64=0.001, max_iter::Int64=5) where T <: Float64
 
 This implements a lag-shift Gauss-Newton IEnKS analysis step as in algorithm 4 of
 [Bocquet & Sakov 2014](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.2236).
@@ -1541,23 +1541,23 @@ state including parameters. In this case, a value for the parameter covariance i
 should be included in addition to the state covariance inflation.
 ```
 return Dict{String,Array{Float64}}(
-                                   "ens" => ens, 
-                                   "post" =>  posterior, 
-                                   "fore" => forecast, 
+                                   "ens" => ens,
+                                   "post" =>  posterior,
+                                   "fore" => forecast,
                                    "filt" => filtered
-                                  ) 
+                                  )
 ```
 """
 function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(T),
                                   H_obs::Function, obs_cov::CovM(T),
                                   kwargs::StepKwargs; ϵ::Float64=0.0001,
-                                  tol::Float64=0.001, max_iter::Int64=5) where T <: Float64 
+                                  tol::Float64=0.001, max_iter::Int64=5) where T <: Float64
     # step 0: unpack kwargs, posterior contains length lag past states ending
     # with ens as final entry
     f_steps = kwargs["f_steps"]::Int64
     step_model! = kwargs["step_model"]::Function
     posterior = kwargs["posterior"]::Array{Float64,3}
-    
+
     # infer the ensemble, obs, and system dimensions,
     # observation sequence includes lag forward times
     obs_dim, lag = size(obs)
@@ -1576,8 +1576,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
     # re-analized prior
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs["spin"]::Bool
-    
-    # step 1: create storage for the posterior filter values over the DAW, 
+
+    # step 1: create storage for the posterior filter values over the DAW,
     # forecast values in the DAW+shift
     if spin
         forecast = Array{Float64}(undef, sys_dim, N_ens, lag + shift)
@@ -1598,7 +1598,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
 
     # multiple data assimilation (mda) is optional, read as boolean variable
     mda = kwargs["mda"]::Bool
-    
+
     # algorithm splits on the use of MDA or not
     if mda
         # 1b: define the initial parameters for the two stage iterative optimization
@@ -1611,22 +1611,22 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
 
         # m gives the total number of iterations of the algorithm over both the
         # rebalancing and the MDA steps, this is combined from the iteration count
-        # i in each stage; the iterator i will give the number of iterations of the 
-        # optimization and does not take into account the forecast / filtered iteration; 
-        # for an optmized routine of the transform version, forecast / filtered statistics 
-        # can be computed within the iteration count i; for the optimized bundle 
-        # version, forecast / filtered statistics need to be computed with an additional 
+        # i in each stage; the iterator i will give the number of iterations of the
+        # optimization and does not take into account the forecast / filtered iteration;
+        # for an optmized routine of the transform version, forecast / filtered statistics
+        # can be computed within the iteration count i; for the optimized bundle
+        # version, forecast / filtered statistics need to be computed with an additional
         # iteration due to the epsilon scaling of the ensemble
         m = 0
 
         # stage gives the algorithm stage, 0 is rebalancing, 1 is MDA
         stage = 0
 
-        # step 1c: compute the initial ensemble mean and normalized anomalies, 
-        # and storage for the sequentially computed iterated mean, gradient 
-        # and hessian terms 
+        # step 1c: compute the initial ensemble mean and normalized anomalies,
+        # and storage for the sequentially computed iterated mean, gradient
+        # and hessian terms
         ens_mean_0 = mean(ens, dims=2)
-        anom_0 = ens .- ens_mean_0 
+        anom_0 = ens .- ens_mean_0
 
         ∇J = Array{Float64}(undef, N_ens, lag)
         hess_J = Array{Float64}(undef, N_ens, N_ens, lag)
@@ -1634,7 +1634,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         # pre-allocate these variables as global for the loop re-definitions
         hessian = Symmetric(Array{Float64}(undef, N_ens, N_ens))
         new_ens = Array{Float64}(undef, sys_dim, N_ens)
-        
+
         # step through two stages starting at zero
         while stage <=1
             # step 1d: (re)-define the conditioning for bundle versus transform varaints
@@ -1648,18 +1648,18 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
 
             # step 1e: (re)define the iteration count and the base-point for the optimization
             i = 0
-            ens_mean_iter = copy(ens_mean_0) 
+            ens_mean_iter = copy(ens_mean_0)
             w = zeros(N_ens)
-            
+
             # step 2: begin iterative optimization
-            while i < max_iter 
-                # step 2a: redefine the conditioned ensemble with updated mean, after 
-                # first spin run in stage 0 
+            while i < max_iter
+                # step 2a: redefine the conditioned ensemble with updated mean, after
+                # first spin run in stage 0
                 if !spin || i > 0 || stage > 0
                     ens = ens_mean_iter .+ anom_0 * trans
                 end
 
-                # step 2b: forward propagate the ensemble and sequentially store the 
+                # step 2b: forward propagate the ensemble and sequentially store the
                 # forecast or construct cost function
                 for l in 1:lag
                     # propagate between observation times
@@ -1687,15 +1687,15 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                         # if first spin, store the forecast over the entire DAW
                         forecast[:, :, l] = ens
 
-                    # otherwise, compute the sequential terms of the gradient and hessian of 
+                    # otherwise, compute the sequential terms of the gradient and hessian of
                     # the cost function, weights depend on the stage of the algorithm
-                    elseif stage == 0 
+                    elseif stage == 0
                         # this is the rebalancing step to produce filter and forecast stats
                         ∇J[:,l], hess_J[:, :, l] = ens_gauss_newton(
                                                              analysis,
                                                              ens, obs[:, l],
                                                              H_obs,
-                                                             obs_cov * reb_weights[l], 
+                                                             obs_cov * reb_weights[l],
                                                              kwargs,
                                                              conditioning=trans_inv
                                                             )
@@ -1707,7 +1707,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                                                              ens,
                                                              obs[:, l],
                                                              H_obs,
-                                                             obs_cov * obs_weights[l], 
+                                                             obs_cov * obs_weights[l],
                                                              kwargs,
                                                              conditioning=trans_inv
                                                             )
@@ -1717,10 +1717,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
 
                 # skip this section in the first spin cycle, return and begin optimization
                 if !spin || i > 0 || stage > 0
-                    # step 2c: formally compute the gradient and the hessian from the 
+                    # step 2c: formally compute the gradient and the hessian from the
                     # sequential components, perform Gauss-Newton after forecast iteration
-                    if analysis[1:7] == "ienks-n" 
-                        # use the finite size EnKF cost function for the gradient calculation 
+                    if analysis[1:7] == "ienks-n"
+                        # use the finite size EnKF cost function for the gradient calculation
                         ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
                         gradient = N_effective * ζ * w - sum(∇J, dims=2)
 
@@ -1737,10 +1737,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                     end
 
                     if analysis[end-8:end] == "transform"
-                        # transform method requires each of the below, and we make 
+                        # transform method requires each of the below, and we make
                         # all calculations simultaneously via the SVD for stability
                         trans, trans_inv, hessian_inv = square_root_inv(hessian, full=true)
-                        
+
                         # compute the weights update
                         Δw = hessian_inv * gradient
                     else
@@ -1749,25 +1749,25 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                     end
 
                     # update the weights
-                    w -= Δw 
+                    w -= Δw
 
-                    # update the mean via the increment, always with the zeroth 
+                    # update the mean via the increment, always with the zeroth
                     # iterate of the ensemble
                     ens_mean_iter = ens_mean_0 + anom_0 * w
-                    
+
                     if norm(Δw) < tol
                         i+=1
                         break
                     end
                 end
-                
+
                 # update the iteration count
                 i+=1
             end
 
             # step 3: compute posterior initial condiiton and propagate forward in time
             # step 3a: perform the analysis of the ensemble
-            if analysis[1:7] == "ienks-n" 
+            if analysis[1:7] == "ienks-n"
                 # use finite size EnKF cost function to produce adaptive
                 # inflation with the hessian
                 ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
@@ -1796,9 +1796,9 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                 ens[state_dim + 1:end, :] = param_ens
             end
 
-            # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up 
-            # by shift observation times in stage 1, store the filtered state as the forward 
-            # propagated value at the new observation times within the DAW in stage 0, 
+            # step 3c: propagate the re-analyzed, resampled-in-parameter-space ensemble up
+            # by shift observation times in stage 1, store the filtered state as the forward
+            # propagated value at the new observation times within the DAW in stage 0,
             # the forecast states as those beyond the DAW in stage 0, and
             # store the posterior at the times discarded at the next shift in stage 0
             if stage == 0
@@ -1860,7 +1860,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
             stage += 1
             m += i
         end
-        
+
         # store and optionally inflate the forward posterior at the new initial condition
         if haskey(kwargs, "s_infl")
             s_infl = kwargs["s_infl"]::Float64
@@ -1875,12 +1875,12 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         end
 
         Dict{String,Array{Float64}}(
-                                    "ens" => ens, 
-                                    "post" =>  posterior, 
-                                    "fore" => forecast, 
+                                    "ens" => ens,
+                                    "post" =>  posterior,
+                                    "fore" => forecast,
                                     "filt" => filtered,
                                     "iterations" => Array{Float64}([m])
-                                   ) 
+                                   )
     else
         # step 1b: define the initial correction and iteration count, note that i will
         # give the number of iterations of the optimization and does not take into
@@ -1892,14 +1892,14 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         w = zeros(N_ens)
         i = 0
 
-        # step 1c: compute the initial ensemble mean and normalized anomalies, 
-        # and storage for the  sequentially computed iterated mean, gradient 
-        # and hessian terms 
+        # step 1c: compute the initial ensemble mean and normalized anomalies,
+        # and storage for the  sequentially computed iterated mean, gradient
+        # and hessian terms
         ens_mean_0 = mean(ens, dims=2)
-        ens_mean_iter = copy(ens_mean_0) 
-        anom_0 = ens .- ens_mean_0 
+        ens_mean_iter = copy(ens_mean_0)
+        anom_0 = ens .- ens_mean_0
 
-        if spin 
+        if spin
             ∇J = Array{Float64}(undef, N_ens, lag)
             hess_J = Array{Float64}(undef, N_ens, N_ens, lag)
         else
@@ -1921,14 +1921,14 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         end
 
         # step 2: begin iterative optimization
-        while i < max_iter 
-            # step 2a: redefine the conditioned ensemble with updated mean, after the 
+        while i < max_iter
+            # step 2a: redefine the conditioned ensemble with updated mean, after the
             # first spin run or for all runs if after the spin cycle
-            if !spin || i > 0 
+            if !spin || i > 0
                 ens = ens_mean_iter .+ anom_0 * trans
             end
 
-            # step 2b: forward propagate the ensemble and sequentially store the forecast 
+            # step 2b: forward propagate the ensemble and sequentially store the forecast
             # or construct cost function
             for l in 1:lag
                 # propagate between observation times
@@ -1970,8 +1970,8 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                     end
                 elseif l > (lag - shift)
                     # compute sequential terms of the gradient and hessian of the
-                    # cost function only for the shift-length new observations in the DAW 
-                    ∇J[:,l - (lag - shift)], 
+                    # cost function only for the shift-length new observations in the DAW
+                    ∇J[:,l - (lag - shift)],
                     hess_J[:, :, l - (lag - shift)] = ens_gauss_newton(
                                                                 analysis,
                                                                 ens,
@@ -1986,10 +1986,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
 
             # skip this section in the first spin cycle, return and begin optimization
             if !spin || i > 0
-                # step 2c: otherwise, formally compute the gradient and the hessian from the 
+                # step 2c: otherwise, formally compute the gradient and the hessian from the
                 # sequential components, perform Gauss-Newton step after forecast iteration
-                if analysis[1:7] == "ienks-n" 
-                    # use finite size EnKF cost function to produce the gradient calculation 
+                if analysis[1:7] == "ienks-n"
+                    # use finite size EnKF cost function to produce the gradient calculation
                     ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
                     gradient = N_effective * ζ * w - sum(∇J, dims=2)
 
@@ -2005,10 +2005,10 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                                         dropdims(sum(hess_J, dims=3), dims=3))
                 end
                 if analysis[end-8:end] == "transform"
-                    # transform method requires each of the below, and we make 
+                    # transform method requires each of the below, and we make
                     # all calculations simultaneously via the SVD for stability
                     trans, trans_inv, hessian_inv = square_root_inv(hessian, full=true)
-                    
+
                     # compute the weights update
                     Δw = hessian_inv * gradient
                 else
@@ -2018,32 +2018,32 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                 end
 
                 # update the weights
-                w -= Δw 
+                w -= Δw
 
-                # update the mean via the increment, always with the zeroth iterate 
+                # update the mean via the increment, always with the zeroth iterate
                 # of the ensemble
                 ens_mean_iter = ens_mean_0 + anom_0 * w
-                
+
                 if norm(Δw) < tol
                     i +=1
                     break
                 end
             end
-            
+
             # update the iteration count
             i+=1
         end
         # step 3: compute posterior initial condiiton and propagate forward in time
         # step 3a: perform the analysis of the ensemble
-        if analysis[1:7] == "ienks-n" 
+        if analysis[1:7] == "ienks-n"
             # use finite size EnKF cost function to produce adaptive inflation
             # with the hessian
             ζ = 1.0 / (sum(w.^2.0) + ϵ_N)
             hessian = Symmetric(
-                                N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) + 
+                                N_effective * (ζ * I - 2.0 * ζ^(2.0) * w * transpose(w)) +
                                 dropdims(sum(hess_J, dims=3), dims=3)
                                )
-            
+
             # redefine the ensemble transform for the final update
             trans = square_root_inv(hessian)
 
@@ -2067,7 +2067,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         end
 
         # step 3c: propagate re-analyzed, resampled-in-parameter-space ensemble up by shift
-        # observation times, store the filtered state as the forward propagated value at the 
+        # observation times, store the filtered state as the forward propagated value at the
         # new observation times within the DAW, forecast states as those beyond the DAW, and
         # store the posterior at the times discarded at the next shift
         for l in 1:lag + shift
@@ -2116,7 +2116,7 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
                 forecast[:, :, l - lag] = ens
             end
         end
-        
+
         # store and optionally inflate the forward posterior at the new initial condition
         ens = copy(new_ens)
         if haskey(kwargs, "s_infl")
@@ -2132,12 +2132,12 @@ function ls_smoother_gauss_newton(analysis::String, ens::ArView(T), obs::ArView(
         end
 
         Dict{String,Array{Float64}}(
-                                    "ens" => ens, 
-                                    "post" =>  posterior, 
-                                    "fore" => forecast, 
+                                    "ens" => ens,
+                                    "post" =>  posterior,
+                                    "fore" => forecast,
                                     "filt" => filtered,
                                     "iterations" => Array{Float64}([i])
-                                   ) 
+                                   )
     end
 end
 
@@ -2151,25 +2151,25 @@ end
 ##############################################################################################
 # single iteration, correlation-based lag_shift_smoother, adaptive inflation STILL DEBUGGING
 #
-#function ls_smoother_single_iteration_adaptive(analysis::String, ens::ArView, obs::ArView, 
+#function ls_smoother_single_iteration_adaptive(analysis::String, ens::ArView, obs::ArView,
 #                             obs_cov::CovM, s_infl::Float64, kwargs::StepKwargs)
 #
 #    """Lag-shift ensemble kalman smoother analysis step, single iteration adaptive version
 #
-#    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
+#    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast,
 #    which is pushed forward in time from the initial conidtion to shift-number of observation times.
 #
 #    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
 #    case, a value for the parameter covariance inflation should be included in addition to the state covariance
-#    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an 
+#    inflation. If the analysis method is 'etks_adaptive', this utilizes the past analysis means to construct an
 #    innovation-based estimator for the model error covariances.  This is formed by the expectation step in the
 #    expectation maximization algorithm dicussed by Tandeo et al. 2021."""
-#    
+#
 #    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
 #    f_steps = kwargs["f_steps"]::Int64
 #    step_model! = kwargs["step_model"]::Function
 #    posterior = kwargs["posterior"]::Array{Float64,3}
-#    
+#
 #    # infer the ensemble, obs, and system dimensions, observation sequence includes lag forward times
 #    obs_dim, lag = size(obs)
 #    sys_dim, N_ens, shift = size(posterior)
@@ -2178,8 +2178,8 @@ end
 #    # load bool if spinning up tail of innovation statistics
 #    tail_spin = kwargs["tail_spin"]::Bool
 #
-#    # pre_analysis will contain the sequence of the last cycle's analysis states 
-#    # over the current DAW 
+#    # pre_analysis will contain the sequence of the last cycle's analysis states
+#    # over the current DAW
 #    pre_analysis = kwargs["analysis"]::Array{Float64,3}
 #
 #    # analysis innovations contains the innovation statistics over the previous DAW plus a trail of
@@ -2198,11 +2198,11 @@ end
 #
 #    # make a copy of the intial ens for re-analysis
 #    ens_0 = copy(ens)
-#    
+#
 #    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
 #    # the first initial condition for the future iterations regardless of sda or mda settings
 #    spin = kwargs["spin"]::Bool
-#    
+#
 #    # step 1: create storage for the posterior, forecast and filter values over the DAW
 #    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
 #    # last-iterate posterior estimate respectively
@@ -2213,18 +2213,18 @@ end
 #        forecast = Array{Float64}(undef, sys_dim, N_ens, shift)
 #        filtered = Array{Float64}(undef, sys_dim, N_ens, shift)
 #    end
-#    
+#
 #    if spin
 #        ### NOTE: WRITING THIS NOW SO THAT WE WILL HAVE AN ARBITRARY TAIL OF INNOVATION STATISTICS
-#        # FROM THE PASS BACK THROUGH THE WINDOW, BUT WILL COMPUTE INNOVATIONS ONLY ON THE NEW 
+#        # FROM THE PASS BACK THROUGH THE WINDOW, BUT WILL COMPUTE INNOVATIONS ONLY ON THE NEW
 #        # SHIFT-LENGTH REANALYSIS STATES BY THE SHIFTED DAW
 #        # create storage for the analysis means computed at each forward step of the current DAW
 #        post_analysis = Array{Float64}(undef, sys_dim, N_ens, lag)
 #    else
-#        # create storage for the analysis means computed at the shift forward states in the DAW 
+#        # create storage for the analysis means computed at the shift forward states in the DAW
 #        post_analysis = Array{Float64}(undef, sys_dim, N_ens, shift)
 #    end
-#    
+#
 #    # step 2: forward propagate the ensemble and analyze the observations
 #    for l in 1:lag
 #        # step 2a: propagate between observation times
@@ -2237,11 +2237,11 @@ end
 #            # step 2b: store the forecast to compute ensemble statistics before observations become available
 #            # if spin, store all new forecast states
 #            forecast[:, :, l] = ens
-#            
+#
 #            # step 2c: apply the transformation and update step
 #            trans = transform_R(analysis, ens,  obs[:, l], obs_cov, kwargs)
 #            ens_update_RT!(ens, trans)
-#            
+#
 #            # compute multiplicative inflation of state variables
 #            inflate_state!(ens, s_infl, sys_dim, state_dim)
 #
@@ -2250,10 +2250,10 @@ end
 #            if state_dim != sys_dim
 #                inflate_param!(ens, p_infl, sys_dim, state_dim)
 #            end
-#            
+#
 #            # store all new filtered states
 #            filtered[:, :, l] = ens
-#        
+#
 #            # store the re-analyzed ensembles for future statistics
 #            post_analysis[:, :, l] = ens
 #            for j in 1:l-1
@@ -2262,15 +2262,15 @@ end
 #
 #            # step 2d: compute the re-analyzed initial condition if we have an assimilation update
 #            ens_update_RT!(ens_0, trans)
-#        
+#
 #        elseif l > (lag - shift)
 #            # step 2b: store the forecast to compute ensemble statistics before observations become available
 #            # if not spin, only store forecasted states for beyond unobserved times beyond previous forecast windows
 #            forecast[:, :, l - (lag - shift)] = ens
-#            
+#
 #            # step 2c: apply the transformation and update step
 #            if tail_spin
-#                trans = transform_R(analysis, ens, obs[:, l], obs_cov, kwargs, 
+#                trans = transform_R(analysis, ens, obs[:, l], obs_cov, kwargs,
 #                                  m_err=analysis_innovations[:, 1:end-shift])
 #            else
 #                trans = transform_R(analysis, ens, obs[:, l], obs_cov, kwargs,
@@ -2278,10 +2278,10 @@ end
 #            end
 #
 #            ens = ens_update_RT!(ens, trans)
-#            
+#
 #            # store the filtered states for previously unobserved times, not mda values
 #            filtered[:, :, l - (lag - shift)] = ens
-#            
+#
 #            # store the re-analyzed ensembles for future statistics
 #            post_analysis[:, :, l] = ens
 #            for j in 1:l-1
@@ -2299,13 +2299,13 @@ end
 #            analysis_innovations[:, :, end - lag + l] = pre_analysis[:, :, l + shift] - post_analysis[:, :, l]
 #        end
 #    end
-#    # reset the ensemble with the re-analyzed prior 
+#    # reset the ensemble with the re-analyzed prior
 #    ens = copy(ens_0)
 #
 #    # reset the analysis innovations for the next DAW
 #    pre_analysis = copy(post_analysis)
-#    
-#    if !tail_spin 
+#
+#    if !tail_spin
 #        # add the new shifted DAW innovations to the statistics and discard the oldest
 #        # shift-innovations
 #        analysis_innovations = hcat(analysis_innovations[:, shift + 1: end],
@@ -2315,7 +2315,7 @@ end
 #    # step 3: propagate the posterior initial condition forward to the shift-forward time
 #    # step 3a: inflate the posterior covariance
 #    inflate_state!(ens, s_infl, sys_dim, state_dim)
-#    
+#
 #    # if including an extended state of parameter values,
 #    # compute multiplicative inflation of parameter values
 #    if state_dim != sys_dim
@@ -2344,18 +2344,18 @@ end
 #
 #    if tail_spin
 #        # prepare storage for the new innovations concatenated to the oldest lag-innovations
-#        analysis_innovations = hcat(analysis_innovations, 
+#        analysis_innovations = hcat(analysis_innovations,
 #                                    Array{Float64}(undef, sys_dim, shift))
 #    else
 #        # reset the analysis innovations window to remove the oldest lag-innovations
-#        analysis_innovations = hcat(analysis_innovations[:, shift  + 1: end], 
+#        analysis_innovations = hcat(analysis_innovations[:, shift  + 1: end],
 #                                    Array{Float64}(undef, sys_dim, lag))
 #    end
-#    
+#
 #    Dict{String,Array{Float64}}(
-#                                "ens" => ens, 
-#                                "post" =>  posterior, 
-#                                "fore" => forecast, 
+#                                "ens" => ens,
+#                                "post" =>  posterior,
+#                                "fore" => forecast,
 #                                "filt" => filtered,
 #                                "anal" => pre_analysis,
 #                                "inno" => analysis_innovations,
@@ -2387,7 +2387,7 @@ end
 #    l = 0
 #    nu = 2
 #    w = np.zeros(N_ens)
-#    
+#
 #    # step 3: update the mean via the w increment
 #    X_mean_1 = X_mean_0 + A_t.transpose() @ w
 #    X_mean_tmp = copy.copy(X_mean_1)
@@ -2402,7 +2402,7 @@ end
 #
 #    # step 5: Define the initial transform
 #    T = np.eye(N_ens)
-#    
+#
 #    # step 6: redefine the ensemble with the updated mean and the transform
 #    X_ext_ens = (X_mean_1 + T @ A_t).transpose()
 #
@@ -2410,14 +2410,14 @@ end
 #    for k in range(f_steps):
 #        X_ext_ens = l96_rk4_stepV(X_ext_ens, h, f)
 #
-#    # step 8: compute the forecast anomalies in the observation space, via the observed, evolved mean and the 
+#    # step 8: compute the forecast anomalies in the observation space, via the observed, evolved mean and the
 #    # observed, forward ensemble, conditioned by the transform
 #    Y_ens = H @ X_ext_ens
-#    Y_ens_t = np.linalg.inv(T).transpose() @ (Y_ens.transpose() - Y_mean) 
+#    Y_ens_t = np.linalg.inv(T).transpose() @ (Y_ens.transpose() - Y_mean)
 #
 #    # step 9: compute the cost function in ensemble space
 #    J = 0.5 * (obs - Y_mean) @ np.linalg.inv(obs_cov) @ (obs - Y_mean) + 0.5 * (N_ens - 1) * w @ w
-#    
+#
 #    # step 10: compute the approximate gradient of the cost function
 #    grad_J = (N_ens - 1) * w - Y_ens_t @ np.linalg.inv(obs_cov) @ (obs - Y_mean)
 #
@@ -2429,13 +2429,13 @@ end
 #    mu = tau * np.max(np.diag(hess))
 #
 #    # step 13: while loop
-#    while flag: 
+#    while flag:
 #        if l > l_max:
 #            break
 #
 #        # step 14: set the iteration count forward
 #        l+= 1
-#        
+#
 #        # step 15: solve the system for the w increment update
 #        δ_w = solve(hess + mu * np.eye(N_ens),  -1 * grad_J)
 #
@@ -2448,15 +2448,15 @@ end
 #        else:
 #            # step 19: reset the ensemble adjustment
 #            w_prime = w + δ_w
-#            
+#
 #            # step 20: reset the initial ensemble with the new adjustment term
 #            X_mean_1 = X_mean_0 + A_t.transpose() @ w_prime
-#            
+#
 #            # step 21: forward propagate the new ensemble mean, and transform into observation space
 #            X_mean_tmp = copy.copy(X_mean_1)
 #            for k in range(f_steps):
 #                X_mean_tmp = l96_rk4_step(X_mean_tmp, h, f)
-#            
+#
 #            Y_mean = H @ X_mean_tmp
 #
 #            # steps 22 - 24: define the parameters for the confidence region
@@ -2466,7 +2466,7 @@ end
 #
 #            # step 25: evaluate if new correction needed
 #            if theta > 0:
-#                
+#
 #                # steps 26 - 28: update the cost function, the increment, and the past ensemble, conditioned with the
 #                # transform
 #                J = J_prime
@@ -2506,7 +2506,7 @@ end
 #        # step 39: end if
 #    # step 40: end while
 #
-#    # step 41: perform update to the initial mean with the new defined anomaly transform 
+#    # step 41: perform update to the initial mean with the new defined anomaly transform
 #    X_mean_1 = X_mean_0 + A_t.transpose() @ w
 #
 #    # step 42: define the transform as the inverse square root of the hessian, bundle version only
@@ -2515,11 +2515,11 @@ end
 #
 #    # step 43: compute the updated ensemble by the transform conditioned anomalies and updated mean
 #    X_ext_ens = (T.transpose() @ A_t + X_mean_1).transpose()
-#    
-#    # step 44: forward propagate the ensemble to the observation time 
+#
+#    # step 44: forward propagate the ensemble to the observation time
 #    for k in range(f_steps):
 #        X_ext_ens = l96_rk4_stepV(X_ext_ens, h, f)
-#   
+#
 #    # step 45: compute the ensemble with inflation
 #    X_mean_2 = np.mean(X_ext_ens, axis=1)
 #    A_t = X_ext_ens.transpose() - X_mean_2
@@ -2547,14 +2547,14 @@ end
 #
 #    # step 2: we define the initial iterative minimization parameters
 #    l = 0
-#    
+#
 #    # NOTE: MARC'S VERSION HAS NU SET TO ONE FIRST AND THEN ITERATES ON THIS IN PRODUCTS
-#    # OF TWO    
+#    # OF TWO
 #    #nu = 2
 #    nu = 1
 #
 #    w = np.zeros(N_ens)
-#    
+#
 #    # step 3: update the mean via the w increment
 #    X_mean_1 = X_mean_0 + A_t.transpose() @ w
 #    X_mean_tmp = copy.copy(X_mean_1)
@@ -2567,7 +2567,7 @@ end
 #
 #    # step 5: Define the initial transform, transform version only
 #    # T = np.eye(N_ens)
-#    
+#
 #    # step 6: redefine the ensemble with the updated mean, rescaling by epsilon
 #    X_ext_ens = (X_mean_1 + epsilon * A_t).transpose()
 #
@@ -2575,14 +2575,14 @@ end
 #    for k in range(f_steps):
 #        X_ext_ens = l96_rk4_stepV(X_ext_ens, h, f)
 #
-#    # step 8: compute the anomalies in the observation space, via the observed, evolved mean and the observed, 
+#    # step 8: compute the anomalies in the observation space, via the observed, evolved mean and the observed,
 #    # forward ensemble, rescaling by epsilon
 #    Y_ens = H @ X_ext_ens
 #    Y_ens_t = (Y_ens.transpose() - Y_mean) / epsilon
 #
 #    # step 9: compute the cost function in ensemble space
 #    J = 0.5 * (obs - Y_mean) @ np.linalg.inv(obs_cov) @ (obs - Y_mean) + 0.5 * (N_ens - 1) * w @ w
-#    
+#
 #    # step 10: compute the approximate gradient of the cost function
 #    grad_J = (N_ens - 1) * w - Y_ens_t @ np.linalg.inv(obs_cov) @ (obs - Y_mean)
 #
@@ -2593,7 +2593,7 @@ end
 #    # NOTE: MARC'S VERSION DOES NOT HAVE A FLAG BASED ON THE INFINITY NORM OF THE GRADIENT
 #    # THIS IS ALSO PROBABLY A TRIVIAL FLAG
 #    # flag = np.max(np.abs(grad_J)) > e1
-#    
+#
 #    # NOTE: MARC'S FLAG
 #    flag = True
 #
@@ -2601,16 +2601,16 @@ end
 #    # THIS DECLARATION IN TERMS OF TAU AND HESS
 #    # mu = tau * np.max(np.diag(hess))
 #    mu = 1
-#    
+#
 #    # step 13: while loop
-#    while flag: 
+#    while flag:
 #        if l > l_max:
 #            print(l)
 #            break
 #
 #        # step 14: set the iteration count forward
 #        l+= 1
-#        
+#
 #        # NOTE: MARC'S RE-DEFINITION OF MU AND NU
 #        mu *= nu
 #        nu *= 2
@@ -2629,25 +2629,25 @@ end
 #        else:
 #            # step 19: reset the ensemble adjustment
 #            w_prime = w + δ_w
-#            
+#
 #            # step 20: reset the initial ensemble with the new adjustment term
 #            X_mean_1 = X_mean_0 + A_t.transpose() @ w_prime
-#            
+#
 #            # step 21: forward propagate the new ensemble mean, and transform into observation space
 #            X_mean_tmp = copy.copy(X_mean_1)
 #            for k in range(f_steps):
 #                X_mean_tmp = l96_rk4_step(X_mean_tmp, h, f)
-#            
+#
 #            Y_mean = H @ X_mean_tmp
 #
 #            # steps 22 - 24: define the parameters for the confidence region
 #            L = 0.5 * δ_w @ (mu * δ_w - grad_J)
 #            J_prime = 0.5 * (obs - Y_mean) @ np.linalg.inv(obs_cov) @ (obs - Y_mean) + 0.5 * (N_ens -1) * w_prime @ w_prime
 #            theta = (J - J_prime) / L
-#            
+#
 #            # step 25: evaluate if new correction needed
 #            if theta > 0:
-#                
+#
 #                # steps 26 - 28: update the cost function, the increment, and the past ensemble, rescaled with epsilon
 #                J = J_prime
 #                w = w_prime
@@ -2675,9 +2675,9 @@ end
 #                # steps 34 - 35: compute the tolerance and correction parameters
 #                # NOTE: TRIVIAL FLAG?
 #                # flag = np.max(np.abs(grad_J)) > e1
-#                
+#
 #                mu = mu * np.max([1/3, 1 - (2 * theta - 1)**3])
-#                
+#
 #                # NOTE: ADJUSTMENT HERE TO MATCH NU TO MARC'S CODE
 #                # nu = 2
 #                nu = 1
@@ -2690,8 +2690,8 @@ end
 #            # step 38: end if
 #        # step 39: end if
 #    # step 40: end while
-#    
-#    # step 41: perform update to the initial mean with the new defined anomaly transform 
+#
+#    # step 41: perform update to the initial mean with the new defined anomaly transform
 #    X_mean_1 = X_mean_0 + A_t.transpose() @ w
 #
 #    # step 42: define the transform as the inverse square root of the hessian
@@ -2700,11 +2700,11 @@ end
 #
 #    # step 43: compute the updated ensemble by the transform conditioned anomalies and updated mean
 #    X_ext_ens = (T.transpose() @ A_t + X_mean_1).transpose()
-#    
-#    # step 44: forward propagate the ensemble to the observation time 
+#
+#    # step 44: forward propagate the ensemble to the observation time
 #    for k in range(f_steps):
 #        X_ext_ens = l96_rk4_stepV(X_ext_ens, h, f)
-#    
+#
 #    # step 45: compute the ensemble with inflation
 #    X_mean_2 = np.mean(X_ext_ens, axis=1)
 #    A_t = X_ext_ens.transpose() - X_mean_2
@@ -2720,7 +2720,7 @@ end
 #        # but using a computation of the contribution of the model error covariance matrix Q
 #        # in the square root as in Raanes et al. 2015 and the adaptive inflation from the
 #        # frequentist estimator for the model error covariance
-#        # step 0: infer the system, observation and ensemble dimensions 
+#        # step 0: infer the system, observation and ensemble dimensions
 #        sys_dim, N_ens = size(ens)
 #        obs_dim = length(obs)
 #
@@ -2741,7 +2741,7 @@ end
 #            A_err = m_err / sqrt(size(m_err, 2))
 #            F_err = svd(A_err)
 #            if N_ens <= sys_dim
-#                Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0]) 
+#                Σ_pinv = Diagonal([1.0 ./ F_ens.S[1:N_ens-1]; 0.0])
 #            else
 #                Σ_pinv = Diagonal(1.0 ./ F_ens.S)
 #            end
@@ -2750,9 +2750,9 @@ end
 #            # contribution in the ensemble space dimension, note the difference in
 #            # equation due to the normalized anomalies
 #            G = Symmetric(I +  Σ_pinv * transpose(F_ens.U) * F_err.U *
-#                          Diagonal(F_err.S.^2) * transpose(F_err.U) * 
+#                          Diagonal(F_err.S.^2) * transpose(F_err.U) *
 #                          F_ens.U * Σ_pinv)
-#            
+#
 #            G = F_ens.V * square_root(G) * F_ens.Vt
 #
 #            # step 2c: compute the model error adjusted anomalies
@@ -2764,28 +2764,28 @@ end
 #
 #        # step 4: compute the ensemble mean in observation space
 #        y_mean = mean(Y, dims=2)
-#        
+#
 #        # step 5: compute the weighted anomalies in observation space
-#        
+#
 #        # first we find the observation error covariance inverse
 #        obs_sqrt_inv = square_root_inv(obs_cov)
-#        
+#
 #        # then compute the weighted anomalies
 #        S = (Y .- y_mean) / sqrt(N_ens - 1.0)
 #        S = obs_sqrt_inv * S
 #
 #        # step 6: compute the weighted innovation
 #        δ = obs_sqrt_inv * ( obs - y_mean )
-#       
+#
 #        # step 7: compute the transform matrix
 #        T = inv(Symmetric(1.0I + transpose(S) * S))
-#        
+#
 #        # step 8: compute the analysis weights
 #        w = T * transpose(S) * δ
 #
 #        # step 9: compute the square root of the transform
 #        T = sqrt(T)
-#        
+#
 #        # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
 #        U = rand_orth(N_ens)
 #
@@ -2794,7 +2794,7 @@ end
 #
 #    elseif analysis=="etkf-hybrid" || analysis=="etks-hybrid"
 #        # NOTE: STILL DEVELOPMENT VERSION, NOT DEBUGGED
-#        # step 0: infer the system, observation and ensemble dimensions 
+#        # step 0: infer the system, observation and ensemble dimensions
 #        sys_dim, N_ens = size(ens)
 #        obs_dim = length(obs)
 #
@@ -2808,14 +2808,14 @@ end
 #        # step 2: compute the ensemble mean in observation space
 #        Y_ens = H * ens
 #        y_mean = mean(Y_ens, dims=2)
-#        
+#
 #        # step 3: compute the sensitivity matrix in observation space
 #        obs_sqrt_inv = square_root_inv(obs_cov)
 #        Γ = obs_sqrt_inv * Y
 #
 #        # step 4: compute the weighted innovation
 #        δ = obs_sqrt_inv * ( obs - y_mean )
-#       
+#
 #        # step 5: run the Gauss-Newton optimization of the cost function
 #
 #        # step 5a: define the gradient of the cost function for the hybridized covariance
@@ -2824,7 +2824,7 @@ end
 #            w = w_full[1:end-2]
 #            α_1 = w_full[end-1]
 #            α_2 = w_full[end]
-#            K = (N_ens - 1.0) / α_1 * I + transpose(Σ) * Σ 
+#            K = (N_ens - 1.0) / α_1 * I + transpose(Σ) * Σ
 #            F = svd(K)
 #            K_inv = F.U * Diagonal(1.0 ./ F.S) * F.Vt
 #            grad_w = transpose(Γ) * (δ - Γ * w) + w / α_2 - K_inv * w / α_2

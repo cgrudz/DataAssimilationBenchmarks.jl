@@ -7,20 +7,26 @@ development and empirical validation of novel data assimilation techniques.
 While analytical proofs can be derived for classical methods such as the Kalman filter
 in linear-Gaussian dynamics, most currently developed DA
 techniques are designed for estimation in nonlinear, non-Gaussian models where no
-analytical solution may exist.  Novel data assimilation methods,
-therefore, must be studied with rigorous numerical simulation in standard test-cases
-to demonstrate the effectiveness and computational performance.
-Pursuant to proposing a novel DA method, one should likewise compare the performance
-of a proposed scheme with other standard methods within the same class of estimators.
+analytical solution typically exists.  Rigorous validation of novel data assimilation
+methods, therefore, must be performed with reproducible numerical simulations in
+standard test-cases in order to demonstrate the effectiveness and computational
+performance of the proposed technique. Pursuant to proposing a novel DA method,
+one should likewise compare its performance with other standard methods within
+the same class of estimators.
 
 This package implements a variety of standard data assimilation algorithms, including
-widely used performance modifications that are used in practice to tune these estimators.
-Standard libraries exist for full-scale DA system research and development, e.g.,
-the [Data Assimilation Research Testbed (DART)](https://dart.ucar.edu/), but
+some of the widely used performance modifications that are used in practice to tune
+these estimators. Standard libraries exist for full-scale DA system research and
+development, e.g., the
+[Data Assimilation Research Testbed (DART)](https://dart.ucar.edu/), but
 there are fewer standard options for theoretical research and algorithm development in
-simple test systems. DataAssimilationBenchmarks.jl provides one framework for studying
-ensemble-based filters and sequential smoothers that are commonly used in online,
-geoscientific prediction settings.
+simple test systems. Many basic research frameworks, furthermore, do not include
+standard operational techniques developed from classical VAR methods, due to the 
+difficulty in constructing tangent linear and adjoint codes.
+DataAssimilationBenchmarks.jl provides one framework for studying
+squential filters and smoothers that are commonly used in online, geoscientific
+prediction settings, including ensemble estimators, classical VAR techniques
+(currently in-development) and (in-planning) hybrid-EnVAR methods. 
 
 ## Validated methods currently in use
 
@@ -77,7 +83,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td>SIEnKS, perturbed obs / ETKF / MLEF variants</td>
+  <td>SIEnKS, ETKF / MLEF-transform variants</td>
 	<td> X </td>
 	<td> X </td>
 	<td>   </td>
@@ -96,4 +102,3 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 </tr>
 </table>
 ```
-

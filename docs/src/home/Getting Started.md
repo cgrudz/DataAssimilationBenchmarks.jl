@@ -1,20 +1,18 @@
 # Getting Started
 
 ## Installation
-The main module DataAssimilationBenchmarks.jl declares global types and wraps sub-modules
-including the core numerical solvers for ordinary and stochastic differential equations,
-solvers for data assimilation routines and the core process model code for running twin
-experiments with benchmark models. These methods can be run stand-alone in other programs by
-calling these functions from the DeSolvers, EnsembleKalmanSchemes, L96 and IEEE39bus
-sub-modules from this library. Future solvers and models will be added as sub-modules in the
-methods and models directories respectively.
+The main module DataAssimilationBenchmarks.jl declares global types and type constructors.
+These conventions are utilized in sub-modules that implement the core numerical solvers
+for ordinary and stochastic differential equations, solvers for data assimilation routines
+and the core process model code for running twin experiments with benchmark models, collected
+in the `methods` and `models` sub-directories.  Experiments define routines for driving
+standard benchmark case studies with
+[NamedTuples](https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple)
+as arguments to these methods defining the associated experimental hyper-parameters.
 
 In order to get the full functionality of this package you will need to install the dev
-version. This provides the access to edit all of the outer-loop routines for setting up
-twin experiments. These routines are defined in the modules in the `experiments` directory.
-The `slurm_submit_scripts` directory includes routines for parallel submission of experiments
-in Slurm. Data processing scripts and visualization scripts (written in Python with
-Matplotlib and Seaborn) are included in the "analysis" directory.
+version. This provides access to create new experiments and to define performance benchmarks
+for these experiments
 
 ### Installing a dev package from the Julia General registries
 In order to install the dev version to your Julia environment, you can use the following
@@ -45,9 +43,9 @@ The repository is structured as follows:
 		<li><code>experiments</code> - contains the outer-loop scripts that set up twin
 		experiments.</li>
 		<li><code>data</code> - this is an input / output directory for the inputs to and
-		ouptuts fromexperiments.</li>
+		ouptuts from experiments.</li>
 		<li><code>analysis</code> - contains auxilliary scripts for batch processing experiment
-		results and for plotting in Python.</li>
+		results and for plotting (currently in Python).</li>
 	</ul>
   <li><code>scratch</code> - this is a storage directory for backups.</li>
   <li><code>test</code> - contains test cases for the package.</li>
