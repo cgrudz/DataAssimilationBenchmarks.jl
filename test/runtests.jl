@@ -99,6 +99,7 @@ end
     @test Test3dVAR.testCost()
     @test Test3dVAR.testGrad()
     @test Test3dVAR.testNewton()
+    @test Test3dVAR.testNewtonNoise()
 end
 
 ##############################################################################################
