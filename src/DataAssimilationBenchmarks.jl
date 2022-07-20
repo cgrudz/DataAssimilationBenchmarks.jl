@@ -143,7 +143,7 @@ using .GenerateTimeSeries
 using .FilterExps
 using .SmootherExps
 using .SingleExperimentDriver
-export DeSolvers, EnsembleKalmanSchemes, XdVAR, L96, IEEE39bus, ObsOperators, 
+export DeSolvers, EnsembleKalmanSchemes, XdVAR, L96, IEEE39bus, ObsOperators,
     GenerateTimeSeries, FilterExps, SingleExperimentDriver
 
 ##############################################################################################
