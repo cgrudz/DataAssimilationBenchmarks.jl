@@ -22,7 +22,7 @@ function analyze_ensemble_filter_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etkf/"
-        data = load(path * "etkf_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40" * 
+        data = load(path * "etkf_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40" *
                     "_obsU_1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_nens_021" *
                     "_stateInfl_1.02.jld2")
         rmse = data["filt_rmse"]
@@ -90,7 +90,7 @@ function analyze_ensemble_filter_state_IEEE39bus()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/etkf/"
-        data = load(path * "etkf_IEEE39bus_state_seed_0000_diff_0.000_sysD_20_obsD_20_" * 
+        data = load(path * "etkf_IEEE39bus_state_seed_0000_diff_0.000_sysD_20_obsD_20_" *
                     "obsU_0.10_gamma_001.0_nanl_03500_tanl_0.01_h_0.01_nens_021_" *
                     "stateInfl_1.02.jld2")
         rmse = data["filt_rmse"]

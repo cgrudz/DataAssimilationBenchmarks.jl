@@ -50,13 +50,13 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(Normal(), state_dim) 
+            ξ = rand(Normal(), state_dim)
         end
         if haskey(kwargs, "diff_mat")
-            # diffusion is a scalar intensity which is applied to the 
+            # diffusion is a scalar intensity which is applied to the
             # structure matrix for the diffusion coefficients
             diff_mat = kwargs["diff_mat"]::Array{Float64}
-            diffusion = diffusion * diff_mat 
+            diffusion = diffusion * diff_mat
         end
         # rescale the standard normal to variance h for Wiener process
         W = ξ * sqrt(h)
@@ -90,14 +90,14 @@ function rk4_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
         κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h + diffusion * W
     else
         # deterministic formulation
-        κ[:, 1] = dx_dt(v, t, dx_params) * h 
-        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h 
-        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h 
-        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h 
+        κ[:, 1] = dx_dt(v, t, dx_params) * h
+        κ[:, 2] = dx_dt(v + 0.5 * κ[:, 1], t + 0.5 * h, dx_params) * h
+        κ[:, 3] = dx_dt(v + 0.5 * κ[:, 2], t + 0.5 * h, dx_params) * h
+        κ[:, 4] = dx_dt(v + κ[:, 3], t + h, dx_params) * h
     end
-    
+
     # compute the update to the dynamic variables
-    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4]) 
+    x[begin: state_dim] = v + (1.0 / 6.0) * (κ[:, 1] + 2.0*κ[:, 2] + 2.0*κ[:, 3] + κ[:, 4])
     return x
 end
 
@@ -150,7 +150,7 @@ return x
 """
 function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
     # unpack the arguments for the integration step
-    h = kwargs["h"]::Float64 
+    h = kwargs["h"]::Float64
     dx_params = kwargs["dx_params"]::ParamDict(T)
     diffusion = kwargs["diffusion"]::Float64
     dx_dt = kwargs["dx_dt"]::Function
@@ -163,7 +163,7 @@ function em_step!(x::VecA(T), t::Float64, kwargs::StepKwargs) where T <: Real
 	        ξ = kwargs["ξ"]::Array{Float64,2}
 	    else
             # generate perturbation for brownian motion if not neccesary to reproduce
-            ξ = rand(Normal(), state_dim) 
+            ξ = rand(Normal(), state_dim)
         end
 
     else

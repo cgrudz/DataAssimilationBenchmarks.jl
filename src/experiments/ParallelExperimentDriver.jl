@@ -1,5 +1,5 @@
 ##############################################################################################
-module ParallelExperimentDriver 
+module ParallelExperimentDriver
 ##############################################################################################
 # imports and exports
 using Distributed
@@ -9,17 +9,17 @@ using Distributed
 @everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/experiments")
 @everywhere using JLD2, ..DataAssimilationBenchmarks, ..FilterExps, ..SmootherExps,
                   ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..ParallelExperimentDriver
-@everywhere export experiment 
+@everywhere export experiment
 #@everywhere export wrap_exp
 
 ##############################################################################################
-## Timeseries data 
+## Timeseries data
 ##############################################################################################
 # observation timeseries to load into the experiment as truth twin, timeseries are named by
 # the model, seed to initialize, the integration scheme used to produce, number of analyses,
 # the spinup length, and the time length between observation points
 
-ts1 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05" * 
+ts1 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05" *
       "_nanl_50000_spin_5000_h_0.050.jld2"
 ts2 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10" *
       "_nanl_50000_spin_5000_h_0.050.jld2"
@@ -31,13 +31,13 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
       "_nanl_50000_spin_5000_h_0.050.jld2"
 
 ##############################################################################################
-## Experiment parameter generation 
+## Experiment parameter generation
 ##############################################################################################
 
 ##############################################################################################
 # Filters
 ##############################################################################################
-## filter_state 
+## filter_state
 #
 ## [time_series, scheme, seed, nanl, obs_un, obs_dim, N_ens, infl] = args
 #
@@ -64,7 +64,7 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
 #
 #
 ##############################################################################################
-# filter_param 
+# filter_param
 ## [time_series, scheme, seed, nanl, obs_un, obs_dim, param_err, param_wlk, N_ens,
 ##  state_infl, param_infl] = args
 #
@@ -86,7 +86,7 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
 #        for N in N_ens
 #            for s_infl in state_infl
 #                for p_infl in param_infl
-#                    tmp = (time_series, scheme, seed, nanl, obs_un, obs_dim, 
+#                    tmp = (time_series, scheme, seed, nanl, obs_un, obs_dim,
 #                           param_err, wlk, N, s_infl, p_infl)
 #                    push!(args, tmp)
 #                end

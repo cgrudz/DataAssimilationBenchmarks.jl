@@ -87,7 +87,7 @@ function analyze_sda_ensemble_smoother_param_L96()
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"
         data = load(path * "ienks-transform_L96_param_seed_0000_diff_0.000_sysD_41_obsD_40_" *
-                    "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" * 
+                    "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" *
                     "h_0.05_lag_010_shift_001_mda_false_nens_021_stateInfl_1.02_" *
                     "paramInfl_1.00.jld2")
         filt_rmse = data["filt_rmse"]
@@ -120,7 +120,7 @@ function analyze_mda_ensemble_smoother_param_L96()
         # test if the filter RMSE for standard simulation falls below adequate threshold
         path = pkgdir(DataAssimilationBenchmarks) * "/src/data/ienks-transform/"
         data = load(path * "ienks-transform_L96_param_seed_0000_diff_0.000_sysD_41_obsD_40_" *
-                    "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" * 
+                    "obsU_1.00_gamma_001.0_paramE_0.10_paramW_0.0010_nanl_03500_tanl_0.05_" *
                     "h_0.05_lag_010_shift_001_mda_true_nens_021_stateInfl_1.02_" *
                     "paramInfl_1.00.jld2")
         filt_rmse = data["filt_rmse"]

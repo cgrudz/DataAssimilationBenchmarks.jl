@@ -6,8 +6,8 @@ using ..DataAssimilationBenchmarks
 export dx_dt
 ##############################################################################################
 """
-    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real 
-    
+    dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
+
 Time derivative of the phase and fequency of the [effective-network swing equation model](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012).
 Input x is a 2 `n_g` [`VecA`](@ref) of the phase and fequency at each of the `n_g`
 generator buses. The input `dx_params` of type [`ParamDict`](@ref) containing system
@@ -27,7 +27,7 @@ function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
 
     # convert the effective bus coupling and passive injection to contain the change
     # of variable terms
-    K = ω[1] * K / 2.0 
+    K = ω[1] * K / 2.0
     A = ω[1] * A / 2.0
 
     # unpack the phase and frequency at the n_g buses, with all phases listed first, then all
@@ -43,7 +43,7 @@ function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
     dx[1:n_g] .= δ_2
 
     # compute the derivative of the inertia normalized frequencies
-    # entry j is defined as 
+    # entry j is defined as
     # A_j * ω/2 - D_j /2 * δ_2 - Σ_{i!=j} K * ω/2 * sin(δ_j - δ_i - γ_ij)
     for j in 1:n_g
         for i in 1:n_g
@@ -56,7 +56,7 @@ function dx_dt(x::VecA(T), t::Float64, dx_params::ParamDict(T)) where T <: Real
         # finally apply the remaining terms
         dx[n_g + j] += A[j] - δ_2[j] * D[j] / 2.0
     end
-    # to compute the derivative of the frequencies, we finally 
+    # to compute the derivative of the frequencies, we finally
     # divide back out by the inertia
     dx[n_g + 1 : end] = dx[n_g + 1: end] ./ H
     return dx

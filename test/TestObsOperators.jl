@@ -6,9 +6,9 @@ using DataAssimilationBenchmarks.ObsOperators
 using ForwardDiff
 ##############################################################################################
 """
-    alternating_obs_jacobian_pos() 
+    alternating_obs_jacobian_pos()
 
-Tests the alternating observation operator jacobian function for known behavior with automatic 
+Tests the alternating observation operator jacobian function for known behavior with automatic
 differentiation using 'γ' > 1.0.
 Returns whether the difference of computed jacobian is within error tolerance for every entry
 """
@@ -27,13 +27,13 @@ function alternating_obs_jacobian_pos()
         ObsOperators.alternating_obs_operator(x, obs_dim, gam_pos)
     end
 
-    # jacobian computed via automatic differentiation 
+    # jacobian computed via automatic differentiation
     jacob_auto = ForwardDiff.jacobian(wrap_pos, x)
 
     # compute differences between ForwardDiff and ObsOperators calculated jacobians
     diff =  jacob_auto - ObsOperators.alternating_obs_operator_jacobian(x, obs_dim, gam_pos)
 
-    # compare within error tolerance for every entry across all differences 
+    # compare within error tolerance for every entry across all differences
     if sum((abs.(diff)) .<= 0.001) == 20*40
         true
     else
@@ -44,9 +44,9 @@ end
 
 ##############################################################################################
 """
-    alternating_obs_jacobian_zero() 
+    alternating_obs_jacobian_zero()
 
-Tests the alternating observation operator jacobian function for known behavior with automatic 
+Tests the alternating observation operator jacobian function for known behavior with automatic
 differentiation using 'γ' == 0.0.
 Returns whether the difference of computed jacobian is within error tolerance for every entry
 """
@@ -65,7 +65,7 @@ function alternating_obs_jacobian_zero()
         ObsOperators.alternating_obs_operator(x, obs_dim, gam_zero)
     end
 
-    # jacobian computed via automatic differentiation 
+    # jacobian computed via automatic differentiation
     jacob_auto = ForwardDiff.jacobian(wrap_zero, x)
 
     # compute difference between ForwardDiff and ObsOperators calculated jacobian
@@ -82,9 +82,9 @@ end
 
 ##############################################################################################
 """
-    alternating_obs_jacobian_neg() 
+    alternating_obs_jacobian_neg()
 
-Tests the alternating observation operator jacobian function for known behavior with automatic 
+Tests the alternating observation operator jacobian function for known behavior with automatic
 differentiation using 'γ' < 0.0.
 Returns whether the difference of computed jacobian is within error tolerance for every entry
 """
@@ -103,7 +103,7 @@ function alternating_obs_jacobian_neg()
         ObsOperators.alternating_obs_operator(x, obs_dim, gam_neg)
     end
 
-    # jacobian computed via automatic differentiation 
+    # jacobian computed via automatic differentiation
     jacob_auto = ForwardDiff.jacobian(wrap_neg, x)
 
     # compute difference between ForwardDiff and ObsOperators calculated jacobian

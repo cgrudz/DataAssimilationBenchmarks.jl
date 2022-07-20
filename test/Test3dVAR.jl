@@ -6,7 +6,7 @@ using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.ObsOperators
 using ForwardDiff, LinearAlgebra
 ##############################################################################################
 """
-    testCost() 
+    testCost()
 
     Tests the 3dVAR cost function for known behavior.
 """
@@ -30,7 +30,7 @@ end
 
 ##############################################################################################
 """
-    testGrad() 
+    testGrad()
 
     Tests the gradient 3dVAR cost function for known behavior using ForwardDiff.
 """
@@ -60,7 +60,7 @@ end
 
 ##############################################################################################
 """
-    testNewton() 
+    testNewton()
 
     Tests the Newton optimization of the 3dVAR cost function.
 """
@@ -76,7 +76,7 @@ function testNewton()
 
     # perform Simple Newton optimization
     op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
-    
+
     if norm(op - ones(40) * 0.5) < 0.001
         true
     else

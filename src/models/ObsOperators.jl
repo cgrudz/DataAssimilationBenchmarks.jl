@@ -111,9 +111,9 @@ The `γ` parameter (optional) in `kwargs` of type  [`StepKwargs`](@ref) controls
 component-wise transformation of the remaining state vector components mapped to the
 observation space.  For `γ=1.0`, there is no transformation applied, and the observation
 operator acts as a linear projection onto the remaining components of the state vector,
-equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of 
+equivalent to not specifying `γ`. For `γ>1.0`, the nonlinear observation operator of
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
-pg. 181 is applied, 
+pg. 181 is applied,
 ```math
 \begin{align}
 \mathcal{H}(\pmb{x}) = \frac{\pmb{x}}{2}\circ\left[\pmb{1} + \left(\frac{\vert\pmb{x}\vert}{10} \right)^{\gamma - 1}\right]
@@ -144,10 +144,10 @@ function alternating_obs_operator(x::VecA(T), obs_dim::Int64,
     if haskey(kwargs, "state_dim")
         # performing parameter estimation, load the dynamic state dimension
         state_dim = kwargs["state_dim"]::Int64
-        
+
         # observation operator for extended state, without observing extended state components
         obs = copy(x[1:state_dim])
-        
+
         # proceed with alternating observations of the regular state vector
         sys_dim = state_dim
     else
@@ -179,10 +179,10 @@ function alternating_obs_operator(ens::ArView(T), obs_dim::Int64,
     if haskey(kwargs, "state_dim")
         # performing parameter estimation, load the dynamic state dimension
         state_dim = kwargs["state_dim"]::Int64
-        
+
         # observation operator for extended state, without observing extended state components
         obs = copy(ens[1:state_dim, :])
-        
+
         # proceed with alternating observations of the regular state vector
         sys_dim = state_dim
     else
@@ -219,20 +219,20 @@ end
     alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
     kwargs::StepKwargs) where T <: Real
 
-Explicitly computes the jacobian of the alternating observation operator 
+Explicitly computes the jacobian of the alternating observation operator
 given a single model state `x` of type [`VecA`](@ref) and desired dimension of observations
 'obs_dim' for the jacobian. The `γ` parameter (optional) in `kwargs` of type
 [`StepKwargs`](@ref) controls the component-wise transformation of the remaining state
 vector components mapped to the observation space.  For `γ=1.0`, there is no
 transformation applied, and the observation operator acts as a linear projection onto
-the remaining components of the state vector, equivalent to not specifying `γ`. 
-For `γ>1.0`, the nonlinear observation operator of 
+the remaining components of the state vector, equivalent to not specifying `γ`.
+For `γ>1.0`, the nonlinear observation operator of
 [Asch, et al. (2016).](https://epubs.siam.org/doi/book/10.1137/1.9781611974546),
 pg. 181 is applied, which limits to the identity for `γ=1.0`.  If `γ=0.0`, the quadratic
 observation operator of [Hoteit, et al. (2012).](https://journals.ametsoc.org/view/journals/mwre/140/2/2011mwr3640.1.xml)
 is applied to the remaining state components.  If `γ<0.0`, the exponential observation
 operator of [Wu, et al. (2014).](https://npg.copernicus.org/articles/21/955/2014/)
-is applied to the remaining state vector components.        
+is applied to the remaining state vector components.
 """
 
 function alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
@@ -241,35 +241,35 @@ function alternating_obs_operator_jacobian(x::VecA(T), obs_dim::Int64,
     if haskey(kwargs, "state_dim")
         # performing parameter estimation, load the dynamic state dimension
         state_dim = kwargs["state_dim"]::Int64
-        
+
         # observation operator for extended state, without observing extended state components
         jac = copy(x[1:state_dim])
-        
+
         # proceed with alternating observations of the regular state vector
         sys_dim = state_dim
     else
         jac = copy(x)
     end
 
-    # jacobian calculation 
+    # jacobian calculation
     if haskey(kwargs, "γ")
         γ = kwargs["γ"]::Float64
         if γ > 1.0
             jac .= (1.0 / 2.0) .* (((jac .*(γ - 1.0) / 10.0) .* (( abs.(jac) / 10.0 ).^(γ - 2.0))) .+ 1.0 .+ (( abs.(jac) / 10.0 ).^(γ - 1.0)))
-        
+
         elseif γ == 0.0
             jac = 0.1.*jac
 
         elseif γ < 0.0
             jac .= exp.(-γ * jac) .* (1.0 .- (γ * jac))
-            
+
         end
     end
-    
+
     # matrix formation and projection
     jacobian_matrix = alternating_projector(diagm(jac), obs_dim)
 
-    return jacobian_matrix    
+    return jacobian_matrix
 end
 ##############################################################################################
 # end module

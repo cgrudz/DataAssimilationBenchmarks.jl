@@ -44,21 +44,21 @@ exps = Dict{String, Any}(
         "Filter" => Dict{String, Any}(
           # Lorenz-96 ETKF state estimation standard configuration
           "L96_ETKF_state_test" => (
-            time_series = path * 
+            time_series = path *
             "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
             "spin_1500_h_0.050.jld2",
-            method      = "etkf", 
+            method      = "etkf",
             seed        = 0,
             nanl        = 3500,
             obs_un      = 1.0,
-            obs_dim     = 40, 
+            obs_dim     = 40,
             γ           = 1.00,
             N_ens       = 21,
             s_infl      = 1.02,
            ),
           # Lorenz-96 ETKF joint state-parameter estimation standard configuration
           "L96_ETKF_param_test" => (
-            time_series = path * 
+            time_series = path *
             "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
             "spin_1500_h_0.050.jld2",
             method  = "etkf",
@@ -130,7 +130,7 @@ exps = Dict{String, Any}(
         "Single_iteration_smoother" => Dict{String, Any}(
           # Lorenz-96 SIEnKS sda state estimation standard configuration
           "L96_ETKS_state_sda_test" => (
-            time_series = path * 
+            time_series = path *
             "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
             "spin_1500_h_0.050.jld2",
             method  = "etks",
@@ -147,7 +147,7 @@ exps = Dict{String, Any}(
           ),
           "L96_ETKS_state_mda_test" => (
           # Lorenz-96 SIEnKS mda state estimation standard configuration
-            time_series = path * 
+            time_series = path *
             "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
             "spin_1500_h_0.050.jld2",
             method  = "etks",
@@ -184,7 +184,7 @@ exps = Dict{String, Any}(
            ),
           # Lorenz-96 SIEnKS mda join state-parameter estimation standard configuration
           "L96_ETKS_param_mda_test" => (
-            time_series = path * "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_" * 
+            time_series = path * "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_" *
             "tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2",
             method  = "etks",
             seed    = 0,
@@ -224,7 +224,7 @@ exps = Dict{String, Any}(
           # Lorenz-96 IEnKS mda state estimation standard configuration
           "L96_IEnKS_state_mda_test" => (
             time_series =  path *
-            "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" * 
+            "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
             "spin_1500_h_0.050.jld2",
             method  = "ienks-transform",
             seed    = 0,

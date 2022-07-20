@@ -10,7 +10,7 @@ include("TestObsOperators.jl")
 include("Test3dVAR.jl")
 include("TestDeSolvers.jl")
 include("TestL96.jl")
-include("TestTimeSeriesGeneration.jl")
+include("TestGenerateTimeSeries.jl")
 include("TestIEEE39bus.jl")
 include("TestFilterExps.jl")
 include("TestClassicSmootherExps.jl")
@@ -40,11 +40,11 @@ end
 end
 
 # test set 3: Test time series generation, saving output to default directory and loading
-@testset "Time Series Generation" begin
-    @test TestTimeSeriesGeneration.testGenL96()
-    @test TestTimeSeriesGeneration.testLoadL96()
-    @test TestTimeSeriesGeneration.testGenIEEE39bus()
-    @test TestTimeSeriesGeneration.testLoadIEEE39bus()
+@testset "Generate Time Series" begin
+    @test TestGenerateTimeSeries.testGenL96()
+    @test TestGenerateTimeSeries.testLoadL96()
+    @test TestGenerateTimeSeries.testGenIEEE39bus()
+    @test TestGenerateTimeSeries.testLoadIEEE39bus()
 end
 
 # test set 4: test the model equations for known behavior
