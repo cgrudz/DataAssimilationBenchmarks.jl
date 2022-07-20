@@ -4,7 +4,7 @@ module XdVAR
 # imports and exports
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
-using ForwardDiff, ReverseDiff
+using ForwardDiff
 ##############################################################################################
 # Main methods
 ##############################################################################################
