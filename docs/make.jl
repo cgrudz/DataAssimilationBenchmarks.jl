@@ -29,6 +29,7 @@ makedocs(
                     "SmootherExps" => "submodules/experiments/SmootherExps.md",
                     "SingleExperimentDriver" => "submodules/experiments/SingleExperimentDriver.md",
                     "Slurm" => "submodules/experiments/Slurm.md",
+                    "D3VARExps" => "submodules/experiments/D3VARExps.md"
                    ],
                  "Analysis" => Any[
                     "ProcessExperimentData" => "submodules/analysis/ProcessExperimentData.md",
