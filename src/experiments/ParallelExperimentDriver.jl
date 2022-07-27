@@ -7,7 +7,8 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks.GenerateTimeSeries
 @everywhere using DataAssimilationBenchmarks.FilterExps
 @everywhere using DataAssimilationBenchmarks.SmootherExps
-@everywhere push!(LOAD_PATH, pkgdir(DataAssimilationBenchmarks) * "/src/experiments/")
+#@everywhere push!(LOAD_PATH, pkgdir(DataAssimilationBenchmarks) * "/src/experiments/")
+@everywhere include(pkgdir(DataAssimilationBenchmarks) * "/src/experiments/ParallelExperimentDriver")
 @everywhere export wrap_exp
 
 ##############################################################################################
@@ -31,19 +32,19 @@ function adaptive_inflation_comp()
     diffusion = 0.00
     F         = 8.0
 
-    # generate truth twin time series
-    L96_time_series(
-                    (
-                      seed      = seed,
-                      h         = h,
-                      state_dim = state_dim,
-                      tanl      = tanl,
-                      nanl      = nanl,
-                      spin      = spin,
-                      diffusion = diffusion,
-                      F         = F,
-                     )
-                   )
+    ## generate truth twin time series
+    #L96_time_series(
+    #                (
+    #                  seed      = seed,
+    #                  h         = h,
+    #                  state_dim = state_dim,
+    #                  tanl      = tanl,
+    #                  nanl      = nanl,
+    #                  spin      = spin,
+    #                  diffusion = diffusion,
+    #                  F         = F,
+    #                 )
+    #               )
 
     # define load path to time series
     time_series = path * "L96_time_series_seed_" * lpad(seed, 4, "0") *
