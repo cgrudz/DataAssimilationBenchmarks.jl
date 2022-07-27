@@ -4,6 +4,7 @@ module ParallelExperimentDriver
 # imports and exports
 using Distributed
 @everywhere using DataAssimilationBenchmarks
+@everywhere using DataAssimilationBenchmarks.GenerateTimeSeries
 @everywhere export wrap_exp
 
 ##############################################################################################
@@ -18,14 +19,14 @@ path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
 
 function adaptive_inflation_comp()
     # set time series parameters
-    seed      = 123,
-    h         = 0.05,
-    state_dim = 40,
-    tanl      = 0.05,
-    nanl      = 6500,
-    spin      = 1500,
-    diffusion = 0.00,
-    F         = 8.0,
+    seed      = 123
+    h         = 0.05
+    state_dim = 40
+    tanl      = 0.05
+    nanl      = 6500
+    spin      = 1500
+    diffusion = 0.00
+    F         = 8.0
 
     # generate truth twin time series
     L96_time_series(
