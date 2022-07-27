@@ -5,6 +5,8 @@ module ParallelExperimentDriver
 using Distributed
 @everywhere using DataAssimilationBenchmarks
 @everywhere using DataAssimilationBenchmarks.GenerateTimeSeries
+@everywhere using DataAssimilationBenchmarks.FilterExps
+@everywhere using DataAssimilationBenchmarks.SmootherExps
 @everywhere export wrap_exp
 
 ##############################################################################################
