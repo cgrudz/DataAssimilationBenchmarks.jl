@@ -23,7 +23,7 @@ function adaptive_inflation_comp()
     exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
     function wrap_exp(arguments)
         try
-            exp(arguments)
+            print(exp(arguments))
         catch
             print("Error on " * string(arguments) * "\n")
         end
