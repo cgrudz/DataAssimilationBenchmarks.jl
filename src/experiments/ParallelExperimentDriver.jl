@@ -8,7 +8,7 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks.FilterExps
 @everywhere using DataAssimilationBenchmarks.SmootherExps
 #@everywhere push!(LOAD_PATH, pkgdir(DataAssimilationBenchmarks) * "/src/experiments/")
-@everywhere include(pkgdir(DataAssimilationBenchmarks) * "/src/experiments/ParallelExperimentDriver")
+@everywhere include(pkgdir(DataAssimilationBenchmarks) * "/src/experiments/ParallelExperimentDriver.jl")
 @everywhere export wrap_exp
 
 ##############################################################################################
