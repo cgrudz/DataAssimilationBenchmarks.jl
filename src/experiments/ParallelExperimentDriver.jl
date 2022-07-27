@@ -7,6 +7,7 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks.GenerateTimeSeries
 @everywhere using DataAssimilationBenchmarks.FilterExps
 @everywhere using DataAssimilationBenchmarks.SmootherExps
+@everywhere push!(LOAD_PATH, pkgdir(DataAssimilationBenchmarks) * "/src/experiments/")
 @everywhere export wrap_exp
 
 ##############################################################################################
