@@ -63,7 +63,7 @@ function adaptive_inflation_comp()
     nanl = 4000
     
     # load the experiments
-    args = Tuple[]
+    args = Vector{Any}()
     for method in methods
         for N_ens in N_enss
             for s_infl in s_infls
