@@ -2,17 +2,14 @@
 module ParallelExperimentDriver
 ##############################################################################################
 # imports and exports
-using Distributed
-@everywhere using DataAssimilationBenchmarks
-@everywhere using DataAssimilationBenchmarks.GenerateTimeSeries
-@everywhere using DataAssimilationBenchmarks.FilterExps
-@everywhere using DataAssimilationBenchmarks.SmootherExps
-#@everywhere push!(LOAD_PATH, pkgdir(DataAssimilationBenchmarks) * "/src/experiments/")
-@everywhere include(pkgdir(DataAssimilationBenchmarks) * "/src/experiments/ParallelExperimentDriver.jl")
-@everywhere export wrap_exp
+using ..DataAssimilationBenchmarks
+using ..DataAssimilationBenchmarks.GenerateTimeSeries
+using ..DataAssimilationBenchmarks.FilterExps
+using ..DataAssimilationBenchmarks.SmootherExps
+export adaptive_inflation_comp
 
 ##############################################################################################
-# Utility methods
+# Utility methods and definitions
 ##############################################################################################
 
 path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
@@ -22,6 +19,16 @@ path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
 ##############################################################################################
 
 function adaptive_inflation_comp()
+
+    exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
+    function wrap_exp(arguments)
+        try
+            exp(arguments)
+        catch
+            print("Error on " * string(arguments) * "\n")
+        end
+    end
+
     # set time series parameters
     seed      = 123
     h         = 0.05
@@ -32,19 +39,19 @@ function adaptive_inflation_comp()
     diffusion = 0.00
     F         = 8.0
 
-    ## generate truth twin time series
-    #L96_time_series(
-    #                (
-    #                  seed      = seed,
-    #                  h         = h,
-    #                  state_dim = state_dim,
-    #                  tanl      = tanl,
-    #                  nanl      = nanl,
-    #                  spin      = spin,
-    #                  diffusion = diffusion,
-    #                  F         = F,
-    #                 )
-    #               )
+    # generate truth twin time series
+    L96_time_series(
+                    (
+                      seed      = seed,
+                      h         = h,
+                      state_dim = state_dim,
+                      tanl      = tanl,
+                      nanl      = nanl,
+                      spin      = spin,
+                      diffusion = diffusion,
+                      F         = F,
+                     )
+                   )
 
     # define load path to time series
     time_series = path * "L96_time_series_seed_" * lpad(seed, 4, "0") *
@@ -85,7 +92,7 @@ function adaptive_inflation_comp()
             end
         end
     end
-    return args
+    return args, wrap_exp
 end
 
 
@@ -276,23 +283,6 @@ end
 #
 #experiment = wrap_exp
 #
-##############################################################################################
-# Run the experiments in parallel over the parameter values
-##############################################################################################
-
-exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
-function wrap_exp(arguments)
-    try
-        exp(arguments)
-    catch
-        print("Error on " * string(arguments) * "\n")
-    end
-end
-
-args = adaptive_inflation_comp()
-exp = ensemble_filter_state 
-pmap(wrap_exp, args)
-
 ##############################################################################################
 # end module
 

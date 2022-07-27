@@ -134,6 +134,7 @@ include("experiments/GenerateTimeSeries.jl")
 include("experiments/FilterExps.jl")
 include("experiments/SmootherExps.jl")
 include("experiments/SingleExperimentDriver.jl")
+include("experiments/ParallelExperimentDriver.jl")
 using .DeSolvers
 using .EnsembleKalmanSchemes
 using .L96
@@ -144,7 +145,7 @@ using .FilterExps
 using .SmootherExps
 using .SingleExperimentDriver
 export DeSolvers, EnsembleKalmanSchemes, XdVAR, L96, IEEE39bus, ObsOperators,
-    GenerateTimeSeries, FilterExps, SingleExperimentDriver
+    GenerateTimeSeries, FilterExps, SingleExperimentDriver, ParallelExperimentDriver
 
 ##############################################################################################
 # info
