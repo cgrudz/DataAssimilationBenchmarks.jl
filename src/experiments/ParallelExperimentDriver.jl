@@ -72,6 +72,7 @@ function adaptive_inflation_comp()
     N_enss = 15:2:43
     s_infls = [1.0]
     nanl = 4000
+    γ = 1.0
     
     # load the experiments
     args = Vector{Any}()
@@ -85,6 +86,7 @@ function adaptive_inflation_comp()
                        nanl = nanl,
                        obs_un = obs_un,
                        obs_dim = obs_dim,
+                       γ = γ
                        N_ens = N_ens,
                        s_infl = s_infl
                       )
