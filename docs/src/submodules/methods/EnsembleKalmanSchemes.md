@@ -4,12 +4,8 @@
 There are currently four families of ensemble Kalman estimators available in this package,
 which define the outer-loop of the data assimilation cycle.  Particularly, these define
 how the sequential data assimilation cycle will pass over a time series of observations,
-conceptually pictured in the figure below.
-```@raw html
-<div sytle="float:left; width:100%;">
-<img style="width:95%" src="../cyclingSDA.png" alt="Observation analysis forecast cycle over multiple data assimilation windows">
-</div>
-```
+with more details in the [SmootherExps](@ref) documents.
+
 Ensemble filters only produce analyses forward-in-time.  The classic lag-shift smoother runsi
 identically to the filter in its forecast and filter steps, but includes an additional retrospective
 analysis to past ensemble states stored in memory.  The single iteration smoother follows

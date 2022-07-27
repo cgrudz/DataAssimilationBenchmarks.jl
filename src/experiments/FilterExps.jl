@@ -40,6 +40,10 @@ Output from the experiment is saved in a dictionary of the form,
                             "s_infl" => round(s_infl, digits=2)
                            )
 
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
+    end
+
 Experiment output is written to a directory defined by
 
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
@@ -256,6 +260,11 @@ Output from the experiment is saved in a dictionary of the form,
                             "s_infl" => round(s_infl, digits=2),
                             "p_infl" => round(p_infl, digits=2)
                            )
+
+    if haskey(ts, "diff_mat")
+        data["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
+    end
+
 Experiment output is written to a directory defined by
 
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/" * method * "/"
@@ -465,7 +474,6 @@ function ensemble_filter_param((time_series, method, seed, nanl, obs_un, obs_dim
                             "p_infl" => round(p_infl, digits=2)
                            )
 
-    # check if there is a diffusion structure matrix
     if haskey(ts, "diff_mat")
         data["diff_mat"] = ts["diff_mat"]::Array{Float64,2}
     end

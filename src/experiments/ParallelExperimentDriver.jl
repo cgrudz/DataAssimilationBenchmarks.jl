@@ -3,66 +3,87 @@ module ParallelExperimentDriver
 ##############################################################################################
 # imports and exports
 using Distributed
-@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/")
-@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/methods")
-@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/models")
-@everywhere push!(LOAD_PATH, "/DataAssimilationBenchmarks/src/experiments")
-@everywhere using JLD2, ..DataAssimilationBenchmarks, ..FilterExps, ..SmootherExps,
-                  ..EnsembleKalmanSchemes, ..DeSolvers, ..L96, ..ParallelExperimentDriver
-@everywhere export experiment
-#@everywhere export wrap_exp
+@everywhere using DataAssimilationBenchmarks
+@everywhere export wrap_exp
 
 ##############################################################################################
-## Timeseries data
-##############################################################################################
-# observation timeseries to load into the experiment as truth twin, timeseries are named by
-# the model, seed to initialize, the integration scheme used to produce, number of analyses,
-# the spinup length, and the time length between observation points
-
-ts1 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.05" *
-      "_nanl_50000_spin_5000_h_0.050.jld2"
-ts2 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.10" *
-      "_nanl_50000_spin_5000_h_0.050.jld2"
-ts3 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.15" *
-      "_nanl_50000_spin_5000_h_0.050.jld2"
-ts4 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0_tanl_0.20" *
-      "_nanl_50000_spin_5000_h_0.050.jld2"
-ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tanl_0.25" *
-      "_nanl_50000_spin_5000_h_0.050.jld2"
-
-##############################################################################################
-## Experiment parameter generation
+# Utility methods
 ##############################################################################################
 
+path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
 ##############################################################################################
-# Filters
+# FIlters
 ##############################################################################################
-## filter_state
-#
-## [time_series, scheme, seed, nanl, obs_un, obs_dim, N_ens, infl] = args
-#
-#schemes = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
-#seed = 0
-#obs_un = 1.0
-#obs_dim = 40
-#N_ens = 15:43
-#infl = [1.0]#LinRange(1.0, 1.20, 21)
-#nanl = 2500
-#
-## load the experiments
-#args = Tuple[]
-#for scheme in schemes
-#    for N in N_ens
-#        for α in infl
-#            tmp = (time_series, scheme, seed, nanl, obs_un, obs_dim, N, α)
-#            push!(args, tmp)
-#        end
-#    end
-#end
-#
-#experiment = FilterExps.filter_state
-#
-#
+
+function adaptive_inflation_comp()
+    # set time series parameters
+    seed      = 123,
+    h         = 0.05,
+    state_dim = 40,
+    tanl      = 0.05,
+    nanl      = 6500,
+    spin      = 1500,
+    diffusion = 0.00,
+    F         = 8.0,
+
+    # generate truth twin time series
+    L96_time_series(
+                    (
+                      seed      = seed,
+                      h         = h,
+                      state_dim = state_dim,
+                      tanl      = tanl,
+                      nanl      = nanl,
+                      spin      = spin,
+                      diffusion = diffusion,
+                      F         = F,
+                     )
+                   )
+
+    # define load path to time series
+    time_series = path * "L96_time_series_seed_" * lpad(seed, 4, "0") *
+                         "_dim_" * lpad(state_dim, 2, "0") *
+                         "_diff_" * rpad(diffusion, 5, "0") *
+                         "_F_" * lpad(F, 4, "0") *
+                         "_tanl_" * rpad(tanl, 4, "0") *
+                         "_nanl_" * lpad(nanl, 5, "0") *
+                         "_spin_" * lpad(spin, 4, "0") *
+                         "_h_" * rpad(h, 5, "0") *
+                         ".jld2"
+
+    # define ranges for filter parameters
+    methods = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
+    seed = 1234
+    obs_un = 1.0
+    obs_dim = 40
+    N_enss = 15:2:43
+    s_infls = [1.0]
+    nanl = 4000
+    
+    # load the experiments
+    args = Tuple[]
+    for method in methods
+        for N in N_enss
+            for s_infl in s_infls
+                tmp = (
+                       time_series = time_series,
+                       method = method,
+                       seed = seed,
+                       nanl = nanl,
+                       obs_un = obs_un,
+                       obs_dim = obs_dim,
+                       N_ens = N_ens,
+                       s_infl = s_infl
+                      )
+                push!(args, tmp)
+            end
+        end
+    end
+    return args
+end
+
+
 ##############################################################################################
 # filter_param
 ## [time_series, scheme, seed, nanl, obs_un, obs_dim, param_err, param_wlk, N_ens,
@@ -101,64 +122,55 @@ ts5 = "../data/time_series/L96_time_series_seed_0000_dim_40_diff_0.00_F_08.0)tan
 ##############################################################################################
 # Classic smoothers
 ##############################################################################################
-# classic_state parallel run, arguments are
-# time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
-
-schemes = ["etks"]
-seed = 0
-lags = 1:3:52
-shifts = [1]
-#lags = [1, 2, 4, 8, 16, 32, 64]
-#gammas = Array{Float64}(1:11)
-gammas = [1.0]
-shift = 1
-obs_un = 1.0
-obs_dim = 40
-#N_ens = 15:2:41
-N_ens = [21]
-#state_infl = [1.0]
-state_infl = LinRange(1.0, 1.10, 11)
-time_series = [ts1, ts2, ts3, ts4, ts5]
-nanl = 2500
-
-# load the experiments
-args = Tuple[]
-for ts in time_series
-    for scheme in schemes
-        for γ in gammas
-            for l in 1:length(lags)
-                # optional definition of shifts in terms of the current lag parameter for a
-                # range of shift values
-                lag = lags[l]
-                #shifts = lags[1:l]
-                for shift in shifts
-                    for N in N_ens
-                        for s_infl in state_infl
-                            tmp = (ts, scheme, seed, nanl, lag, shift, obs_un, obs_dim,
-                                   γ, N, s_infl)
-                            push!(args, tmp)
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-
-## define the robust to failure wrapper
-#function wrap_exp(arguments)
-#    try
-#        classic_state(arguments)
-#    catch
-#        print("Error on " * string(args) * "\n")
+## classic_state parallel run, arguments are
+## time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, γ, N_ens, state_infl = args
+#
+#schemes = ["etks"]
+#seed = 0
+#lags = 1:3:52
+#shifts = [1]
+##lags = [1, 2, 4, 8, 16, 32, 64]
+##gammas = Array{Float64}(1:11)
+#gammas = [1.0]
+#shift = 1
+#obs_un = 1.0
+#obs_dim = 40
+##N_ens = 15:2:41
+#N_ens = [21]
+##state_infl = [1.0]
+#state_infl = LinRange(1.0, 1.10, 11)
+#time_series = [ts1, ts2, ts3, ts4, ts5]
+#nanl = 2500
+#
+## load the experiments
+#args = Tuple[]
+#for ts in time_series
+#    for scheme in schemes
+#        for γ in gammas
+#            for l in 1:length(lags)
+#                # optional definition of shifts in terms of the current lag parameter for a
+#                # range of shift values
+#                lag = lags[l]
+#                #shifts = lags[1:l]
+#                for shift in shifts
+#                    for N in N_ens
+#                        for s_infl in state_infl
+#                            tmp = (ts, scheme, seed, nanl, lag, shift, obs_un, obs_dim,
+#                                   γ, N, s_infl)
+#                            push!(args, tmp)
+#                        end
+#                    end
+#                end
+#            end
+#        end
 #    end
 #end
-
-experiment = SmootherExps.classic_state
-#experiment = wrap_exp
-
-
+#
+#
+#experiment = SmootherExps.classic_state
+##experiment = wrap_exp
+#
+#
 ##############################################################################################
 ## classic_param single run for debugging, arguments are
 ##  [time_series, method, seed, nanl, lag, shift, obs_un, obs_dim, param_err,
@@ -262,7 +274,19 @@ experiment = SmootherExps.classic_state
 ##############################################################################################
 # Run the experiments in parallel over the parameter values
 ##############################################################################################
-pmap(experiment, args)
+
+exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
+function wrap_exp(arguments)
+    try
+        exp(arguments)
+    catch
+        print("Error on " * string(arguments) * "\n")
+    end
+end
+
+args = adaptive_inflation_comp()
+exp = ensemble_filter_state 
+pmap(wrap_exp, args)
 
 ##############################################################################################
 # end module
