@@ -65,7 +65,7 @@ function adaptive_inflation_comp()
     # load the experiments
     args = Tuple[]
     for method in methods
-        for N in N_enss
+        for N_ens in N_enss
             for s_infl in s_infls
                 tmp = (
                        time_series = time_series,
