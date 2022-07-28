@@ -17,6 +17,11 @@ path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
 ##############################################################################################
 # compare adaptive inflation methods
 
+"""
+    args, exp = ensemble_filter_adaptive_inflation()
+
+Constucts a parameter map and experiment wrapper for sensitivity test of adaptive inflation.
+"""
 function ensemble_filter_adaptive_inflation()
 
     exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
