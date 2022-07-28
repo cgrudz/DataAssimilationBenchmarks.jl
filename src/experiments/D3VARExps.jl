@@ -3,6 +3,7 @@ module D3VARExps
 ##############################################################################################
 # imports and exports
 using Random, Distributions, LinearAlgebra, StatsBase
+using JLD2, HDF5, Plots
 using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..XdVAR
 ##############################################################################################
 # Main 3DVAR experiments
@@ -14,12 +15,14 @@ using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..XdVAR
                         :γ,:N_ens,:s_infl),
                         <:Tuple{String,String,Int64,Int64,Int64,Int64,Float64,Int64,
                             Float64,Int64,Float64}})=#
-function D3_var_filter_analysis(x::VecA(T)) where T <: Real
+function D3_var_filter_analysis()
     
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
+    # number of cycles in experiment
+    nanl = 40
     # load the timeseries and associated parameters
     # ts = load(time_series)::Dict{String,Any}
     # diffusion = ts["diffusion"]::Float64
@@ -53,12 +56,11 @@ function D3_var_filter_analysis(x::VecA(T)) where T <: Real
     seed = 234
     Random.seed!(seed)
 
-    # Need to ask about this
     # define the initialization
     # observation noise
     v = rand(Normal(0, 1), 40)
 
-    # define the observation range and truth reference solution
+    # define the initial observation range and truth reference solution
     x_b = zeros(40)
     x_t = x_b + v
     
@@ -73,35 +75,84 @@ function D3_var_filter_analysis(x::VecA(T)) where T <: Real
                               "diffusion" => diffusion,
                               "gamma" => γ,
                              )
+
+    # create storage for the forecast and analysis statistics
+    fore_rmse = Vector{Float64}(undef, nanl)
+    filt_rmse = Vector{Float64}(undef, nanl)
     
+    for i in 1:nanl
+        #print("Iteration: ")
+        #display(i)
+        for j in 1:f_steps
+            # M(x^b)
+            step_model!(x_b, 0.0, kwargs)
+            # M(x^t)
+            step_model!(x_t, 0.0, kwargs)
+        end
 
-    for k in 1:f_steps
-        # M(x^b)
-        step_model!(x_b, 0.0, kwargs)
-        # M(x^t)
-        step_model!(x_t, 0.0, kwargs)
-    end
-
-    w = rand(MvNormal(zeros(40), I))
+    # multivariate - rand(MvNormal(zeros(40), I))
+    w = rand(Normal(0, 1), 40)
     obs = x_t + w
 
     state_cov = I
     obs_cov = I
 
-    # generate cost function
-    J = XdVAR.D3_var_cost(x, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    print("Cost Function Output: \n")
-    display(J)
-    # optimize cost function
-    opt = XdVAR.D3_var_NewtonOp(x, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    print("Optimized Cost Function: \n")
-    display(opt)
-    # compare forecast and optimal state via RMSE
-    rmse = sqrt(msd(x_b, opt))
-    print("RMSE between Forecast and Optimal State: ")
-    display(rmse)
+    # generate initial forecast cost
+    # J_i = XdVAR.D3_var_cost(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
+    # print("Cost Function Output: \n")
+    # display(J)
+    # optimized cost function input and value
+    x_opt = XdVAR.D3_var_NewtonOp(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
+    # J_opt = XdVAR.D3_var_cost(x_opt, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
+    # print("Optimized Cost Function Output: \n")
+    # display(J_opt)
+
+    # compare model forecast and truth twin via RMSE
+    rmse_forecast = sqrt(msd(x_b, x_t))
+    #print("RMSE between Model Forecast and Truth Twin: ")
+    #display(rmse_forecast)
+    fore_rmse[i] = rmse_forecast
+
+    # compare optimal forecast and truth twin via RMSE
+    rmse_filter = sqrt(msd(x_opt, x_t))
+    #print("RMSE between Optimal Forecast and Truth Twin: ")
+    #display(rmse_filter)
+    filt_rmse[i] = rmse_filter
+
+    # reinitializing x_b and x_t for next cycle
+    x_b = x_opt
+    end
+
+    data = Dict{String,Any}(
+                            "seed" => seed,
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "gamma" => γ,
+                            "tanl" => tanl,
+                            "nanl" => nanl,
+                            "h" =>  h,
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse
+                           )
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+    name = "L96_3DVAR_time_series_seed_" * lpad(seed, 4, "0") *
+           "_diff_" * rpad(diffusion, 5, "0") *
+           #"_F_" * lpad(, 4, "0") *
+           "_tanl_" * rpad(tanl, 4, "0") *
+           "_nanl_" * lpad(nanl, 5, "0") *
+           "_h_" * rpad(h, 5, "0") *
+           ".jld2"
+
+    save(path * name, data)
     # output time
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+    # make plot
+    t = 1:nanl
+    plot(t, fore_rmse, marker=(:circle,5), label = "Forecast")
+    plot!(t, filt_rmse, marker=(:circle,5), label = "Filter")
+    xlabel!("Time [Cycles]")
+    ylabel!("Root-Mean-Square Error [RMSE]")
 end
 
 ##############################################################################################
