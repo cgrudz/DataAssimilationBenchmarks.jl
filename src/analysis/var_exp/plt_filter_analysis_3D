@@ -1,0 +1,25 @@
+##############################################################################################
+module plt_filter_analysis_3D
+##############################################################################################
+# imports and exports
+using JLD2, HDF5, Plots
+using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..XdVAR, ..D3VARExps
+##############################################################################################
+# Plot results from VAR Filter Analysis Experiment
+##############################################################################################
+
+# make plot
+path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/L96_3DVAR_time_series.jdl2"
+fore_rmse = load(path)[fore_rmse]
+filt_rmse = load(path)[filt_rmse]
+t = 1:length(fore_rmse)
+plot(t, fore_rmse, marker=(:circle,5), label = "Forecast")
+plot!(t, filt_rmse, marker=(:circle,5), label = "Filter")
+xlabel!("Time [Cycles]")
+ylabel!("Root-Mean-Square Error [RMSE]")
+title!("Time vs. Root-Mean-Square Error in 3D-VAR Filter Analysis")
+
+##############################################################################################
+# end module
+
+end
