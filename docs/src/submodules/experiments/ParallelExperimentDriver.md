@@ -9,7 +9,7 @@ experiments instability is encountered causing a crash of an experiment. This me
 configuration in the parameter array fails due to overflow, the remaining configurations will continue their
 own course unaffected.
 
-## Docstrings
-#```@autodocs
-#Modules = [DataAssimilationBenchmarks.ParallelExperimentDriver]
-#```
+## Methods
+```@autodocs
+Modules = [DataAssimilationBenchmarks.ParallelExperimentDriver]
+```

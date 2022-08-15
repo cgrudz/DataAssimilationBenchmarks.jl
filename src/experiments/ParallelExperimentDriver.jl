@@ -105,6 +105,14 @@ end
 ##############################################################################################
 # parameter estimation, different random walk and inflation settings for parameter resampling
 
+"""
+    args, exp = ensemble_filter_param()
+
+Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.
+
+Ensemble schemes sample the forcing parameter for the Lorenz-96 system and vary the random
+walk parameter model for its time evolution / search over parameter space.
+"""
 function ensemble_filter_param()
 
     exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_param
@@ -200,6 +208,14 @@ end
 # Classic smoothers
 ##############################################################################################
 
+"""
+    args, exp = classic_ensemble_state()
+
+Constucts a parameter map and experiment wrapper for sensitivity test of nonlinear obs.
+
+The ETKS / MLES estimators vary over different multiplicative inflation parameters, smoother
+lag lengths and the nonlinearity of the observation operator.
+"""
 function classic_ensemble_state()
 
     exp = DataAssimilationBenchmarks.SmootherExps.classic_ensemble_state
@@ -292,6 +308,16 @@ end
 
 #############################################################################################
 
+"""
+    args, exp = ensemble_filter_adaptive_inflation()
+
+Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.
+
+Ensemble schemes sample the forcing parameter for the Lorenz-96 system and vary the random
+walk parameter model for its time evolution / search over parameter space.  Methods vary
+the ETKS and MLES analysis, with different lag lengths, multiplicative inflation parameters,
+and different pameter models.
+"""
 function classic_ensemble_param()
     
     exp = DataAssimilationBenchmarks.SmootherExps.classic_ensemble_param
