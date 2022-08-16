@@ -134,6 +134,7 @@ include("experiments/GenerateTimeSeries.jl")
 include("experiments/FilterExps.jl")
 include("experiments/SmootherExps.jl")
 include("experiments/SingleExperimentDriver.jl")
+include("experiments/ParallelExperimentDriver.jl")
 include("experiments/D3VARExps.jl")
 include("experiments/VarAnalysisExperimentDriver.jl")
 using .DeSolvers
