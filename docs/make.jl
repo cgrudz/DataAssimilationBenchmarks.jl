@@ -28,7 +28,7 @@ makedocs(
                     "FilterExps" => "submodules/experiments/FilterExps.md",
                     "SmootherExps" => "submodules/experiments/SmootherExps.md",
                     "SingleExperimentDriver" => "submodules/experiments/SingleExperimentDriver.md",
-                    "Slurm" => "submodules/experiments/Slurm.md",
+                    "ParallelExperimentDriver" => "submodules/experiments/ParallelExperimentDriver.md",
                    ],
                  "Analysis" => Any[
                     "ProcessExperimentData" => "submodules/analysis/ProcessExperimentData.md",
@@ -37,7 +37,6 @@ makedocs(
                 ]
             ]
 )
-
 
 deploydocs(
     repo = "github.com:cgrudz/DataAssimilationBenchmarks.jl.git",
