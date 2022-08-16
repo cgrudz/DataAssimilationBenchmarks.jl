@@ -9,13 +9,11 @@ export D3_var_filter_tuning
 # Utility methods and definitions
 ##############################################################################################
 
-path = pkgdir(DataAssimilationBenchmarks) * "/plots/"
+path = pkgdir(DataAssimilationBenchmarks) * "/src/analysis/var_exp/"
 
 ##############################################################################################
 # Filters
 ##############################################################################################
-# compare adaptive inflation methods
-
 """
     args, exp = D3_var_filter_tuning()
 Constucts a parameter map and experiment wrapper for sensitivity test of covariance tuning.
@@ -34,13 +32,13 @@ function D3_var_filter_tuning()
     # set filter parameters
     time_series = "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_spin_1500_h_0.050.jld2"
     γ = 1.0
-    is_informed = false
+    is_informed = true
     is_updated = true
 
     # define tuning range
-    tuning_min = 0.5
-    tuning_step = 0.01
-    tuning_max = 2.0
+    tuning_min = 0.01
+    tuning_step = 0.001
+    tuning_max = 0.03
     
     # load the experiments
     args = Vector{Any}()

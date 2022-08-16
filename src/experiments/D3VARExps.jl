@@ -2,29 +2,24 @@
 module D3VARExps
 ##############################################################################################
 # imports and exports
-using Random, Distributions, LinearAlgebra, StatsBase, Statistics
+using Random, Distributions, LinearAlgebra, StatsBase, Statistics, Measures
 using JLD2, HDF5, Plots
 using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..XdVAR
 ##############################################################################################
 # Main 3DVAR experiments
 ##############################################################################################
-
+"""
+    D3_var_filter_analysis_simple()
+"""
 function D3_var_filter_analysis_simple()
-    
     # time the experiment
     t1 = time()
 
     # Define experiment parameters
     # number of cycles in experiment
     nanl = 40
-    # load the timeseries and associated parameters
-    # ts = load(time_series)::Dict{String,Any}
-    # diffusion = ts["diffusion"]::Float64
     diffusion = 0.0
-    # dx_params = ts["dx_params"]::ParamDict(Float64)
-    # tanl = ts["tanl"]::Float64
     tanl = 0.05
-    # model = ts["model"]::String
     γ = [8.0]
 
     # define the observation operator HARD-CODED in this line
@@ -36,8 +31,8 @@ function D3_var_filter_analysis_simple()
     # define derivative parameter
     dx_params = Dict{String, Vector{Float64}}("F" => [8.0])
 
-    # define the dynamical model derivative for this experiment from the name
-    # supplied in the time series - we are assuming Lorenz-96 model
+    # define the dynamical model derivative for this experiment - we are assuming 
+    # Lorenz-96 model
     dx_dt = L96.dx_dt
 
     # define integration method
@@ -53,7 +48,6 @@ function D3_var_filter_analysis_simple()
     # define the initialization
     # observation noise
     v = rand(Normal(0, 1), 40)
-
     # define the initial observation range and truth reference solution
     x_b = zeros(40)
     x_t = x_b + v
@@ -84,37 +78,26 @@ function D3_var_filter_analysis_simple()
             step_model!(x_t, 0.0, kwargs)
         end
 
-    # multivariate - rand(MvNormal(zeros(40), I))
-    w = rand(Normal(0, 1), 40)
-    obs = x_t + w
+        # multivariate - rand(MvNormal(zeros(40), I))
+        w = rand(Normal(0, 1), 40)
+        obs = x_t + w
 
-    state_cov = I
-    obs_cov = I
+        state_cov = I
+        obs_cov = I
 
-    # generate initial forecast cost
-    # J_i = XdVAR.D3_var_cost(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    # print("Cost Function Output: \n")
-    # display(J)
-    # optimized cost function input and value
-    x_opt = XdVAR.D3_var_NewtonOp(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    # J_opt = XdVAR.D3_var_cost(x_opt, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    # print("Optimized Cost Function Output: \n")
-    # display(J_opt)
+        # optimized cost function input and value
+        x_opt = XdVAR.D3_var_NewtonOp(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
 
-    # compare model forecast and truth twin via RMSE
-    rmse_forecast = sqrt(msd(x_b, x_t))
-    #print("RMSE between Model Forecast and Truth Twin: ")
-    #display(rmse_forecast)
-    fore_rmse[i] = rmse_forecast
+        # compare model forecast and truth twin via RMSE
+        rmse_forecast = sqrt(msd(x_b, x_t))
+        fore_rmse[i] = rmse_forecast
 
-    # compare optimal forecast and truth twin via RMSE
-    rmse_filter = sqrt(msd(x_opt, x_t))
-    #print("RMSE between Optimal Forecast and Truth Twin: ")
-    #display(rmse_filter)
-    filt_rmse[i] = rmse_filter
+        # compare optimal forecast and truth twin via RMSE
+        rmse_filter = sqrt(msd(x_opt, x_t))
+        filt_rmse[i] = rmse_filter
 
-    # reinitializing x_b and x_t for next cycle
-     x_b = x_opt
+        # reinitializing x_b and x_t for next cycle
+        x_b = x_opt
     end
 
     data = Dict{String,Any}(
@@ -139,19 +122,31 @@ function D3_var_filter_analysis_simple()
            ".jld2"
 
     save(path * name, data)
+
     # output time
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+
     # make plot
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/analysis/var_exp/"
     t = 1:nanl
-    plot(t, fore_rmse, marker=(:circle,5), label = "Forecast", title="Root-Mean-Square Error vs. Time")
+    plot(t, fore_rmse, marker=(:circle,5), label = "Forecast", 
+        title="Update: Root-Mean-Square Error vs. Time", 
+        legend_position = :outertopright, 
+        margin=15mm, size=(800,500), dpi = 600)
     plot!(t, filt_rmse, marker=(:circle,5), label = "Filter")
     xlabel!("Time [Cycles]")
     ylabel!("Root-Mean-Square Error [RMSE]")
+    savefig(path * "I_Update_SIMPLE")
 end
 
 
 ##############################################################################################
-
+"""
+function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is_updated)::NamedTuple{
+    (:time_series,:γ,:is_informed,:tuning_factor,:is_updated),<:Tuple{String,
+        Float64,Bool,Float64,Bool}})
+    Plotting capabilities are commented out for parallel experiment.
+"""
 function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is_updated)::NamedTuple{
                         (:time_series,:γ,:is_informed,:tuning_factor,:is_updated),<:Tuple{String,
                             Float64,Bool,Float64,Bool}})
@@ -159,8 +154,9 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     # time the experiment
     t1 = time()
 
-    # load the timeseries and associated parameters
-    ts = load(time_series)::Dict{String,Any}
+    # load the path, timeseries, and associated parameters
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/"
+    ts = load(path * time_series)::Dict{String,Any}
     diffusion = ts["diffusion"]::Float64
     dx_params = ts["dx_params"]::ParamDict(Float64)
     tanl = ts["tanl"]::Float64
@@ -171,8 +167,8 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     # define the observation operator HARD-CODED in this line
     H_obs = alternating_obs_operator
 
-    # define the dynamical model derivative for this experiment
-    # we are assuming Lorenz-96 model
+    # define the dynamical model derivative for this experiment - we are assuming 
+    # Lorenz-96 model
     dx_dt = L96.dx_dt
 
     # define integration method
@@ -189,6 +185,7 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     o = ts["obs"]::Array{Float64, 2}
     obs_un = 1
     obs_cov = obs_un^2.0 * I
+
     # define state covaraince based on input
     if is_informed == true
         c = cov(o, dims = 2)
@@ -200,7 +197,7 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     x_t = o[:,1]
     # observation noise
     v = rand(MvNormal(zeros(40), I))
-    # define the initial observation range and truth reference solution
+    # define the initial background state
     x_b = x_t + v;
     
     # define kwargs for the analysis method
@@ -234,8 +231,10 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     
         # optimized cost function input and value 
         x_opt = XdVAR.D3_var_NewtonOp(x_b, obs, x_b, state_cov, H_obs, obs_cov, kwargs)
-    
+        
+        # generate actual observation value
         x_t = o[:, i+1]
+
         # compare model forecast and filter via RMSE
         rmse_forecast = sqrt(msd(x_b, x_t))
         fore_rmse[i] = rmse_forecast
@@ -285,12 +284,13 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     # output time
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
 
-    #= path = pkgdir(DataAssimilationBenchmarks) * "/plots/"
+    #= path = pkgdir(DataAssimilationBenchmarks) * "/src/analysis/var_exp/"
     name = "D3_var_filter_analysis_" * "L96_time_series_seed_" * lpad(seed, 4, "0") *
            "_gam_" * rpad(γ, 5, "0") *
            "_Informed_" * lpad(is_informed, 4, "0") *
            "_Updated_" * rpad(is_informed, 4, "0") *
            "_Tuned_" * lpad(tuning_factor, 5, "0")
+
     # make plot
     t = 1:nanl
     fore_rmse_ra = Vector{Float64}(undef, nanl)
@@ -307,164 +307,6 @@ function D3_var_filter_analysis((time_series, γ, is_informed, tuning_factor, is
     xlabel!("Time [Cycles]")
     ylabel!("Average Analysis RMSE")
     savefig(path * name)=#
-end
-
-##############################################################################################
-
-function D3_var_filter_analysis_tune((time_series, γ, is_informed, tuning_min, tuning_step, tuning_max, is_updated)::NamedTuple{
-    (:time_series,:γ,:is_informed,:tuning_min,:tuning_step,:tuning_max,:is_updated),<:Tuple{String,
-        Float64,Bool,Float64,Float64,Float64,Bool}})
-
-# time the experiment
-t1 = time()
-
-# load the timeseries and associated parameters
-ts = load(time_series)::Dict{String,Any}
-diffusion = ts["diffusion"]::Float64
-dx_params = ts["dx_params"]::ParamDict(Float64)
-tanl = ts["tanl"]::Float64
-nanl = ts["nanl"]::Int64
-# set the integration step size for the ensemble 
-h = ts["h"]::Float64
-
-# define the observation operator HARD-CODED in this line
-H_obs = alternating_obs_operator
-
-# define the dynamical model derivative for this experiment
-# we are assuming Lorenz-96 model
-dx_dt = L96.dx_dt
-
-# define integration method
-step_model! = rk4_step!
-
-# number of discrete forecast steps
-f_steps = convert(Int64, tanl / h)
-
-# set seed
-seed = ts["seed"]::Int64
-Random.seed!(seed)
-
-# define the initialization
-o = ts["obs"]::Array{Float64, 2}
-obs_un = 1
-obs_cov = obs_un^2.0 * I
-# define state covaraince based on input
-if is_informed == true
-    c = cov(o, dims = 2)
-    state_cov = Symmetric(c)
-else
-    state_cov = I
-end
-
-# define kwargs for the analysis method
-# and the underlying dynamical model
-kwargs = Dict{String,Any}(
-          "dx_dt" => dx_dt,
-          "f_steps" => f_steps,
-          "step_model" => step_model!,
-          "dx_params" => dx_params,
-          "h" => h,
-          "diffusion" => diffusion,
-          "γ" => γ,
-          "gamma" => γ,
-          "obs_un" => obs_un,
-          "obs_cov" => obs_cov,
-          "state_cov" => state_cov
-         )
-
-tuning_cycles = Int64((tuning_max - tuning_min)/tuning_step)
-index_count = 1
-# create storage for the forecast and analysis statistics
-stab_fore_rmse = Vector{Float64}(undef, tuning_cycles)
-stab_filt_rmse = Vector{Float64}(undef, tuning_cycles)
-
-for t in tuning_min:tuning_step:tuning_max
-    x_t = o[:,1]
-    # observation noise
-    v = rand(MvNormal(zeros(40), I))
-    # define the initial background
-    x_b = x_t + v;
-
-    # create storage for the forecast and analysis statistics
-    fore_rmse = Vector{Float64}(undef, nanl)
-    filt_rmse = Vector{Float64}(undef, nanl)
-
-    for i in 1:(nanl-1)
-        for j in 1:f_steps
-        # M(x^b)
-        step_model!(x_b, 0.0, kwargs)
-        end
-
-        w = rand(MvNormal(zeros(40), I))
-        obs = o[:, i+1] + w
-
-        # optimized cost function input and value 
-        x_opt = XdVAR.D3_var_NewtonOp(x_b, obs, x_b, t*state_cov, H_obs, obs_cov, kwargs)
-
-        x_t = o[:, i+1]
-        # compare model forecast and filter via RMSE
-        rmse_forecast = sqrt(msd(x_b, x_t))
-        fore_rmse[i] = rmse_forecast
-        rmse_filter = sqrt(msd(x_opt, x_t))
-        filt_rmse[i] = rmse_filter
-
-        # reinitializing x_b for next cycle if updated
-        if is_updated == true
-            x_b = x_opt
-        end
-    end
-
-    stab_fore_rmse[index_count] = sum(fore_rmse[1:nanl])/nanl
-    stab_filt_rmse[index_count] = sum(filt_rmse[1:nanl])/nanl
-
-    index_count = index_count + 1
-end
-
-data = Dict{String,Any}(
-        "seed" => seed,
-        "diffusion" => diffusion,
-        "dx_params" => dx_params,
-        "gamma" => γ,
-        "γ" => γ,
-        "tanl" => tanl,
-        "nanl" => nanl,
-        "h" =>  h,
-        "stab_fore_rmse" => stab_fore_rmse,
-        "stab_filt_rmse" => stab_filt_rmse
-       )
-
-    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/d3_var_exp/"
-    name = "D3_var_filter_analysis_" * "L96_time_series_seed_" * lpad(seed, 4, "0") *
-            "_gam_" * rpad(γ, 5, "0") *
-            "_Informed_" * lpad(is_informed, 4, "0") *
-            "_Updated_" * rpad(is_informed, 4, "0") *
-            "_TuneMin_" * lpad(tuning_min, 5, "0") *
-            "_TuneStep_" * lpad(tuning_step, 5, "0") *
-            "_TuneMax_" * lpad(tuning_max, 5, "0") *
-            ".jld2"
-   
-    save(path * name, data)
-
-    # output time
-    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
-
-    # make plot
-    path = pkgdir(DataAssimilationBenchmarks) * "/plots/"
-    name = "D3_var_filter_analysis_" * "L96_time_series_seed_" * lpad(seed, 4, "0") *
-            "_gam_" * rpad(γ, 5, "0") *
-            "_Informed_" * lpad(is_informed, 4, "0") *
-            "_Updated_" * rpad(is_informed, 4, "0") *
-            "_TuneMin_" * lpad(tuning_min, 5, "0") *
-            "_TuneStep_" * lpad(tuning_step, 5, "0") *
-            "_TuneMax_" * lpad(tuning_max, 5, "0")
-
-    t = tuning_min:tuning_step:tuning_max
-    plot(t, stab_fore_rmse, label = "Forecast", title="Stabilized Analysis RMSE vs. Tuning Parameter")
-    plot!(t, stab_filt_rmse, label = "Filter")
-    plot!([0, 5000], [1, 1])
-    xlabel!("Tuning Parameter")
-    ylabel!("Stabilized Analysis RMSE")
-    savefig(path * name)
 end
 
 ##############################################################################################

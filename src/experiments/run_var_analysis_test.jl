@@ -4,7 +4,6 @@ module run_var_analysis_test
 # imports and exports
 using Distributed
 @everywhere using DataAssimilationBenchmarks
-
 ##############################################################################################
 
 config = VarAnalysisExperimentDriver.D3_var_filter_tuning
