@@ -28,7 +28,7 @@ makedocs(
                     "FilterExps" => "submodules/experiments/FilterExps.md",
                     "SmootherExps" => "submodules/experiments/SmootherExps.md",
                     "SingleExperimentDriver" => "submodules/experiments/SingleExperimentDriver.md",
-                    "Slurm" => "submodules/experiments/Slurm.md"
+                    "Slurm" => "submodules/experiments/Slurm.md",
                    ],
                  "Analysis" => Any[
                     "ProcessExperimentData" => "submodules/analysis/ProcessExperimentData.md",
