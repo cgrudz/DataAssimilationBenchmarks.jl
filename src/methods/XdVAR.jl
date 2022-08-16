@@ -91,7 +91,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
     hess_x = Array{Float64}(undef, (sys_dim, sys_dim))
 
     while j <= j_max
-        print("Iteration: " * string(j) * "\n")
+        #print("Iteration: " * string(j) * "\n")
         # compute the gradient and hessian
         grad!(grad_x, x)
         hess!(hess_x, x)

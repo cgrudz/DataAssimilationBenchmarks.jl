@@ -19,14 +19,6 @@ include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
 
-# test set 9: test 3D-VAR
-@testset "3DVAR" begin
-    @test Test3dVAR.testCost()
-    @test Test3dVAR.testGrad()
-    @test Test3dVAR.testNewton()
-    @test Test3dVAR.testNewtonNoise()
-end
-
 # test set 0: test Observation Operators jacobian
 @testset "Observation Operators" begin
     @test TestObsOperators.alternating_obs_jacobian_pos()

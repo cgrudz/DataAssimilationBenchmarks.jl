@@ -1,7 +1,7 @@
-# XdVAR
+# D3VARExps
 
-This module defines methods for classical variational data assimilation such as
-3D- / 4D-VAR.  Primal cost functions are defined, with their implicit differentiation
+This module defines methods for experiments with classical variational data assimilation with
+3D-VAR.  Primal cost functions are defined, with their implicit differentiation
 performed with automatic differentiation with [JuliaDiff](https://github.com/JuliaDiff)
 methods. Development of gradient-based optimization schemes using automatic
 differentiation is ongoing, with future development planned to integrate variational
@@ -18,5 +18,5 @@ wrapping function passed to auto-differentiation.
 ## Methods
 
 ```@autodocs
-Modules = [DataAssimilationBenchmarks.XdVAR]
+Modules = [DataAssimilationBenchmarks.D3VARExps]
 ```
