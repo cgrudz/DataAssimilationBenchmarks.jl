@@ -19,7 +19,7 @@ validating sequential filters and smoothers in toy model twin experiments.
 This code is meant to be performant in the sense that large hyper-parameter discretizations
 can be explored to determine hyper-parameter sensitivity and reliability of results across
 different experimental regimes, with parallel implementations in native Julia distributed
-computing and using workload managers such as Slurm.
+computing.
 
 This package currently includes code for developing and testing data assimilation schemes in
 the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) and the IEEE 39 bus test
@@ -38,4 +38,3 @@ available currently in open review in Geoscientific Model Development.
 ### Documentation
 
 Please see the [github pages site](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/).
-
