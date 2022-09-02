@@ -555,7 +555,6 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
     x_b = rand(MvNormal(init, I))
 
     # define the observation range and truth reference solution
-    @bp
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
     
