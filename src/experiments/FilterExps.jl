@@ -118,7 +118,6 @@ function ensemble_filter_state((time_series, method, seed, nanl, obs_un, obs_dim
     ens = rand(MvNormal(init, I), N_ens)
 
     # define the observation range and truth reference solution
-    @bp
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
 
