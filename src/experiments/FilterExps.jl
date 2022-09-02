@@ -3,7 +3,6 @@ module FilterExps
 ##############################################################################################
 # imports and exports
 using Random, Distributions, StatsBase
-using Debugger
 using LinearAlgebra
 using JLD2, HDF5
 using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..EnsembleKalmanSchemes,
