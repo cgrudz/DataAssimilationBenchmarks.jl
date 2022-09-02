@@ -166,7 +166,7 @@ function D3_var_tuned_inflation()
     for s_infl in s_infls
         for bkg_cov in bkgs
             tmp = (
-                   time_series = time_series 
+                   time_series = time_series,
                    bkg_cov     = bkg_cov,
                    seed        = 0,
                    nanl        = 3500,
