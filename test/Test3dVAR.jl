@@ -14,13 +14,13 @@ function testCost()
     # initialization
     x = ones(40) * 0.5
     obs = zeros(40)
-    x_background = ones(40)
-    state_cov = I
-    obs_cov = I
-    params = Dict{String, Any}("γ" => 1.0)
+    x_bkg = ones(40)
+    state_cov = 1.0I
+    obs_cov = 1.0I
+    params = Dict{String, Any}()
     H_obs = alternating_obs_operator
 
-    cost = XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+    cost = D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, params)
 
     if abs(cost - 10) < 0.001
         true
@@ -28,6 +28,7 @@ function testCost()
         false
     end
 end
+
 
 ##############################################################################################
 """
@@ -38,15 +39,15 @@ end
 function testGrad()
     # initialization
     obs = zeros(40)
-    x_background = ones(40)
-    state_cov = I
-    obs_cov = I
-    params = Dict{String, Any}("γ" => 1.0)
+    x_bkg = ones(40)
+    state_cov = 1.0I
+    obs_cov = 1.0I
+    params = Dict{String, Any}()
     H_obs = alternating_obs_operator
 
     # wrapper function
     function wrap_cost(x)
-        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+        D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, params)
     end
     # input
     x = ones(40) * 0.5
@@ -60,6 +61,7 @@ function testGrad()
     end
 end
 
+
 ##############################################################################################
 """
     testNewton() 
@@ -68,16 +70,15 @@ end
 """
 function testNewton()
     # initialization
-    x = 5.0 * ones(40)
     obs = zeros(40)
-    x_background = ones(40)
-    state_cov = I
-    obs_cov = I
-    params = Dict{String, Any}("γ" => 1.0)
+    x_bkg = ones(40)
+    state_cov = 1.0I
+    obs_cov = 1.0I
+    params = Dict{String, Any}()
     H_obs = alternating_obs_operator
 
     # perform Simple Newton optimization
-    op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+    op = D3_var_NewtonOp(x_bkg, obs, state_cov, H_obs, obs_cov, params)
   
     if abs(sum(op - ones(40) * 0.5)) < 0.001
         true
@@ -95,17 +96,16 @@ end
 """
 function testNewtonNoise()
     # initialization
-    x = ones(40)
-    v = rand(Normal(0, 1), 40)
-    obs = zeros(40) + v
-    x_background = zeros(40)
-    state_cov = I
-    obs_cov = I
-    params = Dict{String, Any}("γ" => 1.0)
+    Random.seed!(123)
+    obs = rand(Normal(0, 1), 40)
+    x_bkg = zeros(40)
+    state_cov = 1.0I
+    obs_cov = 1.0I
+    params = Dict{String, Any}()
     H_obs = alternating_obs_operator
 
     # perform Simple Newton optimization
-    op = XdVAR.D3_var_NewtonOp(x, obs, x_background, state_cov, H_obs, obs_cov, params)
+    op = D3_var_NewtonOp(x_bkg, obs, state_cov, H_obs, obs_cov, params)
     
     if abs(sum(op - obs * 0.5)) < 0.001
         true

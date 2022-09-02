@@ -2,12 +2,13 @@
 module FilterExps
 ##############################################################################################
 # imports and exports
-using Random, Distributions
+using Random, Distributions, StatsBase
+using Debugger
 using LinearAlgebra
 using JLD2, HDF5
-using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers,
-       ..EnsembleKalmanSchemes, ..L96, ..IEEE39bus
-export ensemble_filter_state, ensemble_filter_param
+using ..DataAssimilationBenchmarks, ..ObsOperators, ..DeSolvers, ..EnsembleKalmanSchemes,
+      ..XdVAR, ..L96, ..IEEE39bus, ..GenerateTimeSeries
+export ensemble_filter_state, ensemble_filter_param, D3_var_filter_state
 ##############################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ##############################################################################################
@@ -32,7 +33,7 @@ Output from the experiment is saved in a dictionary of the form,
                             "sys_dim" => sys_dim,
                             "obs_dim" => obs_dim,
                             "obs_un" => obs_un,
-                            "gamma" => γ,
+                            "γ" => γ,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "h" =>  h,
@@ -118,6 +119,7 @@ function ensemble_filter_state((time_series, method, seed, nanl, obs_un, obs_dim
     ens = rand(MvNormal(init, I), N_ens)
 
     # define the observation range and truth reference solution
+    @bp
     obs = obs[:, 2:nanl + 1]
     truth = copy(obs)
 
@@ -131,7 +133,7 @@ function ensemble_filter_state((time_series, method, seed, nanl, obs_un, obs_dim
                               "h" => h,
                               "diffusion" => diffusion,
                               "s_infl" => s_infl,
-                              "gamma" => γ,
+                              "γ" => γ,
                              )
 
     # define the observation operator, observation error covariance and observations
@@ -190,7 +192,7 @@ function ensemble_filter_state((time_series, method, seed, nanl, obs_un, obs_dim
                             "sys_dim" => sys_dim,
                             "obs_dim" => obs_dim,
                             "obs_un" => obs_un,
-                            "gamma" => γ,
+                            "γ" => γ,
                             "nanl" => nanl,
                             "tanl" => tanl,
                             "h" =>  h,
@@ -250,7 +252,7 @@ Output from the experiment is saved in a dictionary of the form,
                             "state_dim" => state_dim,
                             "obs_dim" => obs_dim,
                             "obs_un" => obs_un,
-                            "gamma" => γ,
+                            "γ" => γ,
                             "p_err" => p_err,
                             "p_wlk" => p_wlk,
                             "nanl" => nanl,
@@ -295,7 +297,7 @@ function ensemble_filter_param((time_series, method, seed, nanl, obs_un, obs_dim
                               (:time_series,:method,:seed,:nanl,:obs_un,:obs_dim,:γ,:p_err,
                                :p_wlk,:N_ens,:s_infl,:p_infl),
                               <:Tuple{String,String,Int64,Int64,Float64,Int64,Float64,Float64,
-                             Float64,Int64,Float64,Float64}})
+                                      Float64,Int64,Float64,Float64}})
     # time the experiment
     t1 = time()
 
@@ -370,7 +372,7 @@ function ensemble_filter_param((time_series, method, seed, nanl, obs_un, obs_dim
                               "step_model" => step_model!,
                               "h" => h,
                               "diffusion" => diffusion,
-                              "gamma" => γ,
+                              "γ" => γ,
                               "state_dim" => state_dim,
                               "s_infl" => s_infl,
                               "p_infl" => p_infl
@@ -497,6 +499,170 @@ function ensemble_filter_param((time_series, method, seed, nanl, obs_un, obs_dim
             "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
             "_paramInfl_" * rpad(round(p_infl, digits=2), 4, "0") *
             ".jld2"
+
+    save(path * name, data)
+    print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")
+end
+
+
+##############################################################################################
+"""
+    D3_var_filter_state((time_series::String, bkg_cov::String, seed::Int64, nanl::Int64,
+                            obs_dim::Int64, obs_un:Float64, γ::Float64,
+                            s_infl::Float64)::NamedTuple)
+
+A description of purpose, behavior and outputs
+"""
+function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim, γ,
+                              s_infl)::NamedTuple{
+                            (:time_series,:bkg_cov,:seed,:nanl,:obs_un,:obs_dim,:γ,
+                             :s_infl),
+                            <:Tuple{String,String,Int64,Int64,Float64,Int64,Float64,
+                                    Float64}})
+    
+    # time the experiment
+    t1 = time()
+
+    # load the path, timeseries, and associated parameters
+    ts = load(time_series)::Dict{String,Any}
+    diffusion = ts["diffusion"]::Float64
+    dx_params = ts["dx_params"]::ParamDict(Float64)
+    F = dx_params["F"]::Vector{Float64}
+    tanl = ts["tanl"]::Float64
+
+    # set the integration step size for the control trajectory 
+    h = ts["h"]::Float64
+
+    # define the observation operator HARD-CODED in this line
+    H_obs = alternating_obs_operator
+
+    # define the dynamical model derivative for this experiment - we are assuming 
+    # Lorenz-96 model
+    dx_dt = L96.dx_dt
+
+    # define integration method
+    step_model! = rk4_step!
+
+    # number of discrete forecast steps
+    f_steps = convert(Int64, tanl / h)
+
+    # set seed
+    seed = ts["seed"]::Int64
+    Random.seed!(seed)
+
+    # define the initial background state as a perturbation of first true state
+    obs = ts["obs"]::Array{Float64, 2}
+    init = obs[:, 1]
+    sys_dim = length(init)
+    x_b = rand(MvNormal(init, I))
+
+    # define the observation range and truth reference solution
+    @bp
+    obs = obs[:, 2:nanl + 1]
+    truth = copy(obs)
+    
+    # define the state background covariance
+    if bkg_cov == "ID"
+        state_cov = s_infl * I
+    
+    elseif bkg_cov == "clima"
+        fname = "L96_time_series_seed_0000" *
+                "_dim_" * lpad(state_dim, 2, "0") *
+                "_diff_" * rpad(diffusion, 5, "0") *
+                "_F_" * lpad(F[1], 4, "0") *
+                "_tanl_0.50"*
+                "_nanl_11000" *
+                "_spin_1000" *
+                "_h_0.010" *
+                ".jld2"
+        try
+            clima = load(path * name)::Dict{String,Any}
+        catch
+            clima_params = ( 
+                            seed      = 000,
+                            h         = 0.05,
+                            state_dim = 40,
+                            tanl      = 0.5,
+                            nanl      = 11000,
+                            spin      = 1000,
+                            diffusion = 0.00,
+                            F         = 8.0,
+                           )
+            L96_time_series(clima_params)
+            clima = load(path * name)::Dict{String,Any}
+        end
+        clima = clima["obs"]
+        state_cov = s_infl * cov(clima, dims=2)
+    end
+
+    # define kwargs for the analysis method
+    # and the underlying dynamical model
+    kwargs = Dict{String,Any}(
+                              "dx_dt" => dx_dt,
+                              "f_steps" => f_steps,
+                              "step_model" => step_model!,
+                              "dx_params" => dx_params,
+                              "h" => h,
+                              "diffusion" => diffusion,
+                              "γ" => γ,
+                             )
+    
+    # define the observation operator, observation error covariance and observations
+    # with error observation covariance operator taken as a uniform scaling by default,
+    # can be changed in the definition below
+    obs = H_obs(obs, obs_dim, kwargs)
+    obs += obs_un * rand(Normal(), size(obs))
+    obs_cov = obs_un^2.0 * I
+
+    # create storage for the forecast and analysis statistics
+    fore_rmse = Vector{Float64}(undef, nanl)
+    filt_rmse = Vector{Float64}(undef, nanl)
+    
+    # loop over the number of observation-forecast-analysis cycles
+    for i in 1:nanl
+        # loop over the integration steps between observations
+        for j in 1:f_steps
+            step_model!(x_b, 0.0, kwargs)
+        end
+
+        # compute the forecast rmse
+        fore_rmse[i] = rmsd(x_b, truth[:, i])
+
+        # optimized cost function input and value 
+        x_b = D3_var_NewtonOp(x_b, obs[:, i], state_cov, H_obs, obs_cov, kwargs)
+        
+        # compute the forecast rmse
+        filt_rmse[i] = rmsd(x_b, truth[:, i])
+    end
+
+    data = Dict{String,Any}(
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse,
+                            "bkg_cov" => bkg_cov,
+                            "seed" => seed,
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "γ" => γ,
+                            "nanl" => nanl,
+                            "tanl" => tanl,
+                            "h" =>  h,
+                            "s_infl" => s_infl,
+                           )
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-" * bkg_cov * "/"
+    name = "bkg-" * bkg_cov *
+           "_L96_" *
+           "_state_seed_" * lpad(seed, 4, "0") *
+           "_diff_" * rpad(diffusion, 5, "0") *
+           "_sysD_" * lpad(sys_dim, 2, "0") *
+           "_obsD_" * lpad(obs_dim, 2, "0") *
+           "_obsU_" * rpad(obs_un, 4, "0") *
+           "_gamma_" * lpad(γ, 5, "0") *
+           "_nanl_" * lpad(nanl, 5, "0") *
+           "_tanl_" * rpad(tanl, 4, "0") *
+           "_h_" * rpad(h, 4, "0") *
+           "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+           ".jld2"
 
     save(path * name, data)
     print("Runtime " * string(round((time() - t1)  / 60.0, digits=4))  * " minutes\n")

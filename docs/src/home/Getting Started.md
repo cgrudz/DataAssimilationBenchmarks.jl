@@ -36,18 +36,17 @@ The repository is structured as follows:
 <ul>
   <li><code>src</code> - contains the main parent module</li>
   <ul>
-		<li><code>models</code> - contains code for defining the dynamic model equations in twin
-		experiments.</li>
+		<li><code>models</code> - contains code for defining the state and observation model equation for twin
+		experiments</li>
 		<li><code>methods</code> - contains DA solvers and general numerical routines for running
-		twin experiments.</li>
+		twin experiments</li>
 		<li><code>experiments</code> - contains the outer-loop scripts that set up twin
-		experiments.</li>
+		experiments, and constructors for generating parameter grids</li>
 		<li><code>data</code> - this is an input / output directory for the inputs to and
-		ouptuts from experiments.</li>
+		ouptuts from experiments</li>
 		<li><code>analysis</code> - contains auxilliary scripts for batch processing experiment
-		results and for plotting (currently in Python).</li>
+		results and for plotting (currently in Python, not fully integrated).</li>
 	</ul>
-  <li><code>scratch</code> - this is a storage directory for backups.</li>
   <li><code>test</code> - contains test cases for the package.</li>
 	<li><code>docs</code> - contains the documenter files.</li>
 </ul>

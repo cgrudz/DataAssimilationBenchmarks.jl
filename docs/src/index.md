@@ -11,9 +11,7 @@ This package currently includes code for developing and testing data assimilatio
 the [L96-s model](https://gmd.copernicus.org/articles/13/1903/2020/) and the IEEE 39 bus test
 case in the form of the [effective network
 model](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012)
-model equations. New toy models and data assimilation schemes are in continuous development
-in the development branch.  Currently validated techniques are available in the master
-branch.
+model equations. New toy models and data assimilation schemes are in continuous development.
 
 This package supported the development of all numerical results and benchmark simulations
 in the pre-print

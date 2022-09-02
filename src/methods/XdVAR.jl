@@ -2,93 +2,111 @@
 module XdVAR
 ##############################################################################################
 # imports and exports
-using LinearAlgebra, SparseArrays
+using LinearAlgebra, ForwardDiff
 using ..DataAssimilationBenchmarks
-using ForwardDiff
+export D3_var_cost, D3_var_grad, D3_var_hessian, D3_var_NewtonOp  
 ##############################################################################################
 # Main methods
 ##############################################################################################
 """
-    D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+    D3_var_cost(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+
+A description of purpose, behavior and outputs
 """
-function D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+function D3_var_cost(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                     H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+
     # initializations
     obs_dim = length(obs)
+
     # obs operator
-    H = H_obs(x,obs_dim,kwargs)
+    H = H_obs(x, obs_dim, kwargs)
 
-    back_component = transpose((x - x_background))*(inv(state_cov))*(x - x_background)
-    obs_component = transpose((obs - H))*(inv(obs_cov))*(obs - H)
-    J = 0.5*back_component + 0.5*obs_component
-    return J
+    # background discepancy
+    δ_b = x - x_bkg
+
+    # observation discrepancy
+    δ_o = obs - H
+
+    # cost function
+    back_component = transpose(δ_b) * inv(state_cov) * δ_b
+    obs_component = transpose(δ_o) * inv(obs_cov) * δ_o
+
+    0.5*back_component + 0.5*obs_component
 end
 
 
 ##############################################################################################
 """
-    D3_var_grad(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-"""
+    D3_var_grad(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T), 
+                obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
 
-function D3_var_grad(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-    # initializations
-    function wrap_cost(x)
-        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+A description of purpose, behavior and outputs
+"""
+function D3_var_grad(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                     H_obs::Function, obs_cov::CovM(T),
+                     kwargs::StepKwargs) where T <: Float64
+
+    function wrap_cost(x::VecA(T)) where T <: Real
+        D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    grad = ForwardDiff.gradient(wrap_cost, x)
-    return grad
+    ForwardDiff.gradient(wrap_cost, x)
 end
 
 
 ##############################################################################################
 """
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+    D3_var_hessian(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                   obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
+
+A description of purpose, behavior and outputs
 """
+function D3_var_hessian(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                        H_obs::Function, obs_cov::CovM(T),
+                        kwargs::StepKwargs) where T <: Float64 
 
-function D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-
-    function wrap_cost(x)
-        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+    function wrap_cost(x::VecA(T)) where T <: Real
+        D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    hess = ForwardDiff.hessian(wrap_cost, x)
-
-    return hess
+    ForwardDiff.hessian(wrap_cost, x)
 end
+
 
 ##############################################################################################
 """
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-"""
+    D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), obs_cov::CovM(T),
+                    kwargs::StepKwargs) where T <: Float64
 
-function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+A description of purpose, behavior and outputs
+"""
+function D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), H_obs::Function,
+                         obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
+
     # initializations
     j_max = 40
     tol = 0.001
     j = 1
-    sys_dim = length(x)
+    sys_dim = length(x_bkg)
+
+    # first guess is copy of the first background
+    x = copy(x_bkg)
 
     # gradient preallocation over-write
     function grad!(g::VecA(T), x::VecA(T)) where T <: Real
-        g[:] = D3_var_grad(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+        g[:] = D3_var_grad(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
     # hessian preallocation over-write
     function hess!(h::ArView(T), x::VecA(T)) where T <: Real
-        h .= D3_var_hessian(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+        h .= D3_var_hessian(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    # step 6: perform the optimization by simple Newton
-    grad_x = Array{Float64}(undef, (sys_dim))
-    hess_x = Array{Float64}(undef, (sys_dim, sys_dim))
+    # perform the optimization by simple Newton
+    grad_x = Array{Float64}(undef, sys_dim)
+    hess_x = Array{Float64}(undef, sys_dim, sys_dim)
 
     while j <= j_max
         #print("Iteration: " * string(j) * "\n")
@@ -97,7 +115,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
         hess!(hess_x, x)
 
         # perform Newton approximation
-        Δx = inv(hess_x)*grad_x
+        Δx = inv(hess_x) * grad_x
         x = x - Δx
 
         if norm(Δx) < tol
@@ -108,6 +126,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
     end
     return x
 end
+
 
 ##############################################################################################
 # end module

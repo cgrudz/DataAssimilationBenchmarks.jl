@@ -6,7 +6,7 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks
 ##############################################################################################
 
-config = VarAnalysisExperimentDriver.D3_var_filter_tuning
+config = ParallelExperimentDriver.D3_var_tuned_inflation
 
 print("Generating experiment configurations from " * string(config) * "\n")
 print("Generate truth twin\n")
@@ -21,7 +21,7 @@ print("Running " * string(num_exps) * " configurations on " * string(nworkers())
 print("Begin pmap\n")
 pmap(exp, args)
 print("Experiments completed, verify outputs in the appropriate directory under:\n")
-print(pkgdir(DataAssimilationBenchmarks) * "/src/data/d3_var_exp/\n")
+print(pkgdir(DataAssimilationBenchmarks) * "/src/data/\n")
 
 ##############################################################################################
 # end module

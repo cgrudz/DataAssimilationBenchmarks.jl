@@ -103,6 +103,85 @@ end
 
 
 ##############################################################################################
+# compare multiplicative inflation tuning for 3D-VAR cycling
+
+"""
+    args, exp = D3_var_filter_tuning()
+
+Constructs parameter range for tuning multiplicative inflation for 3D-VAR background cov.
+"""
+function D3_var_tuned_inflation()
+
+    exp = DataAssimilationBenchmarks.D3VARExps.D3_var_filter_analysis
+    function wrap_exp(arguments)
+        try
+            exp(arguments)
+        catch
+            print("Error on " * string(arguments) * "\n")
+        end
+    end
+
+    # set time series parameters
+    seed      = 123
+    h         = 0.05
+    state_dim = 40
+    tanl      = 0.05
+    nanl      = 6500
+    spin      = 1500
+    diffusion = 0.00
+    F         = 8.0
+
+    # generate truth twin time series
+    GenerateTimeSeries.L96_time_series(
+                                       (
+                                         seed      = seed,
+                                         h         = h,
+                                         state_dim = state_dim,
+                                         tanl      = tanl,
+                                         nanl      = nanl,
+                                         spin      = spin,
+                                         diffusion = diffusion,
+                                         F         = F,
+                                        )
+                                      )
+
+    # define load path to time series
+    time_series = path * "L96_time_series_seed_" * lpad(seed, 4, "0") *
+                         "_dim_" * lpad(state_dim, 2, "0") *
+                         "_diff_" * rpad(diffusion, 5, "0") *
+                         "_F_" * lpad(F, 4, "0") *
+                         "_tanl_" * rpad(tanl, 4, "0") *
+                         "_nanl_" * lpad(nanl, 5, "0") *
+                         "_spin_" * lpad(spin, 4, "0") *
+                         "_h_" * rpad(h, 5, "0") *
+                         ".jld2"
+
+    # define ranges for filter parameters
+    γ = 1.0
+    bkg_covs = ["ID", "clima"]
+    s_infls = 0.005:0.005:1.0
+
+    # load the experiments
+    args = Vector{Any}()
+    for s_infl in s_infls
+        for bkg_cov in bkgs
+            tmp = (
+                   time_series = time_series 
+                   bkg_cov     = bkg_cov,
+                   seed        = 0,
+                   nanl        = 3500,
+                   obs_un      = 1.0,
+                   obs_dim     = 40,
+                   γ           = 1.00,
+                  )
+            push!(args, tmp)
+        end
+    end
+    return args, wrap_exp
+end
+
+
+##############################################################################################
 # parameter estimation, different random walk and inflation settings for parameter resampling
 
 """
@@ -167,7 +246,6 @@ function ensemble_filter_param()
     p_err = 0.03
     p_wlks = [0.0000, 0.0001, 0.0010, 0.0100]
     N_enss = 15:3:42
-    s_infls = [1.0]
     nanl = 4000
     s_infls = LinRange(1.0, 1.10, 11)
     p_infls = LinRange(1.0, 1.05, 6)

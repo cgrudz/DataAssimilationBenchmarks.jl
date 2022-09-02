@@ -2,7 +2,7 @@
 module EnsembleKalmanSchemes
 ##############################################################################################
 # imports and exports
-using Random, Distributions, Statistics
+using Random, Distributions, Statistics, StatsBase
 using LinearAlgebra, SparseArrays
 using ..DataAssimilationBenchmarks
 using Optim, LineSearches, LinearAlgebra
@@ -35,7 +35,7 @@ function analyze_ens(ens::ArView(T), truth::VecA(T)) where T <: Float64
     x_bar = mean(ens, dims=2)
 
     # compute the RMSE of the ensemble mean
-    rmse = sqrt(mean( (truth - x_bar).^2.0))
+    rmse = rmsd(truth, x_bar)
 
     # compute the spread as in whitaker & louge 98 by the standard deviation
     # of the mean square deviation of the ensemble from its mean
