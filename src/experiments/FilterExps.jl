@@ -580,7 +580,9 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
                "_spin_" * lpad(clima_spin, 4, "0") *
                "_h_" * rpad(clima_h, 5, "0") *
                ".jld2"
-        #print("Loading background climatology from " * name "\n")
+
+        print("Loading background climatology from " * name * "\n")
+
         try
             clima = load(path * name)::Dict{String,Any}
         catch
@@ -597,8 +599,10 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
             L96_time_series(clima_params)
             clima = load(path * name)::Dict{String,Any}
         end
+
         clima = clima["obs"]
         state_cov = s_infl * Symmetric(cov(clima, dims=2))
+
     end
 
     # define kwargs for the analysis method
