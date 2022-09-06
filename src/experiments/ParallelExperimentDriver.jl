@@ -112,7 +112,7 @@ Constructs parameter range for tuning multiplicative inflation for 3D-VAR backgr
 """
 function D3_var_tuned_inflation()
 
-    exp = DataAssimilationBenchmarks.D3VARExps.D3_var_filter_analysis
+    exp = DataAssimilationBenchmarks.FilterExps.D3_var_filter_state
     function wrap_exp(arguments)
         try
             exp(arguments)
@@ -164,7 +164,7 @@ function D3_var_tuned_inflation()
     # load the experiments
     args = Vector{Any}()
     for s_infl in s_infls
-        for bkg_cov in bkgs
+        for bkg_cov in bkg_covs
             tmp = (
                    time_series = time_series,
                    bkg_cov     = bkg_cov,
@@ -173,6 +173,7 @@ function D3_var_tuned_inflation()
                    obs_un      = 1.0,
                    obs_dim     = 40,
                    γ           = 1.00,
+                   s_infl      = s_infl,
                   )
             push!(args, tmp)
         end

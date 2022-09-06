@@ -563,33 +563,42 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
         state_cov = s_infl * I
     
     elseif bkg_cov == "clima"
-        fname = "L96_time_series_seed_0000" *
-                "_dim_" * lpad(state_dim, 2, "0") *
-                "_diff_" * rpad(diffusion, 5, "0") *
-                "_F_" * lpad(F[1], 4, "0") *
-                "_tanl_0.50"*
-                "_nanl_11000" *
-                "_spin_1000" *
-                "_h_0.010" *
-                ".jld2"
+        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+        state_dim = sys_dim
+        clima_nanl = 11000
+        clima_tanl = 0.50
+        clima_spin = 1000
+        clima_h    = 0.01
+        clima_seed = 0
+
+        name = "L96_time_series_seed_" * lpad(clima_seed, 4, "0") *
+               "_dim_" * lpad(state_dim, 2, "0") *
+               "_diff_" * rpad(diffusion, 5, "0") *
+               "_F_" * lpad(F[1], 4, "0") *
+               "_tanl_" * rpad(clima_tanl, 4, "0") *
+               "_nanl_" * lpad(clima_nanl, 5, "0") *
+               "_spin_" * lpad(clima_spin, 4, "0") *
+               "_h_" * rpad(clima_h, 5, "0") *
+               ".jld2"
+        #print("Loading background climatology from " * name "\n")
         try
             clima = load(path * name)::Dict{String,Any}
         catch
             clima_params = ( 
-                            seed      = 000,
-                            h         = 0.05,
-                            state_dim = 40,
-                            tanl      = 0.5,
-                            nanl      = 11000,
-                            spin      = 1000,
-                            diffusion = 0.00,
-                            F         = 8.0,
+                            seed      = clima_seed,
+                            h         = clima_h,
+                            state_dim = state_dim,
+                            tanl      = clima_tanl,
+                            nanl      = clima_nanl,
+                            spin      = clima_spin,
+                            diffusion = diffusion,
+                            F         = F[1],
                            )
             L96_time_series(clima_params)
             clima = load(path * name)::Dict{String,Any}
         end
         clima = clima["obs"]
-        state_cov = s_infl * cov(clima, dims=2)
+        state_cov = s_infl * Symmetric(cov(clima, dims=2))
     end
 
     # define kwargs for the analysis method
@@ -648,7 +657,7 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
 
     path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-" * bkg_cov * "/"
     name = "bkg-" * bkg_cov *
-           "_L96_" *
+           "_L96" *
            "_state_seed_" * lpad(seed, 4, "0") *
            "_diff_" * rpad(diffusion, 5, "0") *
            "_sysD_" * lpad(sys_dim, 2, "0") *
@@ -658,7 +667,7 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
            "_nanl_" * lpad(nanl, 5, "0") *
            "_tanl_" * rpad(tanl, 4, "0") *
            "_h_" * rpad(h, 4, "0") *
-           "_stateInfl_" * rpad(round(s_infl, digits=2), 4, "0") *
+           "_stateInfl_" * rpad(round(s_infl, digits=3), 5, "0") *
            ".jld2"
 
     save(path * name, data)
