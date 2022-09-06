@@ -3,7 +3,6 @@ module XdVAR
 ##############################################################################################
 # imports and exports
 using LinearAlgebra, ForwardDiff
-using Debugger
 using ..DataAssimilationBenchmarks
 export D3_var_cost, D3_var_grad, D3_var_hessian, D3_var_NewtonOp  
 ##############################################################################################
@@ -25,7 +24,6 @@ function D3_var_cost(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T
     H = H_obs(x, obs_dim, kwargs)
 
     # background discepancy
-    @bp
     δ_b = x - x_bkg
 
     # observation discrepancy
