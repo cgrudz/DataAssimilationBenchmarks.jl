@@ -5,7 +5,6 @@ module ParallelExperimentDriver
 using ..DataAssimilationBenchmarks
 export ensemble_filter_adaptive_inflation, ensemble_filter_param, classic_ensemble_state,
        classic_ensemble_param, single_iteration_ensemble_state, iterative_ensemble_state 
-
 ##############################################################################################
 # Utility methods and definitions
 ##############################################################################################
@@ -15,12 +14,13 @@ path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
 ##############################################################################################
 # Filters
 ##############################################################################################
-# compare adaptive inflation methods
-
 """
-    args, exp = ensemble_filter_adaptive_inflation()
+    args, wrap_exp = ensemble_filter_adaptive_inflation()
 
 Constucts a parameter map and experiment wrapper for sensitivity test of adaptive inflation.
+
+The ensemble size is varied along with the adaptive multiplicative inflation method,
+including the dual, primal and primal with linesearch EnKF-N methods.
 """
 function ensemble_filter_adaptive_inflation()
 
@@ -103,12 +103,14 @@ end
 
 
 ##############################################################################################
-# compare multiplicative inflation tuning for 3D-VAR cycling
-
 """
-    args, exp = D3_var_filter_tuning()
+    args, wrap_exp = D3_var_filter_tuning()
 
 Constructs parameter range for tuning multiplicative inflation for 3D-VAR background cov.
+
+The choice of the background covariance is varied between the identity matrix and a
+climatological covariance computed from a long time series of the Lorenz-96 system.  Both
+choices then are scaled by a multiplicative covariance parameter that tunes the variances.
 """
 function D3_var_tuned_inflation()
 
@@ -183,10 +185,8 @@ end
 
 
 ##############################################################################################
-# parameter estimation, different random walk and inflation settings for parameter resampling
-
 """
-    args, exp = ensemble_filter_param()
+    args, wrap_exp = ensemble_filter_param()
 
 Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.
 
@@ -286,9 +286,8 @@ end
 ##############################################################################################
 # Classic smoothers
 ##############################################################################################
-
 """
-    args, exp = classic_ensemble_state()
+    args, wrap_exp = classic_ensemble_state()
 
 Constucts a parameter map and experiment wrapper for sensitivity test of nonlinear obs.
 
@@ -386,9 +385,8 @@ function classic_ensemble_state()
 end
 
 #############################################################################################
-
 """
-    args, exp = ensemble_filter_adaptive_inflation()
+    args, wrap_exp = ensemble_filter_adaptive_inflation()
 
 Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.
 
@@ -499,7 +497,14 @@ end
 #############################################################################################
 # SIEnKS
 #############################################################################################
+"""
+    args, wrap_exp = single_iteration_ensemble_state()
 
+Constucts a parameter map and experiment wrapper for sensitivity test of multiple DA.
+
+The ensemble size is varied along with the  multiplicative inflation coefficient,
+and the use of single versus multiple data assimilation in the SIEnKS.
+"""
 function single_iteration_ensemble_state()
         
     exp = DataAssimilationBenchmarks.SmootherExps.single_iteration_ensemble_state
@@ -598,7 +603,14 @@ end
 #############################################################################################
 # IEnKS
 #############################################################################################
+"""
+    args, wrap_exp = iterative_ensemble_state()
 
+Constucts a parameter map and experiment wrapper for sensitivity test of multiple DA.
+
+The ensemble size is varied along with the  multiplicative inflation coefficient,
+and the use of single versus multiple data assimilation in the IEnKS.
+"""
 function iterative_ensemble_state()
         
     exp = DataAssimilationBenchmarks.SmootherExps.iterative_ensemble_state

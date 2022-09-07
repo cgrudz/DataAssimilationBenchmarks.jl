@@ -1,7 +1,5 @@
 # Differential Equation Solvers
 
-## API for differential equation solvers
-
 Three general schemes are developed for ordinary and stochastic differential equations,
   * the four-stage Runge-Kutta [`DataAssimilationBenchmarks.DeSolvers.rk4_step!`](@ref) scheme,
   * the second order autonomous Taylor [`DataAssimilationBenchmarks.DeSolvers.tay2_step!`](@ref) scheme, and

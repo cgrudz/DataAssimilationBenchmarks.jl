@@ -5,13 +5,14 @@ module TestGenerateTimeSeries
 using DataAssimilationBenchmarks
 using DataAssimilationBenchmarks.SingleExperimentDriver
 using DataAssimilationBenchmarks.GenerateTimeSeries
-using JLD, Random
+using JLD2, Random
+
 ##############################################################################################
 # Test generation and loading of the L96 model time series in default localtion
 
 function testGenL96()
     try
-        L96_time_series(exps["Generate_time_series"]["L96_deterministic_test"])
+        L96_time_series(time_series_exps["L96_deterministic_test"])
         true
     catch
         false
@@ -35,7 +36,7 @@ end
 
 function testGenIEEE39bus()
     try
-        IEEE39bus_time_series(exps["Generate_time_series"]["IEEE39bus_deterministic_test"])
+        IEEE39bus_time_series(time_series_exps["IEEE39bus_deterministic_test"])
         true
     catch
         false

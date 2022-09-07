@@ -6,12 +6,13 @@ using DataAssimilationBenchmarks
 using DataAssimilationBenchmarks.SingleExperimentDriver
 using DataAssimilationBenchmarks.SmootherExps
 using JLD2, Statistics
+
 ##############################################################################################
 # run and analyze the ETKS for state estimation with the Lorenz-96 model
 
 function run_ensemble_smoother_state_L96()
     try
-        classic_ensemble_state(exps["Classic_smoother"]["L96_ETKS_state_test"])
+        classic_ensemble_state(classic_enks_exps["L96_ETKS_state_test"])
         true
     catch
         false
@@ -45,7 +46,7 @@ end
 
 function run_ensemble_smoother_param_L96()
     try
-        classic_ensemble_param(exps["Classic_smoother"]["L96_ETKS_param_test"])
+        classic_ensemble_param(classic_enks_exps["L96_ETKS_param_test"])
         true
     catch
         false

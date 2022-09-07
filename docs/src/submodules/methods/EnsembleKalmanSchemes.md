@@ -1,6 +1,5 @@
 # Ensemble Kalman Schemes
 
-## API for ensemble Kalman schemes 
 There are currently four families of ensemble Kalman estimators available in this package,
 which define the outer-loop of the data assimilation cycle.  Particularly, these define
 how the sequential data assimilation cycle will pass over a time series of observations,
