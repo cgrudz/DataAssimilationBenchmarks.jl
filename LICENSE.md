@@ -175,7 +175,7 @@
 
    END OF TERMS AND CONDITIONS
 
-   Copyright 2021 Colin James Grudzien (cgrudzien@ucsd.edu)
+   Copyright 2022 Colin James Grudzien (cgrudzien@ucsd.edu)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
