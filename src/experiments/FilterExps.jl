@@ -509,7 +509,46 @@ end
                             obs_dim::Int64, obs_un:Float64, γ::Float64,
                             s_infl::Float64)::NamedTuple)
 
-A description of purpose, behavior and outputs
+3D-VAR state estimation twin experiment.
+
+Output from the experiment is saved in a dictionary of the form,
+
+    data = Dict{String,Any}(
+                            "fore_rmse" => fore_rmse,
+                            "filt_rmse" => filt_rmse,
+                            "bkg_cov" => bkg_cov,
+                            "seed" => seed,
+                            "diffusion" => diffusion,
+                            "dx_params" => dx_params,
+                            "sys_dim" => sys_dim,
+                            "obs_dim" => obs_dim,
+                            "obs_un" => obs_un,
+                            "γ" => γ,
+                            "nanl" => nanl,
+                            "tanl" => tanl,
+                            "h" =>  h,
+                            "s_infl" => round(s_infl, digits=2)
+                           )
+
+Experiment output is written to a directory defined by
+
+    path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-" * bkg_cov * "/"
+
+where the file name is written dynamically according to the selected parameters as follows:
+
+    "bkg-" * bkg_cov *
+    "_L96" *
+    "_state_seed_" * lpad(seed, 4, "0") *
+    "_diff_" * rpad(diffusion, 5, "0") *
+    "_sysD_" * lpad(sys_dim, 2, "0") *
+    "_obsD_" * lpad(obs_dim, 2, "0") *
+    "_obsU_" * rpad(obs_un, 4, "0") *
+    "_gamma_" * lpad(γ, 5, "0") *
+    "_nanl_" * lpad(nanl, 5, "0") *
+    "_tanl_" * rpad(tanl, 4, "0") *
+    "_h_" * rpad(h, 4, "0") *
+    "_stateInfl_" * rpad(round(s_infl, digits=3), 5, "0") *
+    ".jld2"
 """
 function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim, γ,
                               s_infl)::NamedTuple{
@@ -652,6 +691,9 @@ function D3_var_filter_state((time_series, bkg_cov, seed, nanl, obs_un, obs_dim,
                             "seed" => seed,
                             "diffusion" => diffusion,
                             "dx_params" => dx_params,
+                            "sys_dim" => sys_dim,
+                            "obs_dim" => obs_dim,
+                            "obs_un" => obs_un,
                             "γ" => γ,
                             "nanl" => nanl,
                             "tanl" => tanl,
