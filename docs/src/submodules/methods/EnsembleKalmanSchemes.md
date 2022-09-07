@@ -1,4 +1,4 @@
-# Ensemble Kalman Schemes
+# EnsembleKalmanSchemes
 
 There are currently four families of ensemble Kalman estimators available in this package,
 which define the outer-loop of the data assimilation cycle.  Particularly, these define
