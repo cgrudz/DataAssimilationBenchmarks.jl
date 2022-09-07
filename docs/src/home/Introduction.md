@@ -40,18 +40,24 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 <tr>
 	<th>Estimator / implemented techniques</th>
 	<th>Tuned multiplicative inflation</th>
-	<th>Adaptive inflation, finite-size formalism (perfect model dual / primal)</th>
-	<th>Adaptive inflation, finite-size formalism (imperfect model)</th>
+	<th>Adaptive inflation</th>
 	<th>Linesearch</th>
 	<th>Localization / Hybridization</th>
-	<th>Multiple data assimilation (general shift and lag)</th>
+	<th>Multiple data assimilation</th>
 </tr>
 <tr>
   <td> ETKF </td>
 	<td> X  </td>
 	<td> X  </td>
+	<td> NA </td>
 	<td>    </td>
 	<td> NA </td>
+</tr>
+<tr>
+  <td> 3D-VAR </td>
+	<td> X  </td>
+	<td>    </td>
+	<td>    </td>
 	<td>    </td>
 	<td> NA </td>
 </tr>
@@ -59,7 +65,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
   <td> MLEF, transform / bundle variants</td>
 	<td> X  </td>
 	<td> X  </td>
-	<td>    </td>
 	<td> X  </td>
 	<td>    </td>
 	<td> NA </td>
@@ -68,7 +73,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
   <td> ETKS</td>
 	<td> X  </td>
 	<td> X  </td>
-	<td>    </td>
 	<td> NA </td>
 	<td>    </td>
 	<td> NA </td>
@@ -77,7 +81,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
   <td> MLES, transform / bundle variants</td>
 	<td> X  </td>
 	<td> X  </td>
-	<td>    </td>
 	<td> X  </td>
 	<td>    </td>
 	<td> NA </td>
@@ -86,7 +89,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
   <td>SIEnKS, ETKF / MLEF-transform variants</td>
 	<td> X </td>
 	<td> X </td>
-	<td>   </td>
 	<td> X </td>
 	<td>   </td>
 	<td> X </td>
@@ -95,7 +97,6 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
   <td>Gauss-Newton IEnKS, transform / bundle variants</td>
 	<td> X </td>
 	<td> X </td>
-	<td>   </td>
 	<td>   </td>
 	<td>   </td>
 	<td> X </td>

@@ -4,7 +4,6 @@ module DataAssimilationBenchmarks
 # imports and exports
 using LinearAlgebra
 export VecA, ArView, ParamDict, ParamSample, CovM, ConM, TransM, StepKwargs
-
 ##############################################################################################
 # Global type union declarations for multiple dispatch and type aliases
 

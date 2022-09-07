@@ -11,7 +11,7 @@ using JLD2, Statistics
 
 function run_sda_ensemble_smoother_state_L96()
     try
-        iterative_ensemble_state(exps["Iterative_smoother"]["L96_IEnKS_state_sda_test"])
+        iterative_ensemble_state(ienks_exps["L96_IEnKS_state_sda_test"])
         true
     catch
         false
@@ -41,7 +41,7 @@ end
 
 function run_mda_ensemble_smoother_state_L96()
     try
-        iterative_ensemble_state(exps["Iterative_smoother"]["L96_IEnKS_state_mda_test"])
+        iterative_ensemble_state(ienks_exps["L96_IEnKS_state_mda_test"])
         true
     catch
         false
@@ -75,7 +75,7 @@ end
 
 function run_sda_ensemble_smoother_param_L96()
     try
-        iterative_ensemble_param(exps["Iterative_smoother"]["L96_IEnKS_param_sda_test"])
+        iterative_ensemble_param(ienks_exps["L96_IEnKS_param_sda_test"])
         true
     catch
         false
@@ -108,7 +108,7 @@ end
 
 function run_mda_ensemble_smoother_param_L96()
     try
-        iterative_ensemble_param(exps["Iterative_smoother"]["L96_IEnKS_param_mda_test"])
+        iterative_ensemble_param(ienks_exps["L96_IEnKS_param_mda_test"])
         true
     catch
         false

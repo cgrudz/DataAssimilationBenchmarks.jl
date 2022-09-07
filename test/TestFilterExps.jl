@@ -11,7 +11,7 @@ using JLD2, Statistics
 
 function run_ensemble_filter_state_L96()
     try
-        ensemble_filter_state(exps["Filter"]["L96_ETKF_state_test"])
+        ensemble_filter_state(enkf_exps["L96_ETKF_state_test"])
         true
     catch
         false
@@ -44,7 +44,7 @@ end
 
 function run_ensemble_filter_param_L96()
     try
-        ensemble_filter_param(exps["Filter"]["L96_ETKF_param_test"])
+        ensemble_filter_param(enkf_exps["L96_ETKF_param_test"])
         true
     catch
         false
@@ -79,7 +79,7 @@ end
 # static version for test cases
 function run_ensemble_filter_state_IEEE39bus()
     try
-        ensemble_filter_state(exps["Filter"]["IEEE39bus_ETKF_state_test"])
+        ensemble_filter_state(enkf_exps["IEEE39bus_ETKF_state_test"])
         true
     catch
         false

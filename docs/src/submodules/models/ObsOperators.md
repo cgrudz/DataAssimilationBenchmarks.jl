@@ -1,4 +1,5 @@
 # Observation Operators
+
 The methods in this module define observation operators mapping the state model to
 the observation space.  In current experiments, the observation operator is hard-coded
 in the driver script with a statement

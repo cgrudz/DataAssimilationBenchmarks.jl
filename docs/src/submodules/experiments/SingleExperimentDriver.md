@@ -1,15 +1,23 @@
 # SingleExperimentDriver 
 
-## SingleExperimentDriver API
+Following the convention of [GenerateTimeSeries](@ref), [FilterExps](@ref)
+and [SmootherExps](@ref) using
+[NamedTuple](https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple)
+arguments to  define hyper-parameter configurations,
+the SingleExperimentDriver module defines dictionaries of the form
+```
+experiment_group["parameter_settings"]
+```
+where keyword arguments return standard parameter configurations for these experiments
+with known results for reproducibility. These standard configurations are used in the package
+for for debugging, testing, benchmarking and profiling code.  Package tests
+use these standard configurations to verify a DA method's forecast and analysis RMSE.
+User-defined, custom experiments can be modeled from the methods in the above modules with a
+corresponding SingleExperimentDriver dictionary entry used to run and debug the experiment,
+and to test and document the expected results. Parallel submission scripts are used
+for production runs of sensitivity experiments, defined in [ParallelExperimentDriver](@ref).
 
-While the above filter experiments and smoother experiments configure twin experiments, run them and save the outputs,
-the `SingleExperimentDriver.jl` and `ParallelExperimentDriver.jl` can be used as wrappers to run generic model settings for
-debugging and validation, or to use built-in Julia parallelism to run a collection experiments over a parameter grid.
-The `SingleExperimentDriver.jl` is primarily for debugging purposes with tools like `BenchmarkTools.jl` and `Debugger.jl`,
-so that standard inputs can be run with the experiment called with macros.
-
-## Docstrings
+## Experiment groups
 ```@autodocs
 Modules = [DataAssimilationBenchmarks.SingleExperimentDriver]
 ```
-

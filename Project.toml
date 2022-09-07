@@ -1,6 +1,6 @@
 name = "DataAssimilationBenchmarks"
 uuid = "7c720533-a3c7-49b7-973c-85ef17efca74"
-authors = ["Colin Grudzien <cgrudz@mailbox.org> and contributors"]
+authors = ["Colin Grudzien <cgrudzien@ucsd.edu> and contributors"]
 version = "0.2.0"
 
 [deps]
@@ -12,7 +12,6 @@ DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -27,15 +26,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 
 [compat]
-Distributions = "0.25"
-HDF5 = "0.15"
-JLD = "0.12"
-JLD2 = "0.4"
-LineSearches = "7.1"
-LsqFit = "0.12"
-Optim = "1.4"
-StatsFuns = "0.9"
-julia = "1.6"
+julia = "1.8"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

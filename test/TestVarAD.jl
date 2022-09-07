@@ -1,5 +1,5 @@
 ##############################################################################################
-module Test3dVAR
+module TestVarAD
 ##############################################################################################
 # imports and exports
 using DataAssimilationBenchmarks.XdVAR, DataAssimilationBenchmarks.ObsOperators

@@ -7,7 +7,7 @@ using JLD2
 ##############################################################################################
 # include test sub-modules
 include("TestObsOperators.jl")
-include("Test3dVAR.jl")
+include("TestVarAD.jl")
 include("TestDeSolvers.jl")
 include("TestL96.jl")
 include("TestGenerateTimeSeries.jl")
@@ -53,11 +53,11 @@ end
 end
 
 # Test 3D-VAR
-@testset "3DVAR" begin
-    @test Test3dVAR.testCost()
-    @test Test3dVAR.testGrad()
-    @test Test3dVAR.testNewton()
-    @test Test3dVAR.testNewtonNoise()
+@testset "VAR-AutoDiff" begin
+    @test TestVarAD.testCost()
+    @test TestVarAD.testGrad()
+    @test TestVarAD.testNewton()
+    @test TestVarAD.testNewtonNoise()
 end
 
 # Test filter state and parameter experiments

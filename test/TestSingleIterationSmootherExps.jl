@@ -11,8 +11,7 @@ using JLD2, Statistics
 
 function run_sda_ensemble_smoother_state_L96()
     try
-        single_iteration_ensemble_state(
-                                exps["Single_iteration_smoother"]["L96_ETKS_state_sda_test"])
+        single_iteration_ensemble_state(sienks_exps["L96_ETKS_state_sda_test"])
         true
     catch
         false
@@ -42,8 +41,7 @@ end
 
 function run_mda_ensemble_smoother_state_L96()
     try
-        single_iteration_ensemble_state(
-                                exps["Single_iteration_smoother"]["L96_ETKS_state_mda_test"])
+        single_iteration_ensemble_state(sienks_exps["L96_ETKS_state_mda_test"])
         true
     catch
         false
@@ -77,8 +75,7 @@ end
 
 function run_sda_ensemble_smoother_param_L96()
     try
-        single_iteration_ensemble_param(
-                                exps["Single_iteration_smoother"]["L96_ETKS_param_sda_test"])
+        single_iteration_ensemble_param(sienks_exps["L96_ETKS_param_sda_test"])
         true
     catch
         false
@@ -111,8 +108,7 @@ end
 
 function run_mda_ensemble_smoother_param_L96()
     try
-        single_iteration_ensemble_param(
-                                exps["Single_iteration_smoother"]["L96_ETKS_param_mda_test"])
+        single_iteration_ensemble_param(sienks_exps["L96_ETKS_param_mda_test"])
         true
     catch
         false

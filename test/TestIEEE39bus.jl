@@ -3,7 +3,7 @@ module TestIEEE39bus
 ##############################################################################################
 # imports and exports
 using DataAssimilationBenchmarks
-using JLD, Statistics
+using JLD2, Statistics
 ##############################################################################################
 """
     test_synchrony()
