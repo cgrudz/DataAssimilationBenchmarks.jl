@@ -82,16 +82,16 @@ are differentiated primarily in that:
 
   * DAPPER is a Python-based library which is well-established, and includes many of the same
 	estimators and models. However, numerical simulations in Python run notably slower than simulations in Julia
-	when numerical routines cannot be vectorized in Numpy [@bezanson2012julia].
+	when numerical routines cannot be vectorized in Numpy [@bezanson2017julia].
 	Particularly, this can make the wide hyper-parameter search intended above computationally challenging
-	without utilizing additional packages such as Numba [@lam215numba] for code acceleration such as faster
+	without utilizing additional packages such as Numba [@lam2015numba] for code acceleration such as faster
 	for-loops.
 	
   * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of variational and ensemble-variational techniques.
 	
   * EnsembleKalmanProcesses.jl is another established Julia library, but notably lacks
-	traditional DA approaches 3D-VAR and the ETKF/S.
+	traditional geoscientific DA approaches such as 3D-VAR and the ETKF/S.
 
 ## Future development 
 
