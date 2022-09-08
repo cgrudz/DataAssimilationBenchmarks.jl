@@ -24,6 +24,7 @@ makedocs(
                   "XdVAR" => "submodules/methods/XdVAR.md"
                  ],
                "Experiments" => Any[
+                 "Workflow" => "submodules/experiments/Workflow.md",
                  "GenerateTimeSeries" => "submodules/experiments/GenerateTimeSeries.md",
                  "FilterExps" => "submodules/experiments/FilterExps.md",
                  "SmootherExps" => "submodules/experiments/SmootherExps.md",
