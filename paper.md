@@ -3,6 +3,7 @@ title: 'DataAssimilationBenchmarks.jl: a data assimilation research framework.'
 tags:
   - Julia
   - Data Assimilation
+	- Bayesian Inference
   - Optimization
   - Machine learning
 authors:
@@ -14,7 +15,7 @@ authors:
   - name: Sukhreen Sandhu 
     affiliation: 4
 affiliations:
- - name: CW3E - Scripps Instition of Oceanography, University of California, San Diego
+ - name: CW3E - Scripps Institution of Oceanography, University of California, San Diego
    index: 1
  - name: Department of Mathematics and Statistics, University of Nevada, Reno
    index: 2
@@ -22,7 +23,7 @@ affiliations:
    index: 3
  - name: Department of Computer Science and Engineering, University of Nevada, Reno
    index: 4
-date: 30 November 2021
+date: 30 September 2022
 bibliography: paper.bib
 ---
 
@@ -55,37 +56,37 @@ This package implements a variety of standard data assimilation algorithms,
 including some of the widely used performance modifications that are used in
 practice to tune these estimators. This software framework was written originally
 to support the development and intercomparison of methods studied in [@grudzien2021fast].
-Details of the ensemble DA schemes, including pseudo-code for the methods detailing
+Details of the studied ensemble DA schemes, including pseudo-code detailing
 their implementation, and DA experiment benchmark configurations, can be found in
 the above principal reference.  Additional details on numerical integration schemes
-used in this work for simulating the Lorenz-96 model are found in the secondary
-reference [@grudzien2020numerical].
+utilized in this package can be found in the secondary reference [@grudzien2020numerical].
 
 # Statement of need
 
 Standard libraries exist for full-scale DA system research and development, e.g.,
-the Data Assimilation Research Testbed (DART)[@anderson2009data], but
+the Data Assimilation Research Testbed (DART) [@anderson2009data], but
 there are fewer standard options for theoretical research and algorithm development in
 simple test systems. Many basic research frameworks, furthermore, do not include
 standard operational techniques developed from classical variational methods,
 due to the difficulty in constructing tangent linear and adjoint codes [@kalnay20074denkf].
 DataAssimilationBenchmarks.jl provides one framework for studying squential filters
 and smoothers that are commonly used in online, geoscientific prediction settings,
-including ensemble methods and variational schemes.
+including both ensemble methods and variational schemes, with hybrid method planned for
+future development.
 
 ## Comparison with similar projects
 
 Similar projects to DataAssimilationBenchmarks.jl include the DAPPER Python library
-[@patrick_n_raanes_2018_2029296], DataAssim.jl used by [@vetra2018state], and
-EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.  These alternatives
-are differentiated primarily in that:
+[@dapper], DataAssim.jl used by [@vetra2018state], and
+EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.
+These alternatives are differentiated primarily in that:
 
   * DAPPER is a Python-based library which is well-established, and includes many of the same
-	estimators and models. However, numerical simulations in Python run notably slower than simulations in Julia
-	when numerical routines cannot be vectorized in Numpy [@bezanson2017julia].
-	Particularly, this can make the wide hyper-parameter search intended above computationally challenging
-	without utilizing additional packages such as Numba [@lam2015numba] for code acceleration such as faster
-	for-loops.
+	estimators and models. However, numerical simulations in Python run notably slower than
+	simulations in Julia when numerical routines cannot be vectorized in Numpy
+	[@bezanson2017julia]. Particularly, this can make the wide hyper-parameter search
+	intended above computationally challenging without utilizing additional packages such
+	as Numba [@lam2015numba] for code acceleration.
 	
   * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of variational and ensemble-variational techniques.
@@ -95,28 +96,28 @@ are differentiated primarily in that:
 
 ## Future development 
 
-The future development of the DataAssimilationBenchmarks.jl package is intended to expand upon
-the existing, ensemble-variational filters and sequential smoothers for robust intercomparison of
-novel schemes and the further development of the SIEnKS scheme.  Novel mechanistic models
-for the DA system are also in development. Currently, this supports state and joint
-state-parameter estimation in the L96-s model [@grudzien2020numerical] in both ordinary
-and stochastic differential equation formulations.  Likewise, this supports a variety of observation
-operator configurations in the L96-s model, as outlined in [@grudzien2021fast].
+The future development of the DataAssimilationBenchmarks.jl package is intended to expand
+upon the existing, variational and ensemble-variational filters and sequential smoothers for
+robust intercomparison of novel schemes.  Additional process models and observation models 
+for the DA system are also in development.
 
 # Acknowledgements
 
-Colin Grudzien developed the numerical code for the package data type optimizations, the
+Colin Grudzien developed the numerical code for the package's Julia type optimizations for
+numerical schemes and automatic differentiation of code, the
 ensemble-based estimation schemes, the observation models, the Lorenz-96 model, the IEEE 39
-Bus test case model and the integration schemes for ordinary and stochastic differential
-equations.  Charlotte Merchant developed the numerical code for implementing variational
-data assimilation in the Lorenz-96 model. Sukhreen Sandhu supported development of the
-development of the package structure and organization.  All authors supported the development
-of the package by implementing test cases
+Bus test case model and the numerical integration schemes for ordinary and stochastic
+differential equations.  Charlotte Merchant developed the numerical code for implementing
+variational data assimilation in the Lorenz-96 model and related experiments. Sukhreen
+Sandhu supported development of the development of the package structure and organization.
+All authors supported the development of the package by implementing test cases.
 This work was supported by the University of Nevada, Reno, Office of Undergraduate Research's
-Pack Research Experience Program (PREP) which supported Sukhreen Sandhu as a research assistant.
-This work was supported by the Center for Western Weather and Water Extremes (CW3E) internship
+Pack Research Experience Program which supported Sukhreen Sandhu as a research assistant.
+This work was supported by the Center for Western Weather and Water Extremes internship
 program which supported Charlotte Merchant as a research assistant.
 This work benefited from the DAPPER library which was referenced at times for the development
-of DA schemes.
+of DA schemes.  The authors would like to thank the handling editor Bita Hasheminezhad,
+and the two named referees Lukas Riedel and Tangi Migot for their comments, suggestions
+and valuable advice which strongly improved the quality of the paper and the software.
 
 # References

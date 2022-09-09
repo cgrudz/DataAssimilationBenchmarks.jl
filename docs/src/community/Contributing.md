@@ -39,10 +39,10 @@ the issue will be sent back for more details.
 ## How to contribute new methods, models or other core core
 
 The best way to contribute new code is to reach out to the community first, as this code
-base is in an active state of development and will occassionally face breaking changes
-in order to accomodate more generality and new features.  Please start with an
+base is in an early and active state of development and will occassionally face breaking
+changes in order to accomodate more generality and new features.  Please start with an
 introduction of yourself in the 
-[Github discussions](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/discussions). 
+[Github discussions](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/discussions)
 followed by a detailed feature request in the
 [Github issues](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/issues),
 covering your use-case and what new functionality you are proposing. This will help
@@ -65,4 +65,5 @@ as possible, conventions with arguments should try to match
 existing conventions in, e.g., [EnsembleKalmanSchemes](@ref) and [XdVAR](@ref), though
 it is understood that not all data assimilation methods need follow these conventions
 or even have analogous arguments and sub-routines. Please discuss your approach with
-the community in advanced so that the framework can be made as consistent as possible.
+the community in advanced so that the framework can be made as consistent (and
+therefore extendable and user-friendly) as possible.

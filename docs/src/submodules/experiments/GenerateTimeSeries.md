@@ -14,7 +14,7 @@ Conventions for these arguments are as follows:
   * `seed` - specifies initial condition for the pseudo-random number generator on which various simulation settings will depend, and will be reproduceable with the same `seed` value;
   * `h` - is the numerical integration step size, controling the discretization error of the model evolution;
   * `state_dim` - controls the size of the [Lorenz-96 model](@ref) model though other models such as the [IEEE39bus](@ref) model are of pre-defined size;
-  * `tanl` - (__time-between-analysis__)defines the length of continuous time units between sequential observations;
+  * `tanl` - (__time-between-analysis__) defines the length of continuous time units between sequential observations;
   * `nanl` - (__number-of-analyses__) defines the number of observations / analyses to be saved;
   * `spin` - discrete number of `tanl` intervals to spin-up for the integration of the dynamical system solution to guarantee a stationary observation generating process;
   * `diffusion` - determines intensity of the random perturbations in the integration scheme;
