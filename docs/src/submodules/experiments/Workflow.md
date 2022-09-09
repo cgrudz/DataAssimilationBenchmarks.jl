@@ -12,13 +12,13 @@ multiple configurations of filters and smoothers, holding the pseudo-data fixed 
 varying other hyper-parameters.  Test cases in this package model this workflow,
 to first generate test data and then to implement a particular experiment based
 on a parameter configuration to exhibit known behavior of the estimator, typically in terms
-of forecast and analysis root mean square error (RMSE)..
+of forecast and analysis root mean square error (RMSE).
 
 Standard configurations of hyper-parameters for the truth twin and the data assimilation
 method are included in the [SingleExperimentDriver](@ref) submodule, and constructors for
 generating maps of parallel experiments over parameter grids are defined in the
-[ParallelExperimentDriver](@ref) submodule.  It is assumed that one will dev this
-package in order to define new parameter tuples and constructors for parallel experiments
-in order to test the behavior of estimators in new configurations.  It is also assumed
-that one will write new experiments using the [FilterExps](@ref) and [SmootherExps](@ref)
-submodules as templates.
+[ParallelExperimentDriver](@ref) submodule.  It is assumed that one will
+[Install a dev package](@ref) this package in order to define new parameter tuples
+and constructors for parallel experiments in order to test the behavior of estimators
+in new configurations.  It is also assumed that one will write new experiments using
+the [FilterExps](@ref) and [SmootherExps](@ref) submodules as templates.

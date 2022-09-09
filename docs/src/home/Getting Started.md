@@ -1,6 +1,7 @@
 # Getting Started
 
 ## Installation
+
 The main module DataAssimilationBenchmarks.jl declares global types and type constructors.
 These conventions are utilized in sub-modules that implement the core numerical solvers
 for ordinary and stochastic differential equations, solvers for data assimilation routines
@@ -14,7 +15,8 @@ In order to get the full functionality of this package you will need to install 
 version. This provides access to create new experiments and to define performance benchmarks
 for these experiments
 
-### Installing a dev package from the Julia General registries
+### Install a dev package
+
 In order to install the dev version to your Julia environment, you can use the following
 commands in the REPL
 ```{julia}
@@ -24,13 +26,17 @@ The installed version will be included in your
 ```
 ~/.julia/dev/
 ```
-on Linux and the analogous directory with respect Windows and Mac systems.
-Alternatively, you can install this from the main Github branch directly as follows:
+on Linux and the analogous directory with respect Windows and Mac systems. This version
+in the Julia General Registries will be the latest official release.  However, this
+official release tends to lag behind the current version.
+
+You can install the latest version from the main Github branch directly as follows:
 ```{julia}
 pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 ```
 
 ### Repository structure
+
 The repository is structured as follows:
 ```@raw html
 <ul>

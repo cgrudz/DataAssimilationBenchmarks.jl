@@ -109,7 +109,7 @@ ensemble-based estimation schemes, the observation models, the Lorenz-96 model, 
 Bus test case model and the numerical integration schemes for ordinary and stochastic
 differential equations.  Charlotte Merchant developed the numerical code for implementing
 variational data assimilation in the Lorenz-96 model and related experiments. Sukhreen
-Sandhu supported development of the development of the package structure and organization.
+Sandhu supported the development of the package structure and organization.
 All authors supported the development of the package by implementing test cases.
 This work was supported by the University of Nevada, Reno, Office of Undergraduate Research's
 Pack Research Experience Program which supported Sukhreen Sandhu as a research assistant.
