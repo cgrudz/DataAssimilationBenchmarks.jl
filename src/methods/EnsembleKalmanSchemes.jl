@@ -86,7 +86,7 @@ end
 """
     rand_orth(N_ens::Int64)
 
-This generates a random, mean-preserving, orthogonal matrix as in [Sakov & Oke
+This generates a random, mean-preserving, orthogonal matrix as in [Sakov et al. 
 2008](https://journals.ametsoc.org/view/journals/mwre/136/3/2007mwr2021.1.xml), depending on
 the esemble size `N_ens`.
 ```
@@ -342,36 +342,36 @@ is of type [`ConM`](@ref), the keyword arguments dictionary `kwargs` is of type
 
 Currently validated `analysis` options:
  * `analysis=="etkf" || analysis=="etks"` computes the deterministic ensemble transform
-   as in the ETKF described in [Grudzien, et al.
+   as in the ETKF described in [Grudzien et al.
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
  * `analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"` computes the maximum likelihood
-   ensemble filter transform described in [Grudzien, et al.
+   ensemble filter transform described in [Grudzien et al.
    2021](https://gmd.copernicus.org/preprints/gmd-2021-306/), optimizing the nonlinear
    cost function with Newton-based
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
  * `analysis[1:4]=="mlef" || analysis[1:4]=="mles"` computes the maximum likelihood
    ensemble filter transform described in
-   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
+   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
    optimizing the nonlinear
    cost function with simple Newton-based scheme.
  * `analysis=="enkf-n-dual" || analysis=="enks-n-dual"`
-   computes the dual form of the EnKF-N transform as in [Bocquet, et al.
+   computes the dual form of the EnKF-N transform as in [Bocquet et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/)
    Note: this cannot be used with the nonlinear observation operator.
    This uses the Brent method for the argmin problem as this
    has been more reliable at finding a global minimum than Newton optimization.
  * `analysis=="enkf-n-primal" || analysis=="enks-n-primal"`
-   computes the primal form of the EnKF-N transform as in [Bocquet, et al.
+   computes the primal form of the EnKF-N transform as in [Bocquet et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a simple Newton-based
    minimization of the cost function for the adaptive inflation.
  * `analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"`
-   computes the primal form of the EnKF-N transform as in [Bocquet, et al.
+   computes the primal form of the EnKF-N transform as in [Bocquet et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a Newton-based
@@ -655,7 +655,7 @@ function transform_R(analysis::String, ens::ArView(T), obs::VecA(T), H_obs::Func
         ### NOTE: STILL DEVELOPMENT CODE, NOT DEBUGGED
         # needs to be revised for the calculation with unweighted anomalies
         # Uses the contribution of the model error covariance matrix Q
-        # in the square root as in Raanes, et al. 2015
+        # in the square root as in Raanes et al. 2015
         # step 0: infer the system, observation and ensemble dimensions
         sys_dim, N_ens = size(ens)
         obs_dim = length(obs)
@@ -963,9 +963,9 @@ is of type [`ConM`](@ref), the keyword arguments dictionary `kwargs` is of type
 Currently validated `analysis` options:
  * `analysis == "ienks-bundle" || "ienks-n-bundle" || "ienks-transform" || "ienks-n-transform"`
    computes the weighted observed anomalies as per the
-   bundle or transform version of the IEnKS, described in [Bocquet &
-   Sakov 2013](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/qj.2236),
-   [Grudzien, et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   bundle or transform version of the IEnKS, described in [Bocquet et al. 
+   2013](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/qj.2236),
+   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
    Bundle versus tranform versions of the scheme are specified by the trailing
    `analysis` string as `-bundle` or `-transform`.  The bundle version uses a small uniform
    scalar `ϵ`, whereas the transform version uses a matrix square root inverse as the
@@ -1533,7 +1533,7 @@ end
                              tol::Float64=0.001, max_iter::Int64=5) where T <: Float64
 
 This implements a lag-shift Gauss-Newton IEnKS analysis step as in algorithm 4 of
-[Bocquet & Sakov 2014](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.2236).
+[Bocquet et al. 2014](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.2236).
 The IEnKS uses the final re-analyzed initial state in the data assimilation window to generate
 the forecast, which is subsequently pushed forward in time from the initial conidtion to
 shift-number of observation times. Optional argument includes state dimension for an extended

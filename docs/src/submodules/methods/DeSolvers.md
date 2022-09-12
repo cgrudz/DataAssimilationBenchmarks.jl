@@ -11,7 +11,7 @@ These schemes have arguments with the conventions:
   * `kwargs` - a dictionary of type [`StepKwargs`](@ref).
 
 Details of these schemes are available in the manuscript
-[Grudzien, C. et al. (2020).](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
+[Grudzien et al. 2020](https://gmd.copernicus.org/articles/13/1903/2020/gmd-13-1903-2020.html)
 Because the second order Taylor-Stratonovich scheme relies specifically on the structure
 of the Lorenz-96 model with additive noise, this is included separately in the
 [Lorenz-96 model](@ref) sub-module.  These time steppers over-write

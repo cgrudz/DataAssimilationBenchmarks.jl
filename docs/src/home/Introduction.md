@@ -28,25 +28,24 @@ squential filters and smoothers that are commonly used in online, geoscientific
 prediction settings, including ensemble estimators, classical VAR techniques
 (currently in-development) and (in-planning) hybrid-EnVAR methods. 
 
-## Validated methods currently in use
+## Validated methods
 
-For a discussion of the below methods and benchmarks for their validation, please
-see the manuscript
-[A fast, single-iteration ensemble Kalman smoother for sequential data
-assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+For a discussion of many of the following methods and benchmarks for their
+performance validation, please see the manuscript
+[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 
 ```@raw html
 <table>
 <tr>
-	<th>Estimator / implemented techniques</th>
-	<th>Tuned multiplicative inflation</th>
+	<th>Estimator / enhancement</th>
+	<th>Tuned inflation</th>
 	<th>Adaptive inflation</th>
 	<th>Linesearch</th>
 	<th>Localization / Hybridization</th>
 	<th>Multiple data assimilation</th>
 </tr>
 <tr>
-  <td> ETKF </td>
+  <td>ETKF</td>
 	<td> X  </td>
 	<td> X  </td>
 	<td> NA </td>
@@ -54,7 +53,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td> 3D-VAR </td>
+  <td>3D-VAR</td>
 	<td> X  </td>
 	<td>    </td>
 	<td>    </td>
@@ -62,7 +61,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td> MLEF, transform / bundle variants</td>
+  <td>MLEF</td>
 	<td> X  </td>
 	<td> X  </td>
 	<td> X  </td>
@@ -70,7 +69,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td> ETKS</td>
+  <td>ETKS</td>
 	<td> X  </td>
 	<td> X  </td>
 	<td> NA </td>
@@ -78,7 +77,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td> MLES, transform / bundle variants</td>
+  <td>MLES</td>
 	<td> X  </td>
 	<td> X  </td>
 	<td> X  </td>
@@ -86,7 +85,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> NA </td>
 </tr>
 <tr>
-  <td>SIEnKS, ETKF / MLEF-transform variants</td>
+  <td>SIEnKS</td>
 	<td> X </td>
 	<td> X </td>
 	<td> X </td>
@@ -94,7 +93,7 @@ assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/).
 	<td> X </td>
 </tr>
 <tr>
-  <td>Gauss-Newton IEnKS, transform / bundle variants</td>
+  <td>IEnKS</td>
 	<td> X </td>
 	<td> X </td>
 	<td>   </td>

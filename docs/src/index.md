@@ -15,6 +15,5 @@ model equations. New toy models and data assimilation schemes are in continuous 
 
 This package supported the development of all numerical results and benchmark simulations
 in the pre-print
-[A fast, single-iteration ensemble Kalman smoother for sequential data
-assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/)
+[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/)
 available currently in open review in Geoscientific Model Development.

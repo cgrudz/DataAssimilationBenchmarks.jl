@@ -1,7 +1,7 @@
 # IEEE39bus
 
 This is a version of the IEEE-39 bus test case as described by 
-[Nishikawa, T. et al.](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012)
+[Nishikawa et al. 2015](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012).
 The model, denoted the "effective network", consists of the ten generator buses in the
 network with all other buses eliminated by the classical Kron reduction.
 The power flow is described in steady state by a fixed point of the nonlinear swing equations
@@ -26,7 +26,7 @@ The actual parameters used in the model are defined by files in the
 DataAssimilationBenchmarks/src/models/IEEE39bus_inputs/
 ```
 directory, taken from the configuration studied by 
-[Nishikawa, T. et al.](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012),
+[Nishikawa et al. 2015](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012),
 with details on their interpretation in section 4.1.
 
 The stochastic form in this code loosens the assumption of constant loads in this model by
