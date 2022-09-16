@@ -5,11 +5,11 @@ which define the outer-loop of the data assimilation cycle.  Particularly, these
 how the sequential data assimilation cycle will pass over a time series of observations,
 with more details in the [SmootherExps](@ref) documents.
 
-Ensemble filters only produce analyses forward-in-time.  The classic lag-shift smoother runsi
+Ensemble filters only produce analyses forward-in-time.  The classic lag-shift smoother runs
 identically to the filter in its forecast and filter steps, but includes an additional retrospective
 analysis to past ensemble states stored in memory.  The single iteration smoother follows
 the same convention as the classic smoother, except in that new cycles are initiated from
-a past, reanlyzed ensemble state.  The Gauss-Newton iterative smoothers are 4D smoothers,
+a past, reanalyzed ensemble state.  The Gauss-Newton iterative smoothers are 4D smoothers,
 which iteratively optimize the initial condition at the beginning of a data assimilation
 cycle, and propagate this initial condition to initialize the subsequent cycle. A full
 discussion of these methods can be found in

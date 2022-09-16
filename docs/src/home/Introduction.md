@@ -4,7 +4,7 @@
 
 The purpose of this package is to provide a research framework for the theoretical
 development and empirical validation of novel data assimilation techniques.
-While analytical proofs can be derived for classical methods such as the Kalman filter
+While analytical proofs can be derived for classical methods, such as the Kalman filter
 in linear-Gaussian dynamics, most currently developed DA
 techniques are designed for estimation in nonlinear, non-Gaussian models where no
 analytical solution typically exists.  Rigorous validation of novel data assimilation
@@ -24,7 +24,7 @@ simple test systems. Many basic research frameworks, furthermore, do not include
 standard operational techniques developed from classical VAR methods, due to the 
 difficulty in constructing tangent linear and adjoint codes.
 DataAssimilationBenchmarks.jl provides one framework for studying
-squential filters and smoothers that are commonly used in online, geoscientific
+sequential filters and smoothers that are commonly used in online, geoscientific
 prediction settings, including ensemble estimators, classical VAR techniques
 (currently in-development) and (in-planning) hybrid-EnVAR methods. 
 

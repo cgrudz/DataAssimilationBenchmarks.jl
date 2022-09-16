@@ -1,6 +1,6 @@
 # Description
 
-This is a data assimilation research code base with an emphasis on prototyping, testing and
+This is a data assimilation research code base with an emphasis on prototyping, testing, and
 validating sequential filters and smoothers in toy model twin experiments.
 This code is meant to be performant in the sense that large hyper-parameter discretizations
 can be explored to determine hyper-parameter sensitivity and reliability of results across

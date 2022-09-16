@@ -17,7 +17,7 @@ with the required fields as specified in the experiment method.  Conventions for
 these arguments are the same as with the [FilterExps](@ref), with the additional options
 that configure  the data assimilation window (DAW) and how this is shifted in time:
   * `lag` - the number of past observation / analysis times to reanalyze in a DAW, corresponding to ``L`` in the figure above;
-  * `shift`- the nunber of observation / analysis times to shift the DAW, corresponding to ``S`` in the figure above;
+  * `shift`- the number of observation / analysis times to shift the DAW, corresponding to ``S`` in the figure above;
   * `mda` - (__Multiple Data Assimilation__), type `Bool`, determines whether the technique of multiple data assimilation is used (only compatible with `single_iteration` and `iterative` smoothers.
 
 Currently debugged and validated smoother experiment configurations include

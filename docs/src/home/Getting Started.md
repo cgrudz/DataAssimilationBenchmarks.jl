@@ -4,7 +4,7 @@
 
 The main module DataAssimilationBenchmarks.jl declares global types and type constructors.
 These conventions are utilized in sub-modules that implement the core numerical solvers
-for ordinary and stochastic differential equations, solvers for data assimilation routines
+for ordinary and stochastic differential equations, solvers for data assimilation routines,
 and the core process model code for running twin experiments with benchmark models, collected
 in the `methods` and `models` sub-directories.  Experiments define routines for driving
 standard benchmark case studies with
