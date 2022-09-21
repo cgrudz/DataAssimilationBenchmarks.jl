@@ -124,11 +124,10 @@ end
 Computes the local minima of the three-dimension variational cost function with a static 
 background covariance using a simple Newton optimization method
 
-'x_bkg' is a free argument used to evaluate the cost of the given state proposal versus other 
-proposal states, 'obs' is to the observation vector, state_cov is the background error 
-covariance matrix, H_obs is a model mapping operator for observations, and obs_cov is the 
-observation error covariance matrix. 'kwargs' refers to any additional arguments needed for 
-the operation computation, and 'x' is the initial state proposal vector.
+'x_bkg' is the initial state proposal vector, 'obs' is to the observation vector, state_cov is
+the background error covariance matrix, H_obs is a model mapping operator for observations, 
+obs_cov is the observation error covariance matrix, and 'kwargs' refers to any additional 
+arguments needed for the operation computation.
 
 ```
 return  x
