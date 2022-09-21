@@ -2,23 +2,15 @@
 module XdVAR
 ##############################################################################################
 # imports and exports
-using LinearAlgebra, SparseArrays
+using LinearAlgebra, ForwardDiff
 using ..DataAssimilationBenchmarks
-using ForwardDiff
+export D3_var_cost, D3_var_grad, D3_var_hessian, D3_var_NewtonOp  
 ##############################################################################################
 # Main methods
 ##############################################################################################
 """
-<<<<<<< Updated upstream
-    D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-=======
-<<<<<<< Updated upstream
-    D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T), 
->>>>>>> Stashed changes
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-=======
     D3_var_cost(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
-                obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+        H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
 
 Computes the cost of the three-dimensional variational analysis increment from an initial state 
 proposal with a static background covariance
@@ -34,44 +26,34 @@ Note: The observational and background components are equally weighted.
 ```
 return  0.5*back_component + 0.5*obs_component
 ```
->>>>>>> Stashed changes
 """
-function D3_var_cost(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+function D3_var_cost(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                     H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
+
     # initializations
     obs_dim = length(obs)
+
     # obs operator
-<<<<<<< Updated upstream
-    H = H_obs(x,obs_dim,kwargs)
-=======
     H = H_obs(x, obs_dim, kwargs)
 
-    # background discrepancy
+    # background discepancy
     δ_b = x - x_bkg
 
     # observation discrepancy
     δ_o = obs - H
->>>>>>> Stashed changes
 
-    back_component = transpose((x - x_background))*(inv(state_cov))*(x - x_background)
-    obs_component = transpose((obs - H))*(inv(obs_cov))*(obs - H)
-    J = 0.5*back_component + 0.5*obs_component
-    return J
+    # cost function
+    back_component = dot(δ_b, inv(state_cov) * δ_b)
+    obs_component = dot(δ_o, inv(obs_cov) * δ_o)
+
+    0.5*back_component + 0.5*obs_component
 end
 
 
 ##############################################################################################
 """
-<<<<<<< Updated upstream
-    D3_var_grad(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-=======
-<<<<<<< Updated upstream
-    D3_var_grad(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T), 
->>>>>>> Stashed changes
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-=======
-    D3_var_grad(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T), 
-                obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
+    D3_var_grad(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+        H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
 
 Computes the gradient of the three-dimensional variational analysis increment from an initial 
 state proposal with a static background covariance using a wrapper function for automatic 
@@ -86,33 +68,23 @@ any additional arguments needed for the operation computation.
 ```
 return  ForwardDiff.gradient(wrap_cost, x)
 ```
->>>>>>> Stashed changes
 """
+function D3_var_grad(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                     H_obs::Function, obs_cov::CovM(T),
+                     kwargs::StepKwargs) where T <: Float64
 
-function D3_var_grad(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-    # initializations
-    function wrap_cost(x)
-        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+    function wrap_cost(x::VecA(T)) where T <: Real
+        D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    grad = ForwardDiff.gradient(wrap_cost, x)
-    return grad
+    ForwardDiff.gradient(wrap_cost, x)
 end
 
 
 ##############################################################################################
 """
-<<<<<<< Updated upstream
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-=======
-<<<<<<< Updated upstream
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T), 
->>>>>>> Stashed changes
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-=======
     D3_var_hessian(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
-                   obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
+        H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
 
 Computes the hessian of the three-dimensional variational analysis increment from an initial 
 state proposal with a static background covariance using a wrapper function for automatic 
@@ -127,33 +99,23 @@ any additional arguments needed for the operation computation.
 ```
 return  ForwardDiff.hessian(wrap_cost, x)
 ```
->>>>>>> Stashed changes
 """
+function D3_var_hessian(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
+                        H_obs::Function, obs_cov::CovM(T),
+                        kwargs::StepKwargs) where T <: Float64 
 
-function D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-
-    function wrap_cost(x)
-        XdVAR.D3_var_cost(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+    function wrap_cost(x::VecA(T)) where T <: Real
+        D3_var_cost(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    hess = ForwardDiff.hessian(wrap_cost, x)
-
-    return hess
+    ForwardDiff.hessian(wrap_cost, x)
 end
+
 
 ##############################################################################################
 """
-<<<<<<< Updated upstream
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-=======
-<<<<<<< Updated upstream
-    D3_var_hessian(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T), 
->>>>>>> Stashed changes
-    obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
-=======
-    D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), obs_cov::CovM(T),
-                    kwargs::StepKwargs) where T <: Float64
+    D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), H_obs::Function,
+        obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64
 
 Computes the local minima of the three-dimension variational cost function with a static 
 background covariance using a simple Newton optimization method
@@ -167,30 +129,32 @@ the operation computation, and 'x' is the initial state proposal vector.
 ```
 return  x
 ```
->>>>>>> Stashed changes
 """
+function D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), H_obs::Function,
+                         obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
 
-function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_cov::CovM(T),
-    H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Real
     # initializations
     j_max = 40
     tol = 0.001
     j = 1
-    sys_dim = length(x)
+    sys_dim = length(x_bkg)
+
+    # first guess is copy of the first background
+    x = copy(x_bkg)
 
     # gradient preallocation over-write
     function grad!(g::VecA(T), x::VecA(T)) where T <: Real
-        g[:] = D3_var_grad(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+        g[:] = D3_var_grad(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
     # hessian preallocation over-write
     function hess!(h::ArView(T), x::VecA(T)) where T <: Real
-        h .= D3_var_hessian(x, obs, x_background, state_cov, H_obs, obs_cov, kwargs)
+        h .= D3_var_hessian(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    # step 6: perform the optimization by simple Newton
-    grad_x = Array{Float64}(undef, (sys_dim))
-    hess_x = Array{Float64}(undef, (sys_dim, sys_dim))
+    # perform the optimization by simple Newton
+    grad_x = Array{Float64}(undef, sys_dim)
+    hess_x = Array{Float64}(undef, sys_dim, sys_dim)
 
     while j <= j_max
         #print("Iteration: " * string(j) * "\n")
@@ -199,7 +163,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
         hess!(hess_x, x)
 
         # perform Newton approximation
-        Δx = inv(hess_x)*grad_x
+        Δx = inv(hess_x) * grad_x
         x = x - Δx
 
         if norm(Δx) < tol
@@ -210,6 +174,7 @@ function D3_var_NewtonOp(x::VecA(T), obs::VecA(T), x_background::VecA(T), state_
     end
     return x
 end
+
 
 ##############################################################################################
 # end module
