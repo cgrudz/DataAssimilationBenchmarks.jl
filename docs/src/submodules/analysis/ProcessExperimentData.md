@@ -11,7 +11,7 @@ the output .jld2 file and if this is not available, this will store `Inf` values
 Benchmark configurations for the above filtering and smoothing experiments are available in the open access article
 [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
 with details on the algorithm and parameter specifications discussed in the experiments section.  Performance of filtering and
-smoothing schemes should be validated versus the numerical results presented there for root mean square error and ensemble spread.
+smoothing schemes should be validated versus the numerical results for root mean square error and ensemble spread.
 Simple versions of these diagnostics are built for automatic testing of the filter and smoother experiments for state and parameter estimation
 in the L96-s model.  Further test cases are currently in development.  The deterministic Runge-Kutta and Euler scheme for ODEs are
 validated in the package tests, estimating the order of convergence with the least-squares log-10 line fit between step size

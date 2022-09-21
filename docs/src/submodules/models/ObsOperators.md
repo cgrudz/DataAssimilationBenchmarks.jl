@@ -17,7 +17,7 @@ vector arguments and multi-arrays using mutliple dispatch with the conventions:
 function H_obs(x::VecA(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
 function H_obs(x::ArView(T), obs_dim::Int64, kwargs::StepKwargs) where T <: Real
 ```
-allowing for the same naming to be used for single states, time series of states and
+allowing for the same naming to be used for single states, time series of states, and
 ensembles of states.
 
 

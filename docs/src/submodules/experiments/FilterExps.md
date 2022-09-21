@@ -16,10 +16,10 @@ these arguments are as follows:
   * `nanl` - the number of observation / analysis times to produce a posterior estimate;
   * `obs_un` - the observation error standard deviation, assuming a uniform scaling observation error covariance;
   * `obs_dim` - the dimension of the observation vector;
-  * `γ` - defines nonliearity in the [`DataAssimilationBenchmarks.ObsOperators.alternating_obs_operator`](@ref);
+  * `γ` - defines nonlinearity in the [`DataAssimilationBenchmarks.ObsOperators.alternating_obs_operator`](@ref);
   * `N_ens` - the ensemble size for ensemble-based filters;
   * `s_infl` - the multiplicative inflation for the empirical model state covariance;
-  * `p_infl` - the multiplicative inlfation for the empirical parameter sample covariance;
+  * `p_infl` - the multiplicative inflation for the empirical parameter sample covariance;
   * `p_err` - defines initial parameter sample standard deviation as `p_err` percent of the system parameter value;
   * `p_wlk` - defines the standard deviation of a Gaussian random walk as `p_wlk` percent of the estimated parameter value for a random parameter model.
 

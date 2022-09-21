@@ -7,7 +7,7 @@ data type.  A basic workflow to run a data assimilation twin
 experiment is to first generate a time series for observations using a choice of
 tuneable parameters using the [GenerateTimeSeries](@ref) submodule.  Once the time
 series data is generated from one of the benchmark models, one can use this data as a
-truth twin to generate pseudo-obseravtions. This time series can thus be re-used over
+truth twin to generate pseudo-observations. This time series can thus be re-used over
 multiple configurations of filters and smoothers, holding the pseudo-data fixed while
 varying other hyper-parameters.  Test cases in this package model this workflow,
 to first generate test data and then to implement a particular experiment based

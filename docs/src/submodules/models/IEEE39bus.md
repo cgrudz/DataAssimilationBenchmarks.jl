@@ -58,7 +58,7 @@ By definition the standard deviation of $W_{i,\Delta_t}$ is equal to $\sqrt{\Del
 for each time-discretization of the Wiener process of step size $\Delta$,
 $\frac{s \omega_R}{2 H_i}W_{i,\Delta_t}$ is a mean zero, Gaussian distributed variable
 with standard deviation $\frac{s \omega_\mathrm{R}}{2}\sqrt{\Delta}$.  The reference
-frequency in North America is 60 Hz and the tolerable deviation from this frequency under
+frequency in North America is 60 Hz, and the tolerable deviation from this frequency under
 normal operations is approximately $\pm 0.05$ Hz, or of magnitude
 approximately $0.08\%$.  In the above model, the
 reference frequency is in radians, related to the reference frequency in Hz as
