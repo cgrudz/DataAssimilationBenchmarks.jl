@@ -19,6 +19,18 @@ include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
 
+# Test filter state and parameter experiments
+@testset "Filter Experiments" begin
+    @test TestFilterExps.run_ensemble_filter_state_L96()
+    @test TestFilterExps.analyze_ensemble_filter_state_L96()
+    @test TestFilterExps.run_D3_var_filter_state_L96()
+    #@test TestFilterExps.analyze_D3_var_filter_state_L96()
+    @test TestFilterExps.run_ensemble_filter_param_L96()
+    @test TestFilterExps.analyze_ensemble_filter_param_L96()
+    @test TestFilterExps.run_ensemble_filter_state_IEEE39bus()
+    @test TestFilterExps.analyze_ensemble_filter_state_IEEE39bus()
+end
+
 # test set 0: test Observation Operators jacobian
 @testset "Observation Operators" begin
     @test TestObsOperators.alternating_obs_jacobian_pos()
@@ -58,18 +70,6 @@ end
     @test TestVarAD.testGrad()
     @test TestVarAD.testNewton()
     @test TestVarAD.testNewtonNoise()
-end
-
-# Test filter state and parameter experiments
-@testset "Filter Experiments" begin
-    @test TestFilterExps.run_ensemble_filter_state_L96()
-    @test TestFilterExps.analyze_ensemble_filter_state_L96()
-    #@test TestFilterExps.run_D3_var_filter_state_L96()
-    #@test TestFilterExps.analyze_D3_var_filter_state_L96()
-    @test TestFilterExps.run_ensemble_filter_param_L96()
-    @test TestFilterExps.analyze_ensemble_filter_param_L96()
-    @test TestFilterExps.run_ensemble_filter_state_IEEE39bus()
-    @test TestFilterExps.analyze_ensemble_filter_state_IEEE39bus()
 end
 
 # Test classic smoother state and parameter experiments

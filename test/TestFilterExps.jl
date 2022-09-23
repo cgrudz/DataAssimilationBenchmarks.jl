@@ -40,6 +40,38 @@ end
 
 
 ##############################################################################################
+# run and analyze the ETKF for state estimation with the Lorenz-96 model
+
+function run_D3_var_filter_state_L96()
+    try
+        D3_var_filter_state(d3_var_exps["L96_D3_var_state_test"])
+        true
+    catch
+        false
+    end
+end
+
+function analyze_D3_var_filter_state_L96()
+    try
+        # test if the filter RMSE for standard simulation falls below adequate threshold
+        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-" * "ID" * "/"
+        data = load(path * "bkg-ID_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40_obsU_
+        1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_stateInfl_0.200.jld2")
+        rmse = data["filt_rmse"]
+
+        # note, we use a small burn-in to reach more regular cycles
+        if mean(rmse[501:end]) < 0.2
+            true
+        else
+            false
+        end
+    catch
+        false
+    end
+end
+
+
+##############################################################################################
 # run and analyze the ETKF for joint state-parameter estimation with the Lorenz-96 model
 
 function run_ensemble_filter_param_L96()
