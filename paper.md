@@ -38,12 +38,12 @@ sequential-in-time observational data [@carrassi2018data]. As a long-studied "bi
 problem, DA has benefited from the fusion of a variety of techniques, including methods
 from Bayesian inference, dynamical systems, numerical analysis, optimization, control
 theory and machine learning. DA techniques are widely used in many
-areas of geosciences, neurosciences, biology, autonomous vehicle guidance and various
+areas of geosciences, neurosciences, biology, autonomous vehicle guidance, and various
 engineering applications requiring dynamic state estimation and control.
 
 The purpose of this package is to provide a research framework for the theoretical
 development and empirical validation of novel data assimilation techniques.
-While analytical proofs can be derived for classical methods such as the Kalman filter
+While analytical proofs can be derived for classical methods, such as the Kalman filter
 in linear-Gaussian dynamics [@jazwinski2007stochastic], most currently developed DA
 techniques are designed for estimation in nonlinear, non-Gaussian models where no
 analytical solution may exist.  DA methods,
@@ -55,9 +55,9 @@ of a proposed scheme with other standard methods within the same class of estima
 This package implements a variety of standard data assimilation algorithms,
 including some of the widely used performance modifications that are used in
 practice to tune these estimators. This software framework was written originally
-to support the development and intercomparison of methods studied in [@grudzien2021fast].
+to support the development and intercomparison of methods studied in @grudzien2021fast.
 Details of the studied ensemble DA schemes, including pseudo-code detailing
-their implementation, and DA experiment benchmark configurations, can be found in
+their implementation and DA experiment benchmark configurations, can be found in
 the above principal reference.  Additional details on numerical integration schemes
 utilized in this package can be found in the secondary reference [@grudzien2020numerical].
 
@@ -77,8 +77,8 @@ future development.
 ## Comparison with similar projects
 
 Similar projects to DataAssimilationBenchmarks.jl include the DAPPER Python library
-[@dapper], DataAssim.jl used by [@vetra2018state], and
-EnsembleKalmanProcesses.jl [@enkprocesses] of the Climate Modeling Alliance.
+[@dapper], DataAssim.jl used by @vetra2018state, and
+EnsembleKalmanProcesses.jl of the Climate Modeling Alliance [@enkprocesses].
 These alternatives are differentiated primarily in that:
 
   * DAPPER is a Python-based library which is well-established, and includes many of the same
@@ -91,7 +91,7 @@ These alternatives are differentiated primarily in that:
   * DataAssim.jl is another established Julia library, but notably lacks an implementation
 	of variational and ensemble-variational techniques.
 	
-  * EnsembleKalmanProcesses.jl is another established Julia library, but notably lacks
+  * EnsembleKalmanProcesses.jl is another established Julia library, but specifically lacks
 	traditional geoscientific DA approaches such as 3D-VAR and the ETKF/S.
 
 ## Future development 
@@ -110,7 +110,8 @@ Bus test case model and the numerical integration schemes for ordinary and stoch
 differential equations.  Charlotte Merchant developed the numerical code for implementing
 variational data assimilation in the Lorenz-96 model and related experiments. Sukhreen
 Sandhu supported the development of the package structure and organization.
-All authors supported the development of the package by implementing test cases.
+All authors supported the development of the package by implementing test cases and writing
+software documentation.
 This work was supported by the University of Nevada, Reno, Office of Undergraduate Research's
 Pack Research Experience Program which supported Sukhreen Sandhu as a research assistant.
 This work was supported by the Center for Western Weather and Water Extremes internship
