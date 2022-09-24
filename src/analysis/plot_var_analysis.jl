@@ -3,7 +3,7 @@ module plot_var_analysis
 ##############################################################################################
 # imports and exports
 using Random, LinearAlgebra
-using JLD2, HDF5, Plots
+using JLD2, HDF5, Plots, Statistics
 using Measures
 using DataAssimilationBenchmarks
 
@@ -22,6 +22,7 @@ plot(t, filt_rmse, label = "Filter", title="Uninformative Prior: Filter RMSE vs.
 legend_position = :topright, margin=15mm, size=(800,500), dpi = 600)
 xlabel!("Cycles")
 ylabel!("Filter RMSE")
+print("Mean " * string(mean(filt_rmse[501:end]))  * " minutes\n")
 savefig("stab_I")
 
 ##############################################################################################

@@ -127,7 +127,7 @@ d3_var_exps = Dict{String, Any}(
     # Lorenz-96 3D-VAR state estimation standard configuration
     "L96_D3_var_state_test" => (
       time_series = path *
-      "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_" *
+      "L96_time_series_seed_0000_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_05000_"*
       "spin_1500_h_0.050.jld2",
       bkg_cov     = "ID",
       seed        = 0,

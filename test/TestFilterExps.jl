@@ -54,13 +54,13 @@ end
 function analyze_D3_var_filter_state_L96()
     try
         # test if the filter RMSE for standard simulation falls below adequate threshold
-        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-" * "ID" * "/"
-        data = load(path * "bkg-ID_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40_obsU_
-        1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_stateInfl_0.200.jld2")
+        path = pkgdir(DataAssimilationBenchmarks) * "/src/data/D3-var-bkg-ID/"
+        data = load(path * "bkg-ID_L96_state_seed_0000_diff_0.000_sysD_40_obsD_40_obsU_"
+        * "1.00_gamma_001.0_nanl_03500_tanl_0.05_h_0.05_stateInfl_0.200.jld2")
         rmse = data["filt_rmse"]
 
         # note, we use a small burn-in to reach more regular cycles
-        if mean(rmse[501:end]) < 0.2
+        if mean(rmse[501:end]) < 0.41
             true
         else
             false

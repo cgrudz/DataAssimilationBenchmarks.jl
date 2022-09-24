@@ -159,25 +159,27 @@ function D3_var_tuned_inflation()
                          ".jld2"
 
     # define ranges for filter parameters
-    γ = 1.0
+    γs = [1.0, 2.0, 3.0]
     bkg_covs = ["ID", "clima"]
     s_infls = 0.005:0.005:1.0
 
     # load the experiments
     args = Vector{Any}()
     for s_infl in s_infls
-        for bkg_cov in bkg_covs
-            tmp = (
-                   time_series = time_series,
-                   bkg_cov     = bkg_cov,
-                   seed        = 0,
-                   nanl        = 3500,
-                   obs_un      = 1.0,
-                   obs_dim     = 40,
-                   γ           = 1.00,
-                   s_infl      = s_infl,
-                  )
-            push!(args, tmp)
+        for γ in γs
+            for bkg_cov in bkg_covs
+                tmp = (
+                    time_series = time_series,
+                    bkg_cov     = bkg_cov,
+                    seed        = 0,
+                    nanl        = 3500,
+                    obs_un      = 1.0,
+                    obs_dim     = 40,
+                    γ           = γ,
+                    s_infl      = s_infl,
+                    )
+                push!(args, tmp)
+            end
         end
     end
     return args, wrap_exp

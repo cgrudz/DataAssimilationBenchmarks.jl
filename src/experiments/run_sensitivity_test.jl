@@ -6,7 +6,7 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks
 ##############################################################################################
 
-config = ParallelExperimentDriver.ensemble_filter_adaptive_inflation
+config = ParallelExperimentDriver.D3_var_tuned_inflation
 
 print("Generating experiment configurations from " * string(config) * "\n")
 print("Generate truth twin\n")
