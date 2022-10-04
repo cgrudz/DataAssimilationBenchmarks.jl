@@ -15,11 +15,11 @@ export D3_var_cost, D3_var_grad, D3_var_hessian, D3_var_NewtonOp
 Computes the cost of the three-dimensional variational analysis increment from an initial state 
 proposal with a static background covariance
 
-'x' is a free argument used to evaluate the cost of the given state proposal versus other 
-proposal states, 'obs' is to the observation vector, 'x_bkg' is the initial state proposal 
-vector, state_cov is the background error covariance matrix, H_obs is a model mapping operator 
-for observations, and obs_cov is the observation error covariance matrix. 'kwargs' refers to 
-any additional arguments needed for the operation computation.
+`x` is a free argument used to evaluate the cost of the given state proposal versus other 
+proposal states, `obs` is to the observation vector, `x_bkg` is the initial state proposal 
+vector, `state_cov` is the background error covariance matrix, `H_obs` is a model mapping
+operator for observations, and `obs_cov` is the observation error covariance matrix.
+`kwargs` refers to any additional arguments needed for the operation computation.
 
 ```
 return  0.5*back_component + 0.5*obs_component
@@ -57,13 +57,13 @@ Computes the gradient of the three-dimensional variational analysis increment fr
 state proposal with a static background covariance using a wrapper function for automatic 
 differentiation
 
-'x' is a free argument used to evaluate the cost of the given state proposal versus other 
-proposal states, 'obs' is to the observation vector, 'x_bkg' is the initial state proposal 
-vector, state_cov is the background error covariance matrix, H_obs is a model mapping operator 
-for observations, and obs_cov is the observation error covariance matrix. 'kwargs' refers to 
-any additional arguments needed for the operation computation.
+`x` is a free argument used to evaluate the cost of the given state proposal versus other 
+proposal states, `obs` is to the observation vector, `x_bkg` is the initial state proposal 
+vector, `state_cov` is the background error covariance matrix, `H_obs` is a model mapping
+operator  for observations, and `obs_cov` is the observation error covariance matrix.
+`kwargs` refers to any additional arguments needed for the operation computation.
 
-'wrap_cost' is a function that allows differentiation with respect to the free argument 'x'
+`wrap_cost` is a function that allows differentiation with respect to the free argument `x`
 while treating all other hyperparameters of the cost function as constant.
 
 ```
@@ -87,17 +87,17 @@ end
     D3_var_hessian(x::VecA(T), obs::VecA(T), x_bkg::VecA(T), state_cov::CovM(T),
         H_obs::Function, obs_cov::CovM(T), kwargs::StepKwargs) where T <: Float64 
 
-Computes the hessian of the three-dimensional variational analysis increment from an initial 
+Computes the Hessian of the three-dimensional variational analysis increment from an initial 
 state proposal with a static background covariance using a wrapper function for automatic 
 differentiation
 
-'x' is a free argument used to evaluate the cost of the given state proposal versus other 
-proposal states, 'obs' is to the observation vector, 'x_bkg' is the initial state proposal 
-vector, state_cov is the background error covariance matrix, H_obs is a model mapping 
-operator for observations, and obs_cov is the observation error covariance matrix. 'kwargs' 
-refers to any additional arguments needed for the operation computation.
+`x` is a free argument used to evaluate the cost of the given state proposal versus other 
+proposal states, `obs` is to the observation vector, `x_bkg` is the initial state proposal 
+vector, `state_cov` is the background error covariance matrix, `H_obs` is a model mapping 
+operator for observations, and `obs_cov` is the observation error covariance matrix.
+`kwargs` refers to any additional arguments needed for the operation computation.
 
-'wrap_cost' is a function that allows differentiation with respect to the free argument 'x'
+`wrap_cost` is a function that allows differentiation with respect to the free argument `x`
 while treating all other hyperparameters of the cost function as constant.
 
 ```
@@ -124,10 +124,10 @@ end
 Computes the local minima of the three-dimension variational cost function with a static 
 background covariance using a simple Newton optimization method
 
-'x_bkg' is the initial state proposal vector, 'obs' is to the observation vector, state_cov is
-the background error covariance matrix, H_obs is a model mapping operator for observations, 
-obs_cov is the observation error covariance matrix, and 'kwargs' refers to any additional 
-arguments needed for the operation computation.
+`x_bkg` is the initial state proposal vector, `obs` is to the observation vector, 
+`state_cov` is the background error covariance matrix, `H_obs` is a model mapping operator
+for observations, `obs_cov` is the observation error covariance matrix, and `kwargs` refers
+to any additional arguments needed for the operation computation.
 
 ```
 return  x
@@ -150,7 +150,7 @@ function D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), H_obs
         g[:] = D3_var_grad(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
 
-    # hessian preallocation over-write
+    # Hessian preallocation over-write
     function hess!(h::ArView(T), x::VecA(T)) where T <: Real
         h .= D3_var_hessian(x, obs, x_bkg, state_cov, H_obs, obs_cov, kwargs)
     end
@@ -160,8 +160,7 @@ function D3_var_NewtonOp(x_bkg::VecA(T), obs::VecA(T), state_cov::CovM(T), H_obs
     hess_x = Array{Float64}(undef, sys_dim, sys_dim)
 
     while j <= j_max
-        #print("Iteration: " * string(j) * "\n")
-        # compute the gradient and hessian
+        # compute the gradient and Hessian
         grad!(grad_x, x)
         hess!(hess_x, x)
 
