@@ -137,6 +137,19 @@ d3_var_exps = Dict{String, Any}(
       γ           = 1.00,
       s_infl      = 0.20,
      ),
+     # Lorenz-96 3D-VAR optimal inflation estimation configuration
+    "L96_D3_var_infl_test" => (
+      time_series = path *
+      "L96_time_series_seed_0123_dim_40_diff_0.000_F_08.0_tanl_0.05_nanl_06500_"*
+      "spin_1500_h_0.050.jld2",
+      bkg_cov     = "ID",
+      seed        = 123,
+      nanl        = 3500,
+      obs_un      = 1.0,
+      obs_dim     = 40,
+      γ           = 1.0,
+      s_infl      = 0.230,
+     )
     )
 
 ##############################################################################################

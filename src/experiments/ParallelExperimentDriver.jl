@@ -159,8 +159,8 @@ function D3_var_tuned_inflation()
                          ".jld2"
 
     # define ranges for filter parameters
-    dims = collect(1, 1, 40)
-    bkg_covs = ["ID", "clima"]
+    dims = collect(18:1:20)
+    bkg_covs = ["ID"]
     s_infls = 0.005:0.005:1.0
 
     # load the experiments

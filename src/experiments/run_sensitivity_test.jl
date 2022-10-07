@@ -11,7 +11,7 @@ config = ParallelExperimentDriver.D3_var_tuned_inflation()
 print("Generating experiment configurations from " * string(config) * "\n")
 print("Generate truth twin\n")
 
-args, wrap_exp = config()
+args, wrap_exp = config
 num_exps = length(args)
 
 print("Configuration ready\n")
