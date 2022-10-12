@@ -15,8 +15,8 @@ obs_un = 1.0
 method_list = ["etks_classic", "etks_single_iteration", "lin-ienks-transform", "ienks-transform"]
 stats = ["post", "filt", "fore"]
 tanl = 0.05
-mda = "false"
-#mda = "true"
+#mda = "false"
+mda = "true"
 markerlist = ['+', 'x', "d", "o", '^']
 markersizes = [24, 24, 16, 16, 16]
 color_list = ['#d95f02', '#7570b3', '#1b9e77']
@@ -150,8 +150,8 @@ ax0.set_yticks(np.arange(1,41,4)*.01)
 
 #ax1.set_xlim([0.5, gamma + 0.5])
 #ax0.set_xlim([0.5, gamma + 0.5])
-ax0.set_xscale('log', basex=2)
-ax1.set_xscale('log', basex=2)
+ax0.set_xscale('log', base=2)
+ax1.set_xscale('log', base=2)
 
 if mda == "true":
     title = r'MDA'
