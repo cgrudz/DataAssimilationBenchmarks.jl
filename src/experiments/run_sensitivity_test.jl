@@ -6,12 +6,12 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks
 ##############################################################################################
 
-config = ParallelExperimentDriver.D3_var_tuned_inflation()
+config = ParallelExperimentDriver.ensemble_filter_adaptive_inflation
 
 print("Generating experiment configurations from " * string(config) * "\n")
 print("Generate truth twin\n")
 
-args, wrap_exp = config
+args, wrap_exp = config()
 num_exps = length(args)
 
 print("Configuration ready\n")
