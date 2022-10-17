@@ -36,19 +36,19 @@
 ehthumbs.db
 Thumbs.db
 
-# no vim backups
+# no vim backups #
 *~
 *.swp
 
-# no output from nohup
+# no output from nohup #
 *.out 
 
-# no simulation auxilliary files
+# no simulation auxilliary files #
 *.sl
 *.err
 *.txt
 
-# no actual data, keep output 'data' directory for server sync directory tree
+# no actual data, keep output 'data' directory for server sync directory tree #
 ./scratch/*
 *.jld
 *.jld2

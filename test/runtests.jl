@@ -64,8 +64,8 @@ end
 @testset "Filter Experiments" begin
     @test TestFilterExps.run_ensemble_filter_state_L96()
     @test TestFilterExps.analyze_ensemble_filter_state_L96()
-    #@test TestFilterExps.run_D3_var_filter_state_L96()
-    #@test TestFilterExps.analyze_D3_var_filter_state_L96()
+    @test TestFilterExps.run_D3_var_filter_state_L96()
+    @test TestFilterExps.analyze_D3_var_filter_state_L96()
     @test TestFilterExps.run_ensemble_filter_param_L96()
     @test TestFilterExps.analyze_ensemble_filter_param_L96()
     @test TestFilterExps.run_ensemble_filter_state_IEEE39bus()
