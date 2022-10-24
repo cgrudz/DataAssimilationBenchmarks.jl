@@ -343,15 +343,16 @@ is of type [`ConM`](@ref), the keyword arguments dictionary `kwargs` is of type
 Currently validated `analysis` options:
  * `analysis=="etkf" || analysis=="etks"` computes the deterministic ensemble transform
    as in the ETKF described in [Grudzien et al.
-   2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
  * `analysis[1:7]=="mlef-ls" || analysis[1:7]=="mles-ls"` computes the maximum likelihood
    ensemble filter transform described in [Grudzien et al.
-   2021](https://gmd.copernicus.org/preprints/gmd-2021-306/), optimizing the nonlinear
+   2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html),
+   optimizing the nonlinear
    cost function with Newton-based
    [line searches](https://julianlsolvers.github.io/LineSearches.jl/stable/).
  * `analysis[1:4]=="mlef" || analysis[1:4]=="mles"` computes the maximum likelihood
    ensemble filter transform described in
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
+   [Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html),
    optimizing the nonlinear
    cost function with simple Newton-based scheme.
  * `analysis=="enkf-n-dual" || analysis=="enks-n-dual"`
@@ -363,7 +364,7 @@ Currently validated `analysis` options:
  * `analysis=="enkf-n-primal" || analysis=="enks-n-primal"`
    computes the primal form of the EnKF-N transform as in [Bocquet et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a simple Newton-based
@@ -371,7 +372,7 @@ Currently validated `analysis` options:
  * `analysis=="enkf-n-primal-ls" || analysis=="enks-n-primal-ls"`
    computes the primal form of the EnKF-N transform as in [Bocquet et al.
    2015](https://npg.copernicus.org/articles/22/645/2015/),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
    This differs from the MLEF/S-N in that there is no approximate linearization of
    the observation operator in the EnKF-N, this only handles the approximation error
    with respect to the adaptive inflation. This uses a Newton-based
@@ -965,7 +966,7 @@ Currently validated `analysis` options:
    computes the weighted observed anomalies as per the
    bundle or transform version of the IEnKS, described in [Bocquet et al. 
    2013](https://rmets.onlinelibrary.wiley.com/doi/abs/10.1002/qj.2236),
-   [Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+   [Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
    Bundle versus tranform versions of the scheme are specified by the trailing
    `analysis` string as `-bundle` or `-transform`.  The bundle version uses a small uniform
    scalar `ϵ`, whereas the transform version uses a matrix square root inverse as the

@@ -9,7 +9,7 @@ the output .jld2 file and if this is not available, this will store `Inf` values
 
 ## Validating results
 Benchmark configurations for the above filtering and smoothing experiments are available in the open access article
-[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/),
+[Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html),
 with details on the algorithm and parameter specifications discussed in the experiments section.  Performance of filtering and
 smoothing schemes should be validated versus the numerical results for root mean square error and ensemble spread.
 Simple versions of these diagnostics are built for automatic testing of the filter and smoother experiments for state and parameter estimation

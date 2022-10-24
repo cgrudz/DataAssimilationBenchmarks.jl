@@ -32,7 +32,7 @@ prediction settings, including ensemble estimators, classical VAR techniques
 
 For a discussion of many of the following methods and benchmarks for their
 performance validation, please see the manuscript
-[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+[Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
 
 ```@raw html
 <table>

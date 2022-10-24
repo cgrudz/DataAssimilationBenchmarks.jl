@@ -13,7 +13,7 @@ a past, reanalyzed ensemble state.  The Gauss-Newton iterative smoothers are 4D 
 which iteratively optimize the initial condition at the beginning of a data assimilation
 cycle, and propagate this initial condition to initialize the subsequent cycle. A full
 discussion of these methods can be found in
-[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/).
+[Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
 
 For each outer-loop method defining the data assimilation cycle, different types of analyses
 can be specified within their arguments.  Likewise, these outer-loop methods require
