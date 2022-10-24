@@ -9,11 +9,11 @@ tags:
 authors:
   - name: Colin Grudzien
     orcid: 0000-0002-3084-3178
-    affiliation: 1,2
+    affiliation: "1,2"
   - name: Charlotte Merchant
-    affiliation: 1,3 
+    affiliation: "1,3"
   - name: Sukhreen Sandhu 
-    affiliation: 4
+    affiliation: "4"
 affiliations:
  - name: CW3E - Scripps Institution of Oceanography, University of California, San Diego
    index: 1
