@@ -14,6 +14,5 @@ model](https://iopscience.iop.org/article/10.1088/1367-2630/17/1/015012)
 model equations. New toy models and data assimilation schemes are in continuous development.
 
 This package supported the development of all numerical results and benchmark simulations
-in the pre-print
-[Grudzien et al. 2021](https://gmd.copernicus.org/preprints/gmd-2021-306/)
-available currently in open review in Geoscientific Model Development.
+in the manuscript
+[Grudzien et al. 2021](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
