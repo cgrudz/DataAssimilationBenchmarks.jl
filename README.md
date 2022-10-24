@@ -32,8 +32,7 @@ branch.
 This package supported the development of all numerical results and benchmark simulations
 in the manuscript 
 [A fast, single-iteration ensemble Kalman smoother for sequential data
-assimilation](https://gmd.copernicus.org/preprints/gmd-2021-306/)
-pending final publication in Geoscientific Model Development.
+assimilation](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
 
 ### Documentation
 
