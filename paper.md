@@ -3,7 +3,7 @@ title: 'DataAssimilationBenchmarks.jl: a data assimilation research framework.'
 tags:
   - Julia
   - Data Assimilation
-	- Bayesian Inference
+  - Bayesian Inference
   - Optimization
   - Machine learning
 authors:
