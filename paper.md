@@ -55,7 +55,7 @@ of a proposed scheme with other standard methods within the same class of estima
 This package implements a variety of standard data assimilation algorithms,
 including some of the widely used performance modifications that are used in
 practice to tune these estimators. This software framework was written originally
-to support the development and intercomparison of methods studied in @grudzien2021fast.
+to support the development and intercomparison of methods studied in @grudzien2022fast.
 Details of the studied ensemble DA schemes, including pseudo-code detailing
 their implementation and DA experiment benchmark configurations, can be found in
 the above principal reference.  Additional details on numerical integration schemes
