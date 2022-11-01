@@ -27,7 +27,7 @@ The installed version will be included in your
 ~/.julia/dev/
 ```
 on Linux and the analogous directory with respect Windows and Mac systems. This version
-in the Julia General Registries will be the latest official release.  However, this
+in the Julia General Registries will be the latest stable official release.  However, this
 official release tends to lag behind the current version.
 
 You can install the latest version from the main Github branch directly as follows:
