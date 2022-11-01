@@ -37,7 +37,7 @@ to operate in an extremely large dimension of model variables and observations, 
 sequential-in-time observational data [@carrassi2018data]. As a long-studied "big-data"
 problem, DA has benefited from the fusion of a variety of techniques, including methods
 from Bayesian inference, dynamical systems, numerical analysis, optimization, control
-theory and machine learning. DA techniques are widely used in many
+theory, and machine learning. DA techniques are widely used in many
 areas of geosciences, neurosciences, biology, autonomous vehicle guidance, and various
 engineering applications requiring dynamic state estimation and control.
 
@@ -106,7 +106,7 @@ for the DA system are also in development.
 Colin Grudzien developed the numerical code for the package's Julia type optimizations for
 numerical schemes and automatic differentiation of code, the
 ensemble-based estimation schemes, the observation models, the Lorenz-96 model, the IEEE 39
-Bus test case model and the numerical integration schemes for ordinary and stochastic
+Bus test case model, and the numerical integration schemes for ordinary and stochastic
 differential equations.  Charlotte Merchant developed the numerical code for implementing
 variational data assimilation in the Lorenz-96 model and related experiments. Sukhreen
 Sandhu supported the development of the package structure and organization.
@@ -117,8 +117,9 @@ Pack Research Experience Program which supported Sukhreen Sandhu as a research a
 This work was supported by the Center for Western Weather and Water Extremes internship
 program which supported Charlotte Merchant as a research assistant.
 This work benefited from the DAPPER library which was referenced at times for the development
-of DA schemes.  The authors would like to thank the handling editor Bita Hasheminezhad,
-and the two named referees Lukas Riedel and Tangi Migot for their comments, suggestions
-and valuable advice which strongly improved the quality of the paper and the software.
+of DA schemes.  The authors would like to thank the two handling editors Bita Hasheminezhad
+and Patrick Diehl, and the two named referees Lukas Riedel and Tangi Migot, for their comments,
+suggestions, and valuable advice which strongly improved the quality of the paper and
+the software.
 
 # References
