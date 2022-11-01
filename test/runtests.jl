@@ -6,6 +6,7 @@ using Test
 using JLD2
 ##############################################################################################
 # include test sub-modules
+include("TestDataAssimilationBenchmarks.jl")
 include("TestObsOperators.jl")
 include("TestVarAD.jl")
 include("TestDeSolvers.jl")
@@ -19,7 +20,12 @@ include("TestSingleIterationSmootherExps.jl")
 ##############################################################################################
 # Run tests
 
-# test set 0: test Observation Operators jacobian
+
+@testset "ParentModule" begin
+    @test TestDataAssimilationBenchmarks.splash()
+end
+
+# Test Observation Operators jacobian
 @testset "Observation Operators" begin
     @test TestObsOperators.alternating_obs_jacobian_pos()
     @test TestObsOperators.alternating_obs_jacobian_zero()

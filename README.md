@@ -2,7 +2,8 @@
 
 ![DataAssimilationBenchmarks.jl logo](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/assets/dabenchmarks.png)
 
-[![DOI](https://zenodo.org/badge/268903920.svg)](https://zenodo.org/badge/latestdoi/268903920)
+[![docs-dev-img](https://img.shields.io/badge/docs-dev-purple.svg)](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev)
+[![docs-stable-img](https://img.shields.io/badge/docs-stable-blue.svg)](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/stable)
 [![status](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736/status.svg)](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736)
 [![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
 [![Build Status](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl.svg?branch=master)](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl)
@@ -36,4 +37,6 @@ assimilation](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.
 
 ### Documentation
 
-Please see the [github pages site](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/).
+Please see the up-to-date documentation in the [master branch](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/)
+or the [stable documentation](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/) for the last tagged version in
+the [Julia General Registries](https://github.com/JuliaRegistries/General).
