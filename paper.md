@@ -69,9 +69,9 @@ there are fewer standard options for theoretical research and algorithm developm
 simple test systems. Many basic research frameworks, furthermore, do not include
 standard operational techniques developed from classical variational methods,
 due to the difficulty in constructing tangent linear and adjoint codes [@kalnay20074denkf].
-DataAssimilationBenchmarks.jl provides one framework for studying squential filters
+DataAssimilationBenchmarks.jl provides one framework for studying sequential filters
 and smoothers that are commonly used in online, geoscientific prediction settings,
-including both ensemble methods and variational schemes, with hybrid method planned for
+including both ensemble methods and variational schemes, with hybrid methods planned for
 future development.
 
 ## Comparison with similar projects
