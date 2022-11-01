@@ -37,6 +37,7 @@ assimilation](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.
 
 ### Documentation
 
-Please see the up-to-date documentation in the [master branch](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/)
-or the [stable documentation](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/) for the last tagged version in
-the [Julia General Registries](https://github.com/JuliaRegistries/General).
+Please see the [up-to-date documentation](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/)
+synchronized with the [master branch](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)
+or the [stable documentation](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev/)
+for the last tagged version in the [Julia General Registries](https://github.com/JuliaRegistries/General).
