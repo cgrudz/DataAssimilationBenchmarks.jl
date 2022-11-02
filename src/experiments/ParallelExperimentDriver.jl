@@ -4,7 +4,8 @@ module ParallelExperimentDriver
 # imports and exports
 using ..DataAssimilationBenchmarks
 export ensemble_filter_adaptive_inflation, ensemble_filter_param, classic_ensemble_state,
-       classic_ensemble_param, single_iteration_ensemble_state, iterative_ensemble_state 
+       classic_ensemble_param, single_iteration_ensemble_state, iterative_ensemble_state,
+       D3_var_tuned_inflation
 ##############################################################################################
 # Utility methods and definitions
 ##############################################################################################
@@ -104,7 +105,7 @@ end
 
 ##############################################################################################
 """
-    args, wrap_exp = D3_var_filter_tuning()
+    args, wrap_exp = D3_var_tuned_inflation()
 
 Constructs parameter range for tuning multiplicative inflation for 3D-VAR background cov.
 

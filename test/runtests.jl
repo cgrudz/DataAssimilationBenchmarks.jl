@@ -17,9 +17,9 @@ include("TestFilterExps.jl")
 include("TestClassicSmootherExps.jl")
 include("TestIterativeSmootherExps.jl")
 include("TestSingleIterationSmootherExps.jl")
+include("TestParallelExperimentDriver.jl")
 ##############################################################################################
 # Run tests
-
 
 @testset "ParentModule" begin
     @test TestDataAssimilationBenchmarks.splash()
@@ -108,6 +108,17 @@ end
     @test TestSingleIterationSmootherExps.analyze_mda_ensemble_smoother_state_L96()
     @test TestSingleIterationSmootherExps.run_mda_ensemble_smoother_param_L96()
     @test TestSingleIterationSmootherExps.analyze_mda_ensemble_smoother_param_L96()
+end
+
+# Test parallel experiment constructors
+@testset "Parallel experiment constructors" begin
+    @test TestParallelExperimentDriver.test_ensemble_filter_adaptive_inflation()
+    @test TestParallelExperimentDriver.test_D3_var_tuned_inflation()
+    @test TestParallelExperimentDriver.test_ensemble_filter_param()
+    @test TestParallelExperimentDriver.test_classic_ensemble_state()
+    @test TestParallelExperimentDriver.test_classic_ensemble_param()
+    @test TestParallelExperimentDriver.test_single_iteration_ensemble_state()
+    @test TestParallelExperimentDriver.test_iterative_ensemble_state()
 end
 
 
