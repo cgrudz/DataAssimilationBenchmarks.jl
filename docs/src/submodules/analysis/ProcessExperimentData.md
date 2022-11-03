@@ -2,10 +2,12 @@
 
 ## Processing experiment outputs
 
-The `analysis` directory contains scripts for batch processing the outputs from experiments into time-averaged
-RMSE and spread and arranging these outputs in an array for plotting.  This should be modified based on the
-local paths to stored data.  This will try to load files based on parameter settings written in the name of
-the output .jld2 file and if this is not available, this will store `Inf` values in the place of missing data.
+The `analysis` directory contains examples for batch processing the outputs from experiments into time-averaged
+RMSE and spread and arranging these outputs in an array for plotting.  These examples should be modified based
+on the local paths to stored data and experiment settings.  This will try to load files based on parameter settings
+written in the name of the output `.jld2` file and if this is not available, this will store `Inf` values in the
+place of missing data.  These scripts are not currently integrated or supported, with the expecation that
+one will write their own variants based on their needs with specific experiments.
 
 ## Validating results
 Benchmark configurations for the above filtering and smoothing experiments are available in the open access article

@@ -11,12 +11,12 @@ This module defines argumentless functions to construct an array with each array
 by a [NamedTuple](https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple), defining
 a particular hyper-parameter configuration.  These functions also define a soft-fail method
 for evaluating experiments, with example syntax as
-```
+```{julia}
 args, wrap_exp = method()
 ```
 where the `wrap_exp` follows a convention of
 
-```
+```{julia}
 function wrap_exp(arguments)
     try
         exp(arguments)
@@ -125,7 +125,7 @@ end
 
 With a constructor as above, one can define a script as follows to run the sensitivity test:
 
-```
+```{julia}
 ##############################################################################################
 module run_sensitivity_test 
 ##############################################################################################
