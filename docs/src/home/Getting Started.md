@@ -11,29 +11,42 @@ standard benchmark case studies with
 [NamedTuples](https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple)
 as arguments to these methods defining the associated experimental hyper-parameters.
 
-In order to get the full functionality of this package you will need to install the dev
-version. This provides access to create new experiments and to define performance benchmarks
-for these experiments
+This parent module only serves to support the overhead of type declarations used thoughout
+the package and the functionality of the methods standalone is extremely limited.
+In order to get the full functionality of this package __you will need to install the dev
+version__. This provides access to the source code needed to create new experiments and
+to define performance benchmarks for these experiments.
 
 ### Install a dev package
 
-In order to install the dev version to your Julia environment, you can use the following
+There are two ways to install a dev package of the repository.
+In either case, the installed version will be included in your
+```
+~/.julia/dev/
+```
+on Linux and the analogous directory with respect Windows and Mac systems.
+
+#### Install the tagged stable version
+
+To install the last tagged official release, you can use the following
 commands in the REPL
 ```{julia}
 pkg> dev DataAssimilationBenchmarks
 ```
-The installed version will be included in your
-```
-~/.julia/dev/
-```
-on Linux and the analogous directory with respect Windows and Mac systems. This version
-in the Julia General Registries will be the latest stable official release.  However, this
-official release tends to lag behind the current version.
+This version in the Julia General Registries will be the latest official release.
+However, this official release tends to lag behind the current version.
+
+#### Install the up-to-date version
 
 You can install the latest version from the main Github branch directly as follows:
 ```{julia}
 pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 ```
+The master branch synchronizes with the up-to-date documentation and commits to the master
+branch are considered tested but not necessarily stable.  As this package functions as a
+__research framework__, the master branch is in continuous development.  If your use case is
+performing research of DA mehtods with this package, it is recommended to install and keep
+up-to-date with the current version of the master branch.
 
 ### Repository structure
 

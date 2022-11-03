@@ -15,4 +15,4 @@ model equations. New toy models and data assimilation schemes are in continuous 
 
 This package supported the development of all numerical results and benchmark simulations
 in the manuscript
-[Grudzien et al. 2021](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).
+[Grudzien et al. 2022](https://gmd.copernicus.org/articles/15/7641/2022/gmd-15-7641-2022.html).

@@ -34,7 +34,96 @@ their own course unaffected.
 ## Example usage
 
 An example of how one can use the ParallelExperimentDriver framework to run a sensitivity
-test is as follows.  One can define a script as follows:
+test is as follows. We use a sensitivity test on the ensemble size for several
+variants of the EnKF using adaptive inflation.  The following function, defined in
+ParallelExperimentDriver.jl module, will construct all of input data for the truth twin
+and a collection of NamedTuples that define individual experiments:
+
+```{julia}
+path = pkgdir(DataAssimilationBenchmarks) * "/src/data/time_series/"
+
+function ensemble_filter_adaptive_inflation()
+
+    exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
+    function wrap_exp(arguments)
+        try
+            exp(arguments)
+        catch
+            print("Error on " * string(arguments) * "\n")
+        end
+    end
+
+    # set time series parameters
+    seed      = 123
+    h         = 0.05
+    state_dim = 40
+    tanl      = 0.05
+    nanl      = 6500
+    spin      = 1500
+    diffusion = 0.00
+    F         = 8.0
+
+    # generate truth twin time series
+    GenerateTimeSeries.L96_time_series(
+                                       (
+                                         seed      = seed,
+                                         h         = h,
+                                         state_dim = state_dim,
+                                         tanl      = tanl,
+                                         nanl      = nanl,
+                                         spin      = spin,
+                                         diffusion = diffusion,
+                                         F         = F,
+                                        )
+                                      )
+
+    # define load path to time series
+    time_series = path * "L96_time_series_seed_" * lpad(seed, 4, "0") *
+                         "_dim_" * lpad(state_dim, 2, "0") *
+                         "_diff_" * rpad(diffusion, 5, "0") *
+                         "_F_" * lpad(F, 4, "0") *
+                         "_tanl_" * rpad(tanl, 4, "0") *
+                         "_nanl_" * lpad(nanl, 5, "0") *
+                         "_spin_" * lpad(spin, 4, "0") *
+                         "_h_" * rpad(h, 5, "0") *
+                         ".jld2"
+
+    # define ranges for filter parameters
+    methods = ["enkf-n-primal", "enkf-n-primal-ls", "enkf-n-dual"]
+    seed = 1234
+    obs_un = 1.0
+    obs_dim = 40
+    N_enss = 15:3:42
+    s_infls = [1.0]
+    nanl = 4000
+    γ = 1.0
+    
+    # load the experiments
+    args = Vector{Any}()
+    for method in methods
+        for N_ens in N_enss
+            for s_infl in s_infls
+                tmp = (
+                       time_series = time_series,
+                       method = method,
+                       seed = seed,
+                       nanl = nanl,
+                       obs_un = obs_un,
+                       obs_dim = obs_dim,
+                       γ = γ,
+                       N_ens = N_ens,
+                       s_infl = s_infl
+                      )
+                push!(args, tmp)
+            end
+        end
+    end
+    return args, wrap_exp
+end
+
+```
+
+With a constructor as above, one can define a script as follows to run the sensitivity test:
 
 ```
 ##############################################################################################
@@ -45,7 +134,7 @@ using Distributed
 @everywhere using DataAssimilationBenchmarks
 ##############################################################################################
 
-config = ParallelExperimentDriver.my_new_sensitivity_test
+config = ParallelExperimentDriver.ensemble_filter_adaptive_inflation
 
 print("Generating experiment configurations from " * string(config) * "\n")
 print("Generate truth twin\n")
@@ -67,8 +156,8 @@ print(pkgdir(DataAssimilationBenchmarks) * "/src/data\n")
 
 end
 ```
-where the `my_new_sensitivity_test` is a function that constructs the parameter set and
-wrapper as in the other examples in this module.  Running the script using
+
+Running the script using
 ```
 julia -p N run_sensitivity_test.jl
 ```
