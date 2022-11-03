@@ -45,7 +45,7 @@ pkg> dev https://github.com/cgrudz/DataAssimilationBenchmarks.jl
 The master branch synchronizes with the up-to-date documentation and commits to the master
 branch are considered tested but not necessarily stable.  As this package functions as a
 __research framework__, the master branch is in continuous development.  If your use case is
-performing research of DA mehtods with this package, it is recommended to install and keep
+performing research of DA methods with this package, it is recommended to install and keep
 up-to-date with the current version of the master branch.
 
 ### Repository structure
