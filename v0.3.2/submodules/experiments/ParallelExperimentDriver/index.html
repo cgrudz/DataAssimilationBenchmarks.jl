@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ParallelExperimentDriver · DataAssimilationBenchmarks</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">DataAssimilationBenchmarks</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">DataAssimilationBenchmarks</span><ul><li><a class="tocitem" href="../../../home/Introduction/">Introduction</a></li><li><a class="tocitem" href="../../../home/Getting Started/">Getting Started</a></li><li><a class="tocitem" href="../../../home/DataAssimilationBenchmarks/">Global Types</a></li></ul></li><li><span class="tocitem">Submodules</span><ul><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../models/L96/">L96</a></li><li><a class="tocitem" href="../../models/IEEE39bus/">IEEE39bus</a></li><li><a class="tocitem" href="../../models/ObsOperators/">ObsOperators</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Methods</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../methods/DeSolvers/">DeSolvers</a></li><li><a class="tocitem" href="../../methods/EnsembleKalmanSchemes/">EnsembleKalmanSchemes</a></li><li><a class="tocitem" href="../../methods/XdVAR/">XdVAR</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Experiments</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../Workflow/">Workflow</a></li><li><a class="tocitem" href="../GenerateTimeSeries/">GenerateTimeSeries</a></li><li><a class="tocitem" href="../FilterExps/">FilterExps</a></li><li><a class="tocitem" href="../SmootherExps/">SmootherExps</a></li><li><a class="tocitem" href="../SingleExperimentDriver/">SingleExperimentDriver</a></li><li class="is-active"><a class="tocitem" href>ParallelExperimentDriver</a><ul class="internal"><li><a class="tocitem" href="#Example-usage"><span>Example usage</span></a></li><li><a class="tocitem" href="#Experiment-groups"><span>Experiment groups</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-4" type="checkbox"/><label class="tocitem" for="menuitem-3-4"><span class="docs-label">Analysis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../analysis/ProcessExperimentData/">ProcessExperimentData</a></li><li><a class="tocitem" href="../../analysis/PlotExperimentData/">PlotExperimentData</a></li></ul></li></ul></li><li><span class="tocitem">Community</span><ul><li><a class="tocitem" href="../../../community/Contributing/">Contributing</a></li><li><a class="tocitem" href="../../../community/CodeOfConduct/">Contributor Covenant Code of Conduct</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Submodules</a></li><li><a class="is-disabled">Experiments</a></li><li class="is-active"><a href>ParallelExperimentDriver</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>ParallelExperimentDriver</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/docs/src/submodules/experiments/ParallelExperimentDriver.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="ParallelExperimentDriver"><a class="docs-heading-anchor" href="#ParallelExperimentDriver">ParallelExperimentDriver</a><a id="ParallelExperimentDriver-1"></a><a class="docs-heading-anchor-permalink" href="#ParallelExperimentDriver" title="Permalink"></a></h1><p>In order to perform sensitivity testing and estimator tuning, many different parameter combinations may need to be evaluated for each experiment defined in the submodules  <a href="../GenerateTimeSeries/#GenerateTimeSeries">GenerateTimeSeries</a>, <a href="../FilterExps/#FilterExps">FilterExps</a> and <a href="../SmootherExps/#SmootherExps">SmootherExps</a>.  These experiments are designed so that these hyper-parameter searches can be implemented with naive parallelism, using <a href="https://en.wikipedia.org/wiki/MapReduce">parallel maps</a> and Julia&#39;s native <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/">Distributed</a> computing module.</p><p>This module defines argumentless functions to construct an array with each array entry given by a <a href="https://docs.julialang.org/en/v1/base/base/#Core.NamedTuple">NamedTuple</a>, defining a particular hyper-parameter configuration.  These functions also define a soft-fail method for evaluating experiments, with example syntax as</p><pre><code class="language- hljs">args, wrap_exp = method()</code></pre><p>where the <code>wrap_exp</code> follows a convention of</p><pre><code class="language- hljs">function wrap_exp(arguments)
+    try
+        exp(arguments)
+    catch
+        print(&quot;Error on &quot; * string(arguments) * &quot;\n&quot;)
+    end
+end</code></pre><p>with <code>exp</code> being imported from one of the experiment modules above.</p><p>This soft-fail wrapper provides that if a single experiment configuration in the parameter array fails due to, e.g., numerical overflow, the remaining configurations will continue their own course unaffected.</p><h2 id="Example-usage"><a class="docs-heading-anchor" href="#Example-usage">Example usage</a><a id="Example-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Example-usage" title="Permalink"></a></h2><p>An example of how one can use the ParallelExperimentDriver framework to run a sensitivity test is as follows. We use a sensitivity test on the ensemble size for several variants of the EnKF using adaptive inflation.  The following function, defined in ParallelExperimentDriver.jl module, will construct all of input data for the truth twin and a collection of NamedTuples that define individual experiments:</p><pre><code class="language- hljs">path = pkgdir(DataAssimilationBenchmarks) * &quot;/src/data/time_series/&quot;
+
+function ensemble_filter_adaptive_inflation()
+
+    exp = DataAssimilationBenchmarks.FilterExps.ensemble_filter_state
+    function wrap_exp(arguments)
+        try
+            exp(arguments)
+        catch
+            print(&quot;Error on &quot; * string(arguments) * &quot;\n&quot;)
+        end
+    end
+
+    # set time series parameters
+    seed      = 123
+    h         = 0.05
+    state_dim = 40
+    tanl      = 0.05
+    nanl      = 6500
+    spin      = 1500
+    diffusion = 0.00
+    F         = 8.0
+
+    # generate truth twin time series
+    GenerateTimeSeries.L96_time_series(
+                                       (
+                                         seed      = seed,
+                                         h         = h,
+                                         state_dim = state_dim,
+                                         tanl      = tanl,
+                                         nanl      = nanl,
+                                         spin      = spin,
+                                         diffusion = diffusion,
+                                         F         = F,
+                                        )
+                                      )
+
+    # define load path to time series
+    time_series = path * &quot;L96_time_series_seed_&quot; * lpad(seed, 4, &quot;0&quot;) *
+                         &quot;_dim_&quot; * lpad(state_dim, 2, &quot;0&quot;) *
+                         &quot;_diff_&quot; * rpad(diffusion, 5, &quot;0&quot;) *
+                         &quot;_F_&quot; * lpad(F, 4, &quot;0&quot;) *
+                         &quot;_tanl_&quot; * rpad(tanl, 4, &quot;0&quot;) *
+                         &quot;_nanl_&quot; * lpad(nanl, 5, &quot;0&quot;) *
+                         &quot;_spin_&quot; * lpad(spin, 4, &quot;0&quot;) *
+                         &quot;_h_&quot; * rpad(h, 5, &quot;0&quot;) *
+                         &quot;.jld2&quot;
+
+    # define ranges for filter parameters
+    methods = [&quot;enkf-n-primal&quot;, &quot;enkf-n-primal-ls&quot;, &quot;enkf-n-dual&quot;]
+    seed = 1234
+    obs_un = 1.0
+    obs_dim = 40
+    N_enss = 15:3:42
+    s_infls = [1.0]
+    nanl = 4000
+    γ = 1.0
+    
+    # load the experiments
+    args = Vector{Any}()
+    for method in methods
+        for N_ens in N_enss
+            for s_infl in s_infls
+                tmp = (
+                       time_series = time_series,
+                       method = method,
+                       seed = seed,
+                       nanl = nanl,
+                       obs_un = obs_un,
+                       obs_dim = obs_dim,
+                       γ = γ,
+                       N_ens = N_ens,
+                       s_infl = s_infl
+                      )
+                push!(args, tmp)
+            end
+        end
+    end
+    return args, wrap_exp
+end
+</code></pre><p>With a constructor as above, one can define a script as follows to run the sensitivity test:</p><pre><code class="language- hljs">##############################################################################################
+module run_sensitivity_test 
+##############################################################################################
+# imports and exports
+using Distributed
+@everywhere using DataAssimilationBenchmarks
+##############################################################################################
+
+config = ParallelExperimentDriver.ensemble_filter_adaptive_inflation
+
+print(&quot;Generating experiment configurations from &quot; * string(config) * &quot;\n&quot;)
+print(&quot;Generate truth twin\n&quot;)
+
+args, wrap_exp = config()
+num_exps = length(args)
+
+print(&quot;Configuration ready\n&quot;)
+print(&quot;\n&quot;)
+print(&quot;Running &quot; * string(num_exps) * &quot; configurations on &quot; * string(nworkers()) *
+      &quot; total workers\n&quot;)
+print(&quot;Begin pmap\n&quot;)
+pmap(wrap_exp, args)
+print(&quot;Experiments completed, verify outputs in the appropriate directory under:\n&quot;)
+print(pkgdir(DataAssimilationBenchmarks) * &quot;/src/data\n&quot;)
+
+##############################################################################################
+# end module
+
+end</code></pre><p>Running the script using</p><pre><code class="nohighlight hljs">julia -p N run_sensitivity_test.jl</code></pre><p>will map the evaluation of all parameter configurations to parallel workers where <code>N</code> is the number of workers, to be defined based on the available resources on the user system. User-defined sensitivity tests can be generated by modifying the above script according to new constructors defined within the ParallelExperimentDriver module.</p><h2 id="Experiment-groups"><a class="docs-heading-anchor" href="#Experiment-groups">Experiment groups</a><a id="Experiment-groups-1"></a><a class="docs-heading-anchor-permalink" href="#Experiment-groups" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.D3_var_tuned_inflation-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.D3_var_tuned_inflation-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.D3_var_tuned_inflation</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = D3_var_tuned_inflation()</code></pre><p>Constructs parameter range for tuning multiplicative inflation for 3D-VAR background cov.</p><p>The choice of the background covariance is varied between the identity matrix and a climatological covariance computed from a long time series of the Lorenz-96 system.  Both choices then are scaled by a multiplicative covariance parameter that tunes the variances.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L107-L115">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_param-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_param-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_param</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = ensemble_filter_adaptive_inflation()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.</p><p>Ensemble schemes sample the forcing parameter for the Lorenz-96 system and vary the random walk parameter model for its time evolution / search over parameter space.  Methods vary the ETKS and MLES analysis, with different lag lengths, multiplicative inflation parameters, and different pameter models.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L391-L400">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_state-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_state-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.classic_ensemble_state</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = classic_ensemble_state()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of nonlinear obs.</p><p>The ETKS / MLES estimators vary over different multiplicative inflation parameters, smoother lag lengths and the nonlinearity of the observation operator.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L292-L299">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_adaptive_inflation-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_adaptive_inflation-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_adaptive_inflation</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = ensemble_filter_adaptive_inflation()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of adaptive inflation.</p><p>The ensemble size is varied along with the adaptive multiplicative inflation method, including the dual, primal and primal with linesearch EnKF-N methods.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L18-L25">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_param-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_param-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.ensemble_filter_param</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = ensemble_filter_param()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of parameter estimation.</p><p>Ensemble schemes sample the forcing parameter for the Lorenz-96 system and vary the random walk parameter model for its time evolution / search over parameter space.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L191-L198">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.iterative_ensemble_state-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.iterative_ensemble_state-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.iterative_ensemble_state</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = iterative_ensemble_state()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of multiple DA.</p><p>The ensemble size is varied along with the  multiplicative inflation coefficient, and the use of single versus multiple data assimilation in the IEnKS.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L609-L616">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="DataAssimilationBenchmarks.ParallelExperimentDriver.single_iteration_ensemble_state-Tuple{}" href="#DataAssimilationBenchmarks.ParallelExperimentDriver.single_iteration_ensemble_state-Tuple{}"><code>DataAssimilationBenchmarks.ParallelExperimentDriver.single_iteration_ensemble_state</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">args, wrap_exp = single_iteration_ensemble_state()</code></pre><p>Constucts a parameter map and experiment wrapper for sensitivity test of multiple DA.</p><p>The ensemble size is varied along with the  multiplicative inflation coefficient, and the use of single versus multiple data assimilation in the SIEnKS.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/eb357ecaade4d10f6ed23e62f777788af1970757/src/experiments/ParallelExperimentDriver.jl#L503-L510">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../SingleExperimentDriver/">« SingleExperimentDriver</a><a class="docs-footer-nextpage" href="../../analysis/ProcessExperimentData/">ProcessExperimentData »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Thursday 3 November 2022 20:02">Thursday 3 November 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
