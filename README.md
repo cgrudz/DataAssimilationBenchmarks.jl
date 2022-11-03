@@ -3,12 +3,36 @@
 ![DataAssimilationBenchmarks.jl logo](https://github.com/cgrudz/DataAssimilationBenchmarks.jl/blob/master/assets/dabenchmarks.png)
 <table>
 <tr>
-  <td>[![docs-dev-img](https://img.shields.io/badge/docs-dev-purple.svg)](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev)</td>
-  <td>[![docs-stable-img](https://img.shields.io/badge/docs-stable-blue.svg)](https://cgrudz.github.io/DataAssimilationBenchmarks.jl/stable)</td>
-  <td>[![status](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736/status.svg)](https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736)</td>
-  <td>[![Total lines of code without comments](https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code)](https://github.com/cgrudz/DataAssimilationBenchmarks.jl)</td>
-  <td>[![Build Status](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl.svg?branch=master)](https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl)</td>
-  <td>[![codecov](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl/branch/master/graph/badge.svg?token=3XLYTH8YSZ)](https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl)</td>
+  <td>
+	  <a href="https://cgrudz.github.io/DataAssimilationBenchmarks.jl/dev">
+		  <img src="https://img.shields.io/badge/docs-dev-purple.svg" alt="docs-dev-img">
+		</a>
+	</td>
+  <td>
+	  <a href="https://cgrudz.github.io/DataAssimilationBenchmarks.jl/stable">
+		  <img src="https://img.shields.io/badge/docs-stable-blue.svg" alt="docs-stable-img">
+		</a>
+  </td>
+  <td>
+	  <a href="https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736">
+		  <img src="https://joss.theoj.org/papers/478dcc0b1608d2a4d8c930edebb58736/status.svg" alt="status">
+		</a>
+	</td>
+  <td>
+	  <a href="https://github.com/cgrudz/DataAssimilationBenchmarks.jl">
+		  <img src="https://tokei.rs/b1/github/cgrudz/DataAssimilationBenchmarks.jl?category=code" alt="Total lines of code without comments">
+		</a>
+	</td>
+  <td>
+	  <a href="https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl">
+		  <img src="https://app.travis-ci.com/cgrudz/DataAssimilationBenchmarks.jl.svg?branch=master" alt="Build Status">
+		</a>
+	</td>
+  <td>
+	  <a href="https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl">
+		  <img src="https://codecov.io/gh/cgrudz/DataAssimilationBenchmarks.jl/branch/master/graph/badge.svg?token=3XLYTH8YSZ" alt="codecov">
+		</a>
+	</td>
 </tr>
 </table>
 
