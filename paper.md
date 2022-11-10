@@ -15,15 +15,15 @@ authors:
   - name: Sukhreen Sandhu 
     affiliation: "4"
 affiliations:
- - name: CW3E - Scripps Institution of Oceanography, University of California, San Diego
+ - name: CW3E - Scripps Institution of Oceanography, University of California, San Diego, USA
    index: 1
- - name: Department of Mathematics and Statistics, University of Nevada, Reno
+ - name: Department of Mathematics and Statistics, University of Nevada, Reno, USA
    index: 2
- - name: Department of Computer Science, Princeton University 
+ - name: Department of Computer Science, Princeton University, USA
    index: 3
- - name: Department of Computer Science and Engineering, University of Nevada, Reno
+ - name: Department of Computer Science and Engineering, University of Nevada, Reno, USA
    index: 4
-date: 30 September 2022
+date: 10 September 2022
 bibliography: paper.bib
 ---
 
